@@ -1,7 +1,7 @@
 // App
 import { useEffect, useState } from 'react';
 // React component
-function CurrencyFormat(props: { value: number; locale: string; digits: number; className: string }) {
+function CurrencyFormat(props: { value?: number; locale: string; digits: number; className: string }) {
 	const [symbol, setSymbol] = useState('');
 
 	useEffect(() => {
@@ -12,7 +12,7 @@ function CurrencyFormat(props: { value: number; locale: string; digits: number; 
 	const formatted = new Intl.NumberFormat(props.locale, {
 		style: 'decimal',
 		minimumFractionDigits: props.digits
-	}).format(props.value);
+	}).format(Number(props.value));
 
 	return <div className={props.className}>{symbol + ' ' + formatted}</div>;
 }

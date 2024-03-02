@@ -8,6 +8,8 @@ module.exports = {
         "./app/**/*.{ts,tsx}",
         "./src/**/*.{ts,tsx}",
     ],
+    safelist: [
+    ],
     prefix: "",
     theme: {
         container: {

@@ -17,6 +17,7 @@ export interface Property {
     created_at: string;
     updated_at: string;
     [attribute: string]: string | number | boolean;
+    color: string;
 }
 
 export interface User {

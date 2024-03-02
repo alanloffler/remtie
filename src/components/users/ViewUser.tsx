@@ -1,5 +1,5 @@
 // Icons: Lucide (https://lucide.dev/)
-import { CornerDownLeft, Mail, Pencil, Phone, Trash } from 'lucide-react';
+import { ArrowLeft, Mail, Pencil, Phone, Trash } from 'lucide-react';
 // UI: Shadcn-ui (https://ui.shadcn.com/)
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardFooter } from '@/components/ui/card';
@@ -11,6 +11,7 @@ import { Link, useNavigate, useParams } from 'react-router-dom';
 import { emptyUser } from '@/lib/utils';
 import { DeleteUserService, ReadUserService } from '@/services/users.services';
 import { User } from '@/lib/types';
+import Dot from '@/components/shared/Dot';
 // .env constants
 const appUrl: string = import.meta.env.VITE_APP_URL;
 // React component
@@ -59,21 +60,22 @@ function ViewUser() {
 	}
 
 	return (
-		<main className='flex-1 overflow-y-auto dark:bg-dark'>
-			<div className='mx-6 mb-4 mt-6 flex flex-row items-center justify-between'>
-				<Button variant='outline' size='sm' asChild>
+		<main className='flex-1 overflow-y-auto'>
+			<div className='mx-6 mb-4 mt-6 flex flex-row items-center justify-end'>
+				<Button variant='ghost' size='sm' asChild>
 					<Link to={appUrl + '/usuarios'}>
-						<CornerDownLeft className='mr-2 h-4 w-4' />
+						<ArrowLeft className='mr-2 h-4 w-4' />
 						Volver
 					</Link>
 				</Button>
 			</div>
-			<div className='mt-6 flex min-w-80 flex-col items-center px-6'>
+			<div className='mt-8 flex min-w-80 flex-col items-center px-6'>
 				<Card className='mb-8 min-w-[350px] dark:border-[#2e2e2e] dark:bg-[#292a2d] md:w-[500px]'>
 					<CardContent className='mx-0 px-0'>
 						<div className='flex flex-col items-center'>
-							<div className='mt-12 text-3xl font-bold leading-none tracking-tight'>{user?.name}</div>
-							<div className='text-sm text-neutral-400'>{user?.type === 'admin' ? 'Administrador' : 'Usuario'}</div>
+							<Dot type={user.type} text={user.type.charAt(0).toUpperCase()} width='90px' fontSize='60px' margin='-20px' />
+							<div className='mt-12 text-3xl font-bold'>{user?.name}</div>
+							<div className='mt-2 text-sm text-neutral-400'>{user?.type === 'admin' ? 'Administrador' : 'Usuario'}</div>
 							<div className='my-8 flex items-center gap-2 italic'>
 								<Mail className='h-4 w-4' />
 								{user?.email}
@@ -90,43 +92,42 @@ function ViewUser() {
 							</div>
 						</div>
 					</CardContent>
-					<CardFooter></CardFooter>
+					<CardFooter className='justify-end gap-2 bg-slate-200/50 p-2'>
+						<Button onClick={() => navigate(appUrl + '/usuario/modificar/' + user?.id)} variant='ghost' size='miniIcon' className='rounded-full border bg-white text-slate-400/70 shadow-sm hover:bg-white hover:text-emerald-500'>
+							<Pencil className='h-4 w-4' />
+						</Button>
+						<Dialog open={openDialog} onOpenChange={setOpenDialog}>
+							<Button variant='ghost' size='miniIcon' className='rounded-full border bg-white text-slate-400/70 shadow-sm hover:bg-white hover:text-rose-500' asChild>
+								<DialogTrigger>
+									<Trash className='h-4 w-4' />
+								</DialogTrigger>
+							</Button>
+							<DialogContent>
+								<DialogHeader>
+									<DialogTitle>¿Estás realmente seguro?</DialogTitle>
+									<DialogDescription>Esta acción es imposible de revertir.</DialogDescription>
+								</DialogHeader>
+								<div>
+									<section>
+										La cuenta del usuario
+										<span className='text-md px-1 font-bold text-slate-900'>{user?.name}</span>
+										se eliminará permanentemente de la base de datos.
+									</section>
+									<DialogFooter>
+										<div className='flex flex-row gap-4'>
+											<Button variant='ghost' onClick={() => navigate(appUrl + '/usuarios')}>
+												Cancelar
+											</Button>
+											<Button variant='delete' onClick={() => deleteUser(`${user?.id}`)}>
+												Eliminar
+											</Button>
+										</div>
+									</DialogFooter>
+								</div>
+							</DialogContent>
+						</Dialog>
+					</CardFooter>
 				</Card>
-                <div className='flex flex-row justify-end gap-4'>
-                    <Button onClick={() => navigate(appUrl + '/usuario/modificar/' + user?.id)} variant='outline' size='sm' className='hover:text-emerald-500'>
-                        <Pencil className='mr-2 h-4 w-4 text-emerald-500' />
-                        Editar
-                    </Button>
-                    <Dialog open={openDialog} onOpenChange={setOpenDialog}>
-                        <Button variant='outline' size='sm' className='hover:text-rose-500' asChild>
-                            <DialogTrigger>
-                                <Trash className='mr-2 h-4 w-4 text-rose-500' />
-                                Eliminar
-                            </DialogTrigger>
-                        </Button>
-                        <DialogContent>
-                            <DialogHeader>
-                                <DialogTitle>¿Estás realmente seguro?</DialogTitle>
-                                <DialogDescription>Esta acción es imposible de revertir.</DialogDescription>
-                            </DialogHeader>
-                            <section>
-                                La cuenta del usuario
-                                <span className='text-md px-1 font-bold text-neutral-900'>{user?.name}</span>
-                                se eliminará permanentemente de la base de datos.
-                            </section>
-                            <DialogFooter>
-                                <div className='flex flex-row gap-4'>
-                                    <Button variant='ghost' onClick={() => navigate(appUrl + '/usuarios')}>
-                                        Cancelar
-                                    </Button>
-                                    <Button variant='default' onClick={() => deleteUser(`${user?.id}`)} className='bg-rose-400 hover:bg-rose-600'>
-                                        Eliminar
-                                    </Button>
-                                </div>
-                            </DialogFooter>
-                        </DialogContent>
-                    </Dialog>
-                </div>
 			</div>
 		</main>
 	);

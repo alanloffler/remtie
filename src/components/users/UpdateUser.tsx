@@ -1,8 +1,8 @@
 // Icons: Lucide (https://lucide.dev/)
-import { Check, CornerDownLeft } from 'lucide-react';
+import { ArrowLeft, Check } from 'lucide-react';
 // UI: Shadcn-ui (https://ui.shadcn.com/)
 import { Button } from '@/components/ui/button';
-import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import { FormField, FormItem, FormLabel, FormControl, FormMessage } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from '@/components/ui/select';
@@ -51,9 +51,9 @@ function UpdateUser() {
 	useEffect(() => {
 		ReadUserService(`${id}`).then((response) => {
 			if (response.status > 200) {
-                toast({ title: 'Error', description: response.message, variant: 'destructive', duration: 5000 });
-                if(response.status === 401) navigate('/');
-            }
+				toast({ title: 'Error', description: response.message, variant: 'destructive', duration: 5000 });
+				if (response.status === 401) navigate('/');
+			}
 			if (response instanceof Error) toast({ title: 'Error', description: '500 Internal Server Error | ' + response.message, variant: 'destructive', duration: 5000 });
 			if (!response.status) {
 				setUser(response);
@@ -70,9 +70,9 @@ function UpdateUser() {
 		UpdateUserService(`${id}`, values).then((response) => {
 			if (response instanceof Error) toast({ title: 'Error', description: '500 Internal Server Error | ' + response.message, variant: 'destructive', duration: 5000 });
 			if (response.status > 200) {
-                toast({ title: 'Error', description: response.message, variant: 'destructive', duration: 5000 });
-                if (response.status === 401) navigate('/');
-            }
+				toast({ title: 'Error', description: response.message, variant: 'destructive', duration: 5000 });
+				if (response.status === 401) navigate('/');
+			}
 			if (response.status === 200) {
 				navigate(appUrl + '/usuarios');
 				toast({ title: 'Usuario modificado', description: response.message, variant: 'success', duration: 5000 });
@@ -81,23 +81,18 @@ function UpdateUser() {
 	}
 
 	return (
-		<main className='flex-1 overflow-y-auto dark:bg-dark'>
-			<div className='mx-6 mb-4 mt-6 flex flex-row items-center'>
-				<Button variant='outline' size='sm' asChild>
+		<main className='flex-1 overflow-y-auto'>
+			<div className='flex flex-row items-center justify-between px-8 pt-8'>
+				<h1 className='text-2xl font-normal text-slate-600'>Modificar Usuario</h1>
+				<Button variant='ghost' size='sm' asChild>
 					<Link to={appUrl + '/usuarios'}>
-						<CornerDownLeft className='mr-2 h-4 w-4' />
+						<ArrowLeft className='mr-2 h-4 w-4' />
 						Volver
 					</Link>
 				</Button>
 			</div>
-			<div className='flex flex-row items-center justify-center px-6 pt-6'>
-				<Card className='mb-8 w-full md:w-[550px] lg:w-[700px]'>
-					<CardHeader>
-						<CardTitle>Modificar Usuario</CardTitle>
-						<CardDescription>
-							{user?.name} ({user?.email})
-						</CardDescription>
-					</CardHeader>
+			<div className='flex flex-row items-center justify-center px-6 pt-8'>
+				<Card className='mb-8 w-full pt-6 md:w-[550px] lg:w-[550px]'>
 					<CardContent className='mx-0 px-0'>
 						<FormProvider {...form}>
 							<form onSubmit={form.handleSubmit(onSubmit)} className='space-y-8'>
@@ -187,9 +182,9 @@ function UpdateUser() {
 										<Button variant='ghost' className='mr-4' onClick={() => navigate(appUrl + '/usuarios')}>
 											Cancelar
 										</Button>
-										<Button type='submit' className='bg-sky-400 font-semibold uppercase shadow-md hover:bg-sky-500'>
-                                            <Check className='mr-2 h-4 w-4' />
-                                            Guardar
+										<Button type='submit' variant='default' size='default'>
+											<Check className='mr-2 h-4 w-4' />
+											Guardar
 										</Button>
 									</div>
 								</div>

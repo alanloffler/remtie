@@ -12,6 +12,18 @@ class ProductsServices {
 			return e;
 		}
 	}
+
+    async getProduct(id: number) {
+        try {
+            const query: Response = await fetch(this.apiUrl + '/property/' + id, {
+                method: 'GET',
+                headers: { 'content-type': 'application/json;charset=UTF-8' }
+            })
+            return await query.json();
+        } catch(e) {
+            return e;
+        }
+    }
 }
 
 export default new ProductsServices();

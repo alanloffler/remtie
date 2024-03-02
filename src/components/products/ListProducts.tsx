@@ -3,6 +3,7 @@
 import { ArrowUpDown, Info, Pencil, Plus, Trash } from 'lucide-react';
 // UI: Shadcn-ui (https://ui.shadcn.com/)
 import { Button } from '@/components/ui/button';
+import { Card } from '@/components//ui/card';
 import { Dialog, DialogHeader, DialogFooter, DialogTrigger, DialogContent, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -10,18 +11,19 @@ import { Separator } from '@/components/ui/separator';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useToast } from '@/components/ui/use-toast';
 // App
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import CardView from '@/components/products/CardView';
 import { DataTable } from '@/components/data-table/DataTable';
 import { ColumnDef } from '@tanstack/react-table';
-import CurrencyFormat from '@/components/utils/CurrencyFormat';
+import CurrencyFormat from '@/components/shared/CurrencyFormat';
 import { Property } from '@/lib/types';
-import { Business, Category } from '@/components/products/inputs.types';
+import { Business, Category } from '@/lib/inputs.types';
 import { ProductsConfig } from '@/lib/config';
 import ProductsServices from '@/services/products.services';
 import BusinessServices from '@/services/business.services';
 import CategoriesServices from '@/services/categories.services';
+import { store } from '@/services/store.services';
 // .env constants
 const appUrl: string = import.meta.env.VITE_APP_URL;
 // React component
@@ -39,10 +41,13 @@ function ListProducts() {
 	const [categorySelected, setCategorySelected] = useState<string>('');
 	const [searchFilter, setSearchFilter] = useState<string>('');
 
+    const tabActive: string = store.getState().tabActive;
+    const setTabActive = store.getState().setTabActive;
+
 	const navigate = useNavigate();
 	const { toast } = useToast();
 
-	useMemo(() => {
+	useEffect(() => {
 		async function getBusiness() {
 			const business = await BusinessServices.getBusiness();
 			setBusiness(business);
@@ -58,14 +63,14 @@ function ListProducts() {
 			if (productsService instanceof Error) toast({ variant: 'destructive', title: 'Error', description: '500 Internal Server Error | ' + productsService.message, duration: 5000 });
 			if (productsService.status >= 400) toast({ variant: 'destructive', title: 'Error', description: productsService.message, duration: 5000 });
 			if (productsService.length > 1) {
-				getBusiness();
-				getCategories();
-                setShowSelects(true);
+				setShowSelects(true);
 				setProperties(productsService);
 				setPropertiesFiltered(productsService);
 			}
 		}
 
+		getBusiness();
+		getCategories();
 		getProducts();
 	}, []);
 
@@ -73,7 +78,9 @@ function ListProducts() {
 		// Id
 		{
 			accessorKey: 'id',
-			header: ProductsConfig.headers[0],
+			header: () => {
+				return <div className='text-center'>{ProductsConfig.headers[0]}</div>;
+			},
 			cell: ({ row }) => {
 				return <div className='text-center'>{row.original.id}</div>;
 			}
@@ -88,7 +95,7 @@ function ListProducts() {
 			accessorKey: 'type',
 			header: ({ column }) => {
 				return (
-					<div className='text-center'>
+					<div className=''>
 						<Button variant='ghost' onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}>
 							{ProductsConfig.headers[2]}
 							<ArrowUpDown className='ml-2 h-4 w-4' />
@@ -103,7 +110,7 @@ function ListProducts() {
 			accessorKey: 'price',
 			header: ({ column }) => {
 				return (
-					<div className='text-center'>
+					<div className=''>
 						<Button variant='ghost' onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}>
 							{ProductsConfig.headers[5]}
 							<ArrowUpDown className='ml-2 h-4 w-4' />
@@ -122,13 +129,12 @@ function ListProducts() {
 			cell: ({ row }) => {
 				return (
 					<div className='flex flex-row gap-2'>
-						<Button onClick={() => navigate(appUrl + '/productos')} variant='outline' size='miniIcon' className='hover:bg-white hover:text-sky-400'>
+						<Button onClick={() => navigate(appUrl + '/productos/' + row.original.id)} variant='outline' size='miniIcon' className='hover:bg-white hover:text-sky-400'>
 							<Info className='h-5 w-5' strokeWidth='1.5' />
 						</Button>
 						<Button onClick={() => navigate(appUrl + '/productos')} variant='outline' size='miniIcon' className='hover:bg-white hover:text-emerald-400'>
 							<Pencil className='h-5 w-5' strokeWidth='1.5' />
 						</Button>
-
 						<Dialog>
 							<Button variant='outline' size='miniIcon' className='hover:bg-white hover:text-rose-400' asChild>
 								<DialogTrigger>
@@ -150,7 +156,7 @@ function ListProducts() {
 										<Button variant='ghost' onClick={() => navigate(appUrl + '/productos')}>
 											Cancelar
 										</Button>
-										<Button variant='default' onClick={() => navigate(appUrl + '/productos')} className='bg-rose-400 hover:bg-rose-600'>
+										<Button variant='delete' onClick={() => navigate(appUrl + '/productos')}>
 											Eliminar
 										</Button>
 									</div>
@@ -216,24 +222,34 @@ function ListProducts() {
 	return (
 		<main className='flex-1 overflow-y-auto dark:bg-dark'>
 			<div className='mx-8 mb-8 mt-8 flex flex-row items-center justify-between'>
-				<h1 className='text-2xl font-bold'>Productos</h1>
+				<h1 className='text-2xl font-normal text-slate-600'>Productos</h1>
 				<div>
-					<Button variant='default' size='sm' className='bg-sky-400 font-semibold uppercase shadow-md hover:bg-sky-500' asChild>
+					<Button variant='default' size='default' asChild>
 						<Link to={appUrl + '/productos'}>
 							<Plus className='mr-2 h-4 w-4' />
-							Nuevo Producto
+							Nuevo
 						</Link>
 					</Button>
 				</div>
 			</div>
 			<div className='container'>
-				<Tabs defaultValue='list' className='w-full'>
-					<TabsList className='h-14 px-3 py-4'>
-						<TabsTrigger value='card'>Tarjeta</TabsTrigger>
-						<TabsTrigger value='list'>Lista</TabsTrigger>
-						<Separator orientation='vertical' className='mx-4 h-full bg-slate-300' />
-						<div className='flex gap-4'>
-							<div className='flex h-8 w-[120px]'>
+				<Tabs defaultValue={tabActive} className='w-full'>
+					<div className='flex flex-col rounded-md border border-slate-300 bg-slate-200 px-3 py-4 shadow-sm md:flex-row md:gap-4 md:p-2 md:pr-4'>
+						<div className='flex flex-row'>
+							<TabsList className='flex bg-inherit p-0 pl-1'>
+								<TabsTrigger value='card' className='font-normal' onClick={() => setTabActive('card')}>
+									Tarjeta
+								</TabsTrigger>
+								<TabsTrigger value='list' className='font-normal' onClick={() => setTabActive('list')}>
+									Lista
+								</TabsTrigger>
+							</TabsList>
+						</div>
+						<div className='flex'>
+							<Separator orientation='vertical' className='mx-2 h-full bg-slate-400/50' />
+						</div>
+						<div className='mt-3 flex flex-row gap-4 md:mt-1'>
+							<div className='flex h-8 w-[50%] md:w-[100px]'>
 								<Select key={businessKey} onValueChange={(event) => handleBusinessFilter(event)}>
 									<SelectTrigger className='h-full w-full'>
 										<SelectValue placeholder='Tipo' className='text-sm' />
@@ -252,7 +268,7 @@ function ListProducts() {
 									</SelectContent>
 								</Select>
 							</div>
-							<div className='flex h-8 w-[150px]'>
+							<div className='flex h-8 w-[50%] md:w-[120px] lg:w-[160px]'>
 								<Select key={categoryKey} onValueChange={(event) => handleCategoryFilter(event)}>
 									<SelectTrigger className='h-full w-full'>
 										<SelectValue placeholder='Categoría' className='text-sm' />
@@ -271,19 +287,25 @@ function ListProducts() {
 									</SelectContent>
 								</Select>
 							</div>
-							<div className='flex h-8 w-[150px]'>
+						</div>
+						<div className='mt-4 flex flex-row gap-4 md:mt-1'>
+							<div className='flex h-8 w-[50%] md:w-auto lg:w-auto'>
 								<Input placeholder={ProductsConfig.search} onChange={(event) => setSearchFilter(event?.target.value)} value={searchFilter} className='h-full w-full' />
 							</div>
-							<Button onClick={resetFilters} variant='default' size='sm' className='h-8 bg-slate-400 text-xs font-semibold uppercase tracking-wider hover:bg-slate-500'>
-								Borrar
-							</Button>
+							<div className='flew-row flex h-8 w-[50%] md:w-[90px]'>
+								<Button onClick={resetFilters} variant='slate' className='h-8 w-full'>
+									Borrar
+								</Button>
+							</div>
 						</div>
-					</TabsList>
-					<TabsContent value='card' className='py-6'>
+					</div>
+					<TabsContent value='card' className='py-6 pb-8'>
 						<CardView properties={propertiesFiltered} />
 					</TabsContent>
-					<TabsContent value='list'>
-						<DataTable columns={columns} data={propertiesFiltered} searchBy='city' />
+					<TabsContent value='list' className='py-6 pb-8'>
+						<Card className='p-6'>
+							<DataTable columns={columns} data={propertiesFiltered} searchBy='city' />
+						</Card>
 					</TabsContent>
 				</Tabs>
 			</div>

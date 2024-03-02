@@ -1,12 +1,11 @@
 // Icons: Lucide (https://lucide.dev/)
-import { Menu } from 'lucide-react';
+import { LogOut, Menu } from 'lucide-react';
 // UI: Shadcn-ui (https://ui.shadcn.com/)
 import { Button } from '@/components/ui/button';
 // import { ModeToggle } from "@/components/ui/mode-toggle";
 // App
 import { Link, useNavigate } from 'react-router-dom';
 import { store } from '@/services/store.services';
-import UserHeader from '@/components/layout/UserHeader';
 // .env constants
 const appUrl: string = import.meta.env.VITE_APP_URL;
 // React component
@@ -14,7 +13,6 @@ function Header() {
 	const toggleOpen = store((state) => state.toggleOpen);
 	const reset = store((state) => state.reset);
 	const navigate = useNavigate();
-	const userId: number = store.getState().userId;
 
 	function Logout() {
 		reset();
@@ -22,18 +20,18 @@ function Header() {
 	}
 
 	return (
-		<header className='flex h-16 items-center justify-between border-b bg-white p-4 dark:border-[#2e2e2e] dark:bg-dark'>
+		<header className='flex h-[76px] pl-8 pr-5 items-center justify-between border-b border-slate-800 bg-slate-700 shadow-md shadow-slate-300'>
 			<div className='hidden md:inline-flex lg:inline-flex'></div>
 			<Link to={appUrl} onClick={reset}>
-				<h1 className='text-xl font-bold'>Room 202</h1>
+				<h1 className='text-xl font-bold text-gray-200'>Room 202</h1>
 			</Link>
-			<div className='flex gap-3 align-middle'>
-				<UserHeader user={userId} />
-				<Button variant='outline' onClick={() => Logout()}>
-					Salir
+			<div className='flex gap-5 items-center'>
+				<Button variant='default' size='sm' onClick={() => Logout()} className='h-9 md:mr-1 bg-slate-300 text-sm text-slate-600 border border-slate-400 hover:bg-slate-200 hover:border-slate-200'>
+					<LogOut strokeWidth='2.5' className='w-4 h-4 mr-2' />
+                    Salir
 				</Button>
 				{/* <ModeToggle /> */}
-				<Button onClick={toggleOpen} className='mobile-menu-button align-middle hover:bg-gray-700 focus:outline-none md:hidden'>
+				<Button onClick={toggleOpen} className='h-10 mobile-menu-button align-middle bg-slate-800 hover:bg-slate-900 border border-slate-900 hover:border-slate-900 focus:outline-none md:hidden'>
 					<Menu />
 				</Button>
 			</div>

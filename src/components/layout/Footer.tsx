@@ -1,9 +1,9 @@
 // React component
 function Footer() {
 	return (
-		<footer className='flex items-center justify-between border-t border-neutral-200 bg-neutral-100 p-4 dark:border-[#2e2e2e] dark:bg-dark'>
+		<footer className='flex items-center justify-between border-t border-slate-200 bg-slate-200/50 p-4'>
 			<div>Contacto</div>
-			<div className='text-l font-semibold text-neutral-900 dark:text-neutral-500'>&#123;a&#125; 2024</div>
+			<div className='text-l font-semibold text-slate-900'>&#123;a&#125; 2024</div>
 			<div className='hidden items-center md:inline-flex lg:inline-flex'>
 				<a href='http://github.com/alanloffler' target='_blank'>
 					<svg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='currentColor' strokeWidth='2' strokeLinecap='round' strokeLinejoin='round' className='lucide lucide-github'>

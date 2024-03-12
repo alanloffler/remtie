@@ -1,10 +1,10 @@
 // Business service: used in the business type select input
-class BusinessService {
-	readonly apiUrl: string = import.meta.env.VITE_REACT_BACKEND_API;
+export class BusinessServices {
+	static readonly apiUrl: string = import.meta.env.VITE_REACT_BACKEND_API;
 
-	async getBusiness() {
+	static async getBusiness() {
 		try {
-			const query: Response = await fetch(this.apiUrl + '/ui/business', {
+			const query: Response = await fetch(`${BusinessServices.apiUrl}/ui/business`, {
 				method: 'GET',
 				headers: { 'content-type': 'application/json;charset=UTF-8' }
 			});
@@ -14,5 +14,3 @@ class BusinessService {
 		}
 	}
 }
-
-export default new BusinessService();

@@ -11,9 +11,9 @@ import { Link, useNavigate } from 'react-router-dom';
 import { ColumnDef } from '@tanstack/react-table';
 import { DataTable } from '@/components/data-table/DataTable';
 import { UsersConfig } from '@/lib/config';
-import { User } from '@/lib/types';
+import { User } from '@/lib/interfaces';
 import { DeleteUserService, GetAllUsers } from '@/services/users.services';
-import Dot from '@/components/users/Dot';
+import Dot from '@/components/shared/Dot';
 // .env constants
 const appUrl: string = import.meta.env.VITE_APP_URL;
 // React component
@@ -34,6 +34,9 @@ function ListUsers() {
 						</Button>
 					</div>
 				);
+			},
+			cell: ({ row }) => {
+				return <div className='text-center'>{row.original.id}</div>;
 			}
 		},
 		{
@@ -41,18 +44,14 @@ function ListUsers() {
 			header: '',
 			cell: ({ row }) => {
 				const item = row.original;
-				return (
-					<>
-						<Dot width='12px' className={item.type === 'admin' ? 'bg-rose-600' : 'bg-sky-600'} radius='50%' margin='0' />
-					</>
-				);
+				return <Dot type={item.type} width='14px' />;
 			}
 		},
 		{
 			accessorKey: 'name',
 			header: ({ column }) => {
 				return (
-					<div className='text-center'>
+					<div className='text-left'>
 						<Button variant='ghost' onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}>
 							{UsersConfig.headers[1]}
 							<ArrowUpDown className='ml-2 h-4 w-4' />
@@ -65,7 +64,7 @@ function ListUsers() {
 			accessorKey: 'email',
 			header: ({ column }) => {
 				return (
-					<div className='text-center'>
+					<div className='text-left'>
 						<Button variant='ghost' onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}>
 							{UsersConfig.headers[2]}
 							<ArrowUpDown className='ml-2 h-4 w-4' />
@@ -101,7 +100,7 @@ function ListUsers() {
 								</DialogHeader>
 								<section>
 									La cuenta del usuario
-									<span className='text-md px-1 font-bold text-neutral-900'>{row.original.name}</span>
+									<span className='text-md px-1 font-bold text-slate-900'>{row.original.name}</span>
 									se eliminará permanentemente de la base de datos.
 								</section>
 								<DialogFooter>
@@ -109,7 +108,7 @@ function ListUsers() {
 										<Button variant='ghost' onClick={() => setOpenDialog(false)}>
 											Cancelar
 										</Button>
-										<Button variant='default' onClick={() => deleteUser(`${row.original.id}`)} className='bg-rose-400 hover:bg-rose-600'>
+										<Button variant='delete' onClick={() => deleteUser(`${row.original.id}`)}>
 											Eliminar
 										</Button>
 									</div>
@@ -152,28 +151,28 @@ function ListUsers() {
 	}
 
 	return (
-		<main className='flex-1 overflow-y-auto dark:bg-dark'>
-			<div className='mx-8 mb-2 mt-6 flex flex-row items-center justify-between'>
-				<h1 className='text-2xl font-bold'>Usuarios</h1>
-				<Button variant='default' size='sm' asChild className='bg-sky-400 font-semibold uppercase shadow-md hover:bg-sky-500'>
+		<main className='flex-1 overflow-y-auto'>
+			<div className='flex flex-row items-center justify-between px-8 pt-8'>
+				<h1 className='text-2xl font-normal text-slate-600'>Usuarios</h1>
+				<Button variant='default' size='default' asChild>
 					<Link to={appUrl + '/usuario/crear'}>
 						<Plus className='mr-2 h-4 w-4' />
-						Crear
+						Nuevo
 					</Link>
 				</Button>
 			</div>
-			<div className='container mx-auto my-6'>
-				<Card className='mb-8 px-6 pb-0 dark:border-[#2e2e2e] dark:bg-[#292a2d]'>
+			<div className='container mx-auto pt-8'>
+				<Card className='p-6'>
 					<DataTable columns={columns} data={users} searchBy={''} />
 				</Card>
 			</div>
-			<div className='ml-8 flex flex-row justify-start'>
-				<div className='mr-6 flex flex-row items-center space-x-2 text-sm font-light text-neutral-400'>
-					<Dot width='12px' className='bg-rose-600' radius='50%' margin='0px' />
+			<div className='mt-6 flex flex-row justify-start px-8'>
+				<div className='mr-6 flex flex-row items-center space-x-2 text-sm font-light text-slate-500'>
+					<Dot type='admin' width='14px' />
 					<span>Administrador</span>
 				</div>
-				<div className='mr-6 flex flex-row items-center space-x-2 text-sm font-light text-neutral-400'>
-					<Dot width='12px' className='bg-sky-600' radius='50%' margin='0px' />
+				<div className='mr-6 flex flex-row items-center space-x-2 text-sm font-light text-slate-500'>
+					<Dot type='user' width='14px' />
 					<span>Usuario</span>
 				</div>
 			</div>

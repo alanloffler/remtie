@@ -9,7 +9,7 @@ import { Outlet } from 'react-router-dom';
 function Layout() {
 	return (
 		<ThemeProvider defaultTheme='light' storageKey='vite-ui-theme'>
-			<div className='flex h-full min-h-screen flex-col'>
+			<div className='flex h-full min-h-screen flex-col bg-slate-50'>
 				<Header />
 				<div className='flex flex-1 flex-col overflow-y-hidden sm:flex-row'>
 					<Sidebar />

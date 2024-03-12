@@ -15,6 +15,8 @@ const CreateNewUser = React.lazy(() => import('./components/users/CreateNewUser'
 const UpdateUser = React.lazy(() => import('./components/users/UpdateUser'));
 const ViewUser = React.lazy(() => import('./components/users/ViewUser'));
 const ListProducts = React.lazy(() => import('./components/products/ListProducts'));
+const ViewProduct = React.lazy(() => import('./components/products/ViewProduct'));
+const UpdateProduct = React.lazy(() => import('./components/products/UpdateProduct'));
 const NotFound = React.lazy(() => import('./components/shared/NotFound'));
 // .env constants
 const appUrl: string = import.meta.env.VITE_APP_URL;
@@ -36,7 +38,7 @@ function App() {
 							path={appUrl + '/'}
 							element={
 								<React.Suspense fallback={<>...</>}>
-									<ListUsers />
+									<ListProducts />
 								</React.Suspense>
 							}
 						/>
@@ -57,7 +59,7 @@ function App() {
 							}
 						/>
 						<Route
-							path='/app/usuario/crear'
+							path={appUrl + '/usuario/crear'}
 							element={
 								<React.Suspense fallback={<>...</>}>
 									<CreateNewUser />
@@ -77,6 +79,22 @@ function App() {
 							element={
 								<React.Suspense fallback={<>...</>}>
 									<ListProducts />
+								</React.Suspense>
+							}
+						/>
+						<Route
+							path={appUrl + '/productos/:id'}
+							element={
+								<React.Suspense fallback={<>...</>}>
+									<ViewProduct />
+								</React.Suspense>
+							}
+						/>
+						<Route
+							path={appUrl + '/productos/modificar/:id'}
+							element={
+								<React.Suspense fallback={<>...</>}>
+									<UpdateProduct />
 								</React.Suspense>
 							}
 						/>

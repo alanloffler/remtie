@@ -5,6 +5,8 @@ import { Button } from '@/components/ui/button';
 // App
 import { store } from '@/services/store.services';
 import { Link } from 'react-router-dom';
+import UserLogged from '@/components/layout/UserLogged';
+import { useEffect, useRef } from 'react';
 // .env constants
 const appUrl: string = import.meta.env.VITE_APP_URL;
 // React component
@@ -12,14 +14,33 @@ function Sidebar() {
 	const isOpen = store((state) => state.isOpen);
 	const clicked = store((state) => state.clicked);
 	const isClicked = store((state) => state.isClicked);
+	const userId: number = store.getState().userId;
+	const sidebarRef = useRef<HTMLDivElement>(null);
 
 	function handleClick(item: number) {
 		isClicked(item);
 		if (isOpen === true) store.getState().toggleOpen();
 	}
 
+	useEffect(() => {
+		function handleClickOutside(event: MouseEvent) {
+			if (isOpen) {
+				if (sidebarRef.current && !sidebarRef.current.contains(event.target as Node)) {
+					store.getState().toggleOpen();
+				}
+			}
+		}
+
+		document.addEventListener('mousedown', handleClickOutside);
+
+		return () => {
+			document.removeEventListener('mousedown', handleClickOutside);
+		};
+	}, [isOpen]);
+
 	return (
 		<nav
+			ref={sidebarRef}
 			className={`
         ${isOpen ? 'translate-x-0' : '-translate-x-full'} 
         w-46 
@@ -57,6 +78,9 @@ function Sidebar() {
 							<span className='ml-auto'></span>
 						</Button>
 					</Link>
+				</div>
+				<div className='fixed bottom-6 flex justify-between px-2'>
+					<UserLogged user={userId} />
 				</div>
 			</div>
 		</nav>

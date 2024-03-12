@@ -1,6 +1,6 @@
 // TODO: change to a class like others services
 // Imports
-import { User } from '@/lib/types';
+import { User } from '@/lib/interfaces';
 import { store } from './store.services';
 // .env constants
 const apiUrl: string = import.meta.env.VITE_REACT_BACKEND_API;

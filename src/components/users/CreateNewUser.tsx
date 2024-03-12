@@ -1,8 +1,8 @@
 // Icons: Lucide (https://lucide.dev/)
-import { Check, CornerDownLeft } from 'lucide-react';
+import { ArrowLeft, Check } from 'lucide-react';
 // UI: Shadcn-ui (https://ui.shadcn.com/)
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -59,21 +59,18 @@ function CreateNewUser() {
 	}
 
 	return (
-		<main className='flex-1 overflow-y-auto dark:bg-dark'>
-			<div className='mx-6 mb-4 mt-6 flex flex-row items-center justify-between'>
-				<Button variant='outline' size='sm' asChild>
+		<main className='flex-1 overflow-y-auto'>
+			<div className='flex flex-row items-center justify-between px-8 pt-8'>
+				<h1 className='text-2xl font-normal text-slate-600'>Crear Usuario</h1>
+				<Button variant='ghost' size='sm' asChild>
 					<Link to={appUrl + '/usuarios'}>
-						<CornerDownLeft className='mr-2 h-4 w-4' />
+						<ArrowLeft strokeWidth='2' className='mr-2 h-4 w-4' />
 						Volver
 					</Link>
 				</Button>
 			</div>
-			<div className='flex flex-row items-center justify-center px-6 pt-6'>
-				<Card className='mb-8 w-full md:w-[550px] lg:w-[700px]'>
-					<CardHeader>
-						<CardTitle>Crear Usuario</CardTitle>
-						<CardDescription>Ingrese los datos del nuevo usuario</CardDescription>
-					</CardHeader>
+			<div className='flex flex-row items-center justify-center px-6 pt-8'>
+				<Card className='mb-8 w-full pt-6 md:w-[550px] lg:w-[550px]'>
 					<CardContent className='mx-0 px-0'>
 						<Form {...form}>
 							<form onSubmit={form.handleSubmit(onSubmit)} className='space-y-8'>
@@ -111,7 +108,7 @@ function CreateNewUser() {
 												name='password'
 												render={({ field }) => (
 													<FormItem className='mb-4'>
-														<FormLabel>Password</FormLabel>
+														<FormLabel>Contraseña</FormLabel>
 														<FormControl>
 															<Input placeholder='Mínimo 6 caracteres' {...field} />
 														</FormControl>
@@ -163,7 +160,7 @@ function CreateNewUser() {
 										<Button variant='ghost' className='mr-4' onClick={() => navigate(appUrl + '/usuarios')}>
 											Cancelar
 										</Button>
-										<Button type='submit' className='bg-sky-400 font-semibold uppercase shadow-md hover:bg-sky-500'>
+										<Button type='submit' variant='default' size='default'>
 											<Check className='mr-2 h-4 w-4' />
 											Guardar
 										</Button>

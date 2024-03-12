@@ -11,6 +11,7 @@ type State = {
 	authorized: boolean;
 	authToken: string;
 	userId: number;
+	tabActive: string;
 };
 
 type Actions = {
@@ -19,6 +20,7 @@ type Actions = {
 	setAuthorized: (token: boolean) => void;
 	setAuthToken: (token: string) => void;
 	setUserId: (id: number) => void;
+	setTabActive: (tab: string) => void;
 	reset: () => void;
 };
 
@@ -27,7 +29,8 @@ const initialState: State = {
 	clicked: 0,
 	authorized: false,
 	authToken: '',
-	userId: 0
+	userId: 0,
+	tabActive: 'card'
 };
 
 export const store = create<State & Actions>()(
@@ -53,6 +56,10 @@ export const store = create<State & Actions>()(
 			userId: 0,
 			setUserId: (id) => {
 				set(() => ({ userId: id }));
+			},
+			tabActive: '',
+			setTabActive: (tab: string) => {
+				set(() => ({ tabActive: tab }));
 			},
 			reset: () => set(initialState)
 		}),

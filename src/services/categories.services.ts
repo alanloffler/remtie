@@ -1,10 +1,10 @@
 // Categories service: used in the categories select input
-class CategoriesService {
-	readonly apiUrl: string = import.meta.env.VITE_REACT_BACKEND_API;
+export class CategoriesServices {
+	static readonly apiUrl: string = import.meta.env.VITE_REACT_BACKEND_API;
 
-	async getCategories() {
+	static async getCategories() {
 		try {
-			const query: Response = await fetch(this.apiUrl + '/ui/categories', {
+			const query: Response = await fetch(`${CategoriesServices.apiUrl}/ui/categories`, {
 				method: 'GET',
 				headers: { 'content-type': 'application/json;charset=UTF-8' }
 			});
@@ -14,5 +14,3 @@ class CategoriesService {
 		}
 	}
 }
-
-export default new CategoriesService();

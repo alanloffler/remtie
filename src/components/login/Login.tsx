@@ -72,10 +72,10 @@ function Login() {
 	}
 
 	return (
-		<div className='mt-20'>
-			<Card className='mx-auto max-w-sm'>
+		<div className='mt-8'>
+			<Card className='mx-8 md:mx-auto md:w-[400px] lg:mx-auto'>
 				<CardHeader className='space-y-1'>
-					<CardTitle className='text-2xl font-bold'>Ingreso</CardTitle>
+					<CardTitle className='text-2xl font-bold'>Room202</CardTitle>
 					<CardDescription>Ingresá tus datos para acceder a la aplicación</CardDescription>
 				</CardHeader>
 				<CardContent>

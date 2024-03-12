@@ -46,45 +46,40 @@ export function DataTable<TData, TValue>({
 
 	return (
 		<div>
-			<div className='rounded-md border'>
-				<Table>
-					<TableHeader>
-						{table.getHeaderGroups().map((headerGroup) => (
-							<TableRow key={headerGroup.id}>
-								{headerGroup.headers.map((header) => {
-									return (
-										<TableHead key={header.id} className='bg-muted/80'>
-											{header.isPlaceholder ? null : flexRender(header.column.columnDef.header, header.getContext())}
-										</TableHead>
-									);
-								})}
+			<Table className='border border-slate-300 min-w-[590px]'>
+				<TableHeader className='bg-slate-200'>
+					{table.getHeaderGroups().map((headerGroup) => (
+						<TableRow key={headerGroup.id}>
+							{/* <TableRow key={headerGroup.id} className='bg-gray-200'> */}
+							{headerGroup.headers.map((header) => {
+								return <TableHead key={header.id}>{header.isPlaceholder ? null : flexRender(header.column.columnDef.header, header.getContext())}</TableHead>;
+							})}
+						</TableRow>
+					))}
+				</TableHeader>
+				<TableBody className=''>
+					{table.getRowModel().rows?.length ? (
+						table.getRowModel().rows.map((row) => (
+							<TableRow key={row.id} data-state={row.getIsSelected() && 'selected'}>
+								{row.getVisibleCells().map((cell) => (
+									<TableCell key={cell.id} className='px-4 py-2'>
+										{flexRender(cell.column.columnDef.cell, cell.getContext())}
+									</TableCell>
+								))}
 							</TableRow>
-						))}
-					</TableHeader>
-					<TableBody>
-						{table.getRowModel().rows?.length ? (
-							table.getRowModel().rows.map((row) => (
-								<TableRow key={row.id} data-state={row.getIsSelected() && 'selected'}>
-									{row.getVisibleCells().map((cell) => (
-										<TableCell key={cell.id} className='px-4 py-2'>
-											{flexRender(cell.column.columnDef.cell, cell.getContext())}
-										</TableCell>
-									))}
-								</TableRow>
-							))
-						) : (
-							<TableRow>
-								<TableCell colSpan={columns.length} className='h-24 text-center'>
-									{UsersConfig.noResults}
-								</TableCell>
-							</TableRow>
-						)}
-					</TableBody>
-				</Table>
-			</div>
-			<div className='flex items-center justify-between space-x-6 py-6 lg:space-x-8'>
+						))
+					) : (
+						<TableRow>
+							<TableCell colSpan={columns.length} className='h-24 text-center'>
+								{UsersConfig.noResults}
+							</TableCell>
+						</TableRow>
+					)}
+				</TableBody>
+			</Table>
+			<div className='flex items-center justify-between space-x-6 pt-6 lg:space-x-8'>
 				<div className='flex items-center space-x-2'>
-					<p className='text-sm font-normal text-gray-400'>{UsersConfig.pagination.rowsPerPage}</p>
+					<p className='text-sm font-normal text-slate-400'>{UsersConfig.pagination.rowsPerPage}</p>
 					<Select
 						value={`${table.getState().pagination.pageSize}`}
 						onValueChange={(value) => {
@@ -102,23 +97,23 @@ export function DataTable<TData, TValue>({
 						</SelectContent>
 					</Select>
 				</div>
-				<div className='flex w-[100px] items-center justify-center text-sm font-normal text-neutral-400'>
+				<div className='flex w-[100px] items-center justify-center text-sm font-normal text-slate-400'>
 					{UsersConfig.pagination.page} {table.getState().pagination.pageIndex + 1} {UsersConfig.pagination.of} {table.getPageCount()}
 				</div>
 				<div className='flex items-center space-x-2'>
-					<Button variant='outline' className='hidden h-8 w-8 bg-neutral-100 p-0 hover:bg-neutral-200 dark:bg-neutral-950 dark:hover:bg-neutral-800 lg:flex' onClick={() => table.setPageIndex(0)} disabled={!table.getCanPreviousPage()}>
+					<Button variant='outline' className='hidden h-8 w-8 bg-slate-100 p-0 hover:bg-slate-200 dark:bg-neutral-950 dark:hover:bg-neutral-800 lg:flex' onClick={() => table.setPageIndex(0)} disabled={!table.getCanPreviousPage()}>
 						<span className='sr-only'>Go to first page</span>
 						<ArrowLeftIcon className='h-4 w-4' />
 					</Button>
-					<Button variant='outline' className='h-8 w-8 bg-neutral-100 p-0 hover:bg-neutral-200 dark:bg-neutral-950 dark:hover:bg-neutral-800' onClick={() => table.previousPage()} disabled={!table.getCanPreviousPage()}>
+					<Button variant='outline' className='h-8 w-8 bg-slate-100 p-0 hover:bg-slate-200 dark:bg-neutral-950 dark:hover:bg-neutral-800' onClick={() => table.previousPage()} disabled={!table.getCanPreviousPage()}>
 						<span className='sr-only'>Go to previous page</span>
 						<ChevronLeftIcon className='h-4 w-4' />
 					</Button>
-					<Button variant='outline' className='h-8 w-8 bg-neutral-100 p-0 hover:bg-neutral-200 dark:bg-neutral-950 dark:hover:bg-neutral-800' onClick={() => table.nextPage()} disabled={!table.getCanNextPage()}>
+					<Button variant='outline' className='h-8 w-8 bg-slate-100 p-0 hover:bg-slate-200 dark:bg-neutral-950 dark:hover:bg-neutral-800' onClick={() => table.nextPage()} disabled={!table.getCanNextPage()}>
 						<span className='sr-only'>Go to next page</span>
 						<ChevronRightIcon className='h-4 w-4' />
 					</Button>
-					<Button variant='outline' className='hidden h-8 w-8 bg-neutral-100 p-0 hover:bg-neutral-200 dark:bg-neutral-950 dark:hover:bg-neutral-800 lg:flex' onClick={() => table.setPageIndex(table.getPageCount() - 1)} disabled={!table.getCanNextPage()}>
+					<Button variant='outline' className='hidden h-8 w-8 bg-slate-100 p-0 hover:bg-slate-200 dark:bg-neutral-950 dark:hover:bg-neutral-800 lg:flex' onClick={() => table.setPageIndex(table.getPageCount() - 1)} disabled={!table.getCanNextPage()}>
 						<span className='sr-only'>Go to last page</span>
 						<ArrowRightIcon className='h-4 w-4' />
 					</Button>

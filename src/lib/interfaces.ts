@@ -11,11 +11,11 @@ export interface Property {
     state: string;
     zip: string;
     price: number;
-    thumbnail: string;
-    images: string;
+    // thumbnail: string;
+    // images: string;
     created_by: number;
-    created_at: string;
-    updated_at: string;
+    // created_at?: string;
+    // updated_at?: string;
     [attribute: string]: string | number | boolean;
     color: string;
 }
@@ -28,4 +28,10 @@ export interface User {
     password?: string;
     type: string;
     created_at?: string;
+}
+
+export interface IImage {
+    id: number;
+    name: string;
+    propertyId: number;
 }

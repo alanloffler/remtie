@@ -10,7 +10,7 @@ import { useEffect, useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import { emptyUser } from '@/lib/utils';
 import { DeleteUserService, ReadUserService } from '@/services/users.services';
-import { User } from '@/lib/types';
+import { User } from '@/lib/interfaces';
 import Dot from '@/components/shared/Dot';
 // .env constants
 const appUrl: string = import.meta.env.VITE_APP_URL;

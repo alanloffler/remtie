@@ -4,15 +4,16 @@ import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import Loading from '@/components/shared/Loading';
 import { getImageURL } from '@/lib/image-util';
+import { IImages } from '@/lib/interfaces';
 // Interface
 interface ICarousel {
 	autoSlide?: boolean;
 	autoSlideInterval?: number;
-	images: string[];
+	images: IImages[];
 }
 // React component
 function Carousel(props: ICarousel) {
-	const images: string[] = props.images;
+	const images: IImages[] = props.images;
 	const autoSlide: boolean = props.autoSlide || false;
 	const autoSlideInterval: number = props.autoSlideInterval || 3000;
 	const [loading, setLoading] = useState<boolean>(true);
@@ -38,9 +39,10 @@ function Carousel(props: ICarousel) {
 			<div className='relative overflow-hidden rounded-xl shadow-md'>
 				<div className='flex transition-transform duration-500 ease-out' style={{ transform: `translateX(-${current * 100}%)` }}>
 					{images.map((img, i) => (
-						<img key={i} src={getImageURL(img)} onLoad={() => setLoading(false)} />
+						<img key={i} src={getImageURL(img.name)} onLoad={() => setLoading(false)} onClick={() => console.log(img.name)} />
 					))}
 				</div>
+                <div className='absolute top-2 right-4 text-center text-white justify-end sr-only'>fullscreen</div>
 				{images.length > 1 && (
 					<div className='absolute inset-0 flex items-center justify-between p-4'>
 						<button onClick={prev} className='rounded-full bg-white/70 p-1 text-gray-800 shadow hover:bg-white'>

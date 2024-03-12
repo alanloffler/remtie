@@ -2,7 +2,7 @@
 import { useEffect, useState } from 'react';
 import { ReadUserService } from '@/services/users.services';
 import Dot from '@/components/shared/Dot';
-import { User } from '@/lib/types';
+import { User } from '@/lib/interfaces';
 // React component
 function UserLogged({ user }: { user: number }) {
 	const [actualUser, setActualUser] = useState<User>();

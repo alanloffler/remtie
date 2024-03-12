@@ -13,7 +13,7 @@ import { Link, useNavigate, useParams } from 'react-router-dom';
 import { useForm, FormProvider } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { User } from '@/lib/types';
+import { User } from '@/lib/interfaces';
 import { ReadUserService, UpdateUserService } from '@/services/users.services';
 // .env constants
 const appUrl: string = import.meta.env.VITE_APP_URL;

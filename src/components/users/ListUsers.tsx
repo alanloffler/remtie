@@ -11,7 +11,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { ColumnDef } from '@tanstack/react-table';
 import { DataTable } from '@/components/data-table/DataTable';
 import { UsersConfig } from '@/lib/config';
-import { User } from '@/lib/types';
+import { User } from '@/lib/interfaces';
 import { DeleteUserService, GetAllUsers } from '@/services/users.services';
 import Dot from '@/components/shared/Dot';
 // .env constants

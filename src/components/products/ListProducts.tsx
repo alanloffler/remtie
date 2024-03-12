@@ -17,12 +17,12 @@ import CardView from '@/components/products/CardView';
 import { DataTable } from '@/components/data-table/DataTable';
 import { ColumnDef } from '@tanstack/react-table';
 import CurrencyFormat from '@/components/shared/CurrencyFormat';
-import { Property } from '@/lib/types';
-import { Business, Category } from '@/lib/inputs.types';
+import { Property } from '@/lib/interfaces';
+import { IBusiness, ICategory } from '@/lib/inputs.interfaces';
 import { ProductsConfig } from '@/lib/config';
-import ProductsServices from '@/services/products.services';
-import BusinessServices from '@/services/business.services';
-import CategoriesServices from '@/services/categories.services';
+import { ProductsServices } from '@/services/products.services';
+import { BusinessServices } from '@/services/business.services';
+import { CategoriesServices } from '@/services/categories.services';
 import { store } from '@/services/store.services';
 // .env constants
 const appUrl: string = import.meta.env.VITE_APP_URL;
@@ -31,12 +31,12 @@ function ListProducts() {
 	const [properties, setProperties] = useState<Property[]>([]);
 	const [propertiesFiltered, setPropertiesFiltered] = useState<Property[]>([]);
 
-	const [business, setBusiness] = useState<Business[]>([]);
+	const [business, setBusiness] = useState<IBusiness[]>([]);
 	const [businessKey, setBusinessKey] = useState<number>(0);
 	const [businessSelected, setBusinessSelected] = useState<string>('');
 	const [showSelects, setShowSelects] = useState(false);
 
-	const [categories, setCategories] = useState<Category[]>([]);
+	const [categories, setCategories] = useState<ICategory[]>([]);
 	const [categoryKey, setCategoryKey] = useState<number>(0);
 	const [categorySelected, setCategorySelected] = useState<string>('');
 	const [searchFilter, setSearchFilter] = useState<string>('');
@@ -132,7 +132,7 @@ function ListProducts() {
 						<Button onClick={() => navigate(appUrl + '/productos/' + row.original.id)} variant='outline' size='miniIcon' className='hover:bg-white hover:text-sky-400'>
 							<Info className='h-5 w-5' strokeWidth='1.5' />
 						</Button>
-						<Button onClick={() => navigate(appUrl + '/productos')} variant='outline' size='miniIcon' className='hover:bg-white hover:text-emerald-400'>
+						<Button onClick={() => navigate(`${appUrl}/productos/modificar/${row.original.id}`)} variant='outline' size='miniIcon' className='hover:bg-white hover:text-emerald-400'>
 							<Pencil className='h-5 w-5' strokeWidth='1.5' />
 						</Button>
 						<Dialog>
@@ -163,6 +163,11 @@ function ListProducts() {
 								</DialogFooter>
 							</DialogContent>
 						</Dialog>
+                        <div className='flex items-center'>
+								<div className={'flex h-4 w-4 items-center rounded-full border pl-1 ' + (row.original.is_active ? 'border-emerald-400 bg-emerald-300' : 'border-slate-300/50 bg-input')}>
+									{/* <span className='flex items-center pl-5 text-xs font-normal text-slate-400/70'>{row.original.is_active ? 'Activo' : 'Inactivo'}</span> */}
+								</div>
+							</div>
 					</div>
 				);
 			}
@@ -220,7 +225,7 @@ function ListProducts() {
 	}, [businessSelected, categorySelected, searchFilter]);
 
 	return (
-		<main className='flex-1 overflow-y-auto dark:bg-dark'>
+		<main className='flex-1 overflow-y-auto'>
 			<div className='mx-8 mb-8 mt-8 flex flex-row items-center justify-between'>
 				<h1 className='text-2xl font-normal text-slate-600'>Productos</h1>
 				<div>
@@ -233,7 +238,7 @@ function ListProducts() {
 				</div>
 			</div>
 			<div className='container'>
-				<Tabs defaultValue={tabActive} className='w-full'>
+				<Tabs defaultValue={tabActive || 'card'} className='w-full'>
 					<div className='flex flex-col rounded-md border border-slate-300 bg-slate-200 px-3 py-4 shadow-sm md:flex-row md:gap-4 md:p-2 md:pr-4'>
 						<div className='flex flex-row'>
 							<TabsList className='flex bg-inherit p-0 pl-1'>

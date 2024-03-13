@@ -1,5 +1,5 @@
 // Icons: Lucide (https://lucide.dev/)
-import { ArrowLeft, Mail, Pencil, Phone, Trash } from 'lucide-react';
+import { ArrowLeft, Mail, Pencil, Phone, Trash2 } from 'lucide-react';
 // UI: Shadcn-ui (https://ui.shadcn.com/)
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardFooter } from '@/components/ui/card';
@@ -99,7 +99,7 @@ function ViewUser() {
 						<Dialog open={openDialog} onOpenChange={setOpenDialog}>
 							<Button variant='ghost' size='miniIcon' className='rounded-full border bg-white text-slate-400/70 shadow-sm hover:bg-white hover:text-rose-500' asChild>
 								<DialogTrigger>
-									<Trash className='h-4 w-4' />
+									<Trash2 className='h-4 w-4' />
 								</DialogTrigger>
 							</Button>
 							<DialogContent>
@@ -108,14 +108,14 @@ function ViewUser() {
 									<DialogDescription>Esta acción es imposible de revertir.</DialogDescription>
 								</DialogHeader>
 								<div>
-									<section>
+									<section className='text-sm font-normal'>
 										La cuenta del usuario
 										<span className='text-md px-1 font-bold text-slate-900'>{user?.name}</span>
 										se eliminará permanentemente de la base de datos.
 									</section>
 									<DialogFooter>
-										<div className='flex flex-row gap-4'>
-											<Button variant='ghost' onClick={() => navigate(appUrl + '/usuarios')}>
+										<div className='flex flex-row mt-6 gap-4'>
+											<Button variant='ghost' onClick={() => setOpenDialog(false)}>
 												Cancelar
 											</Button>
 											<Button variant='delete' onClick={() => deleteUser(`${user?.id}`)}>

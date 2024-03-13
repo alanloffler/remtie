@@ -1,9 +1,9 @@
 // Icons: Lucide (https://lucide.dev/)
-import { ArrowUpDown, Info, Pencil, Plus, Trash } from 'lucide-react';
+import { ArrowUpDown, Info, Pencil, Plus, Trash2 } from 'lucide-react';
 // UI: Shadcn-ui (https://ui.shadcn.com/)
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { toast } from '@/components/ui/use-toast';
 // App
 import { useEffect, useState } from 'react';
@@ -21,6 +21,12 @@ function ListUsers() {
 	const navigate = useNavigate();
 	const [users, setUsers] = useState<User[]>([]);
 	const [openDialog, setOpenDialog] = useState(false);
+	const [userDialog, setUserDialog] = useState<IUserDialog>({ id: '', name: '' });
+
+	interface IUserDialog {
+		id: string | undefined;
+		name: string;
+	}
 
 	const columns: ColumnDef<User>[] = [
 		{
@@ -86,35 +92,19 @@ function ListUsers() {
 						<Button onClick={() => navigate(appUrl + '/usuario/modificar/' + Number(row.original.id))} variant='outline' size='miniIcon' className='hover:bg-white hover:text-emerald-400'>
 							<Pencil className='h-5 w-5' strokeWidth='1.5' />
 						</Button>
-
-						<Dialog open={openDialog} onOpenChange={setOpenDialog}>
-							<Button variant='outline' size='miniIcon' className='hover:bg-white hover:text-rose-400' asChild>
-								<DialogTrigger>
-									<Trash className='h-5 w-5' strokeWidth='1.5' />
-								</DialogTrigger>
-							</Button>
-							<DialogContent>
-								<DialogHeader>
-									<DialogTitle>¿Estás realmente seguro?</DialogTitle>
-									<DialogDescription>Esta acción es imposible de revertir.</DialogDescription>
-								</DialogHeader>
-								<section>
-									La cuenta del usuario
-									<span className='text-md px-1 font-bold text-slate-900'>{row.original.name}</span>
-									se eliminará permanentemente de la base de datos.
-								</section>
-								<DialogFooter>
-									<div className='flex flex-row gap-4'>
-										<Button variant='ghost' onClick={() => setOpenDialog(false)}>
-											Cancelar
-										</Button>
-										<Button variant='delete' onClick={() => deleteUser(`${row.original.id}`)}>
-											Eliminar
-										</Button>
-									</div>
-								</DialogFooter>
-							</DialogContent>
-						</Dialog>
+						<Button
+							onClick={() => {
+								setOpenDialog(true);
+								setUserDialog({
+									id: row.original.id,
+									name: row.original.name
+								});
+							}}
+							variant='outline'
+							size='miniIcon'
+							className='hover:bg-white hover:text-rose-400'>
+							<Trash2 className='h-5 w-5' strokeWidth='1.5' />
+						</Button>
 					</div>
 				);
 			}
@@ -137,7 +127,8 @@ function ListUsers() {
 		// eslint-disable-next-line react-hooks/exhaustive-deps
 	}, []);
 
-	function deleteUser(id: string) {
+	function deleteUser(id: string | undefined) {
+		if (!id) return;
 		DeleteUserService(id).then((response) => {
 			if (response.status === 200) {
 				setOpenDialog(false);
@@ -176,6 +167,29 @@ function ListUsers() {
 					<span>Usuario</span>
 				</div>
 			</div>
+			<Dialog open={openDialog} onOpenChange={setOpenDialog}>
+				<DialogContent>
+					<DialogHeader>
+						<DialogTitle>¿Estás realmente seguro?</DialogTitle>
+						<DialogDescription>Esta acción es imposible de revertir.</DialogDescription>
+					</DialogHeader>
+					<section className='text-sm font-normal'>
+						La cuenta del usuario
+						<span className='text-md px-1 font-bold text-slate-900'>{userDialog.name}</span>
+						se eliminará permanentemente de la base de datos.
+					</section>
+					<DialogFooter>
+						<div className='mt-6 flex flex-row gap-4'>
+							<Button variant='ghost' onClick={() => setOpenDialog(false)}>
+								Cancelar
+							</Button>
+							<Button variant='delete' onClick={() => deleteUser(userDialog.id)}>
+								Eliminar
+							</Button>
+						</div>
+					</DialogFooter>
+				</DialogContent>
+			</Dialog>
 		</main>
 	);
 }

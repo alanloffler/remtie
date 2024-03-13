@@ -7,7 +7,7 @@ import { Dialog, DialogHeader, DialogFooter, DialogTrigger, DialogContent, Dialo
 import { toast } from '@/components/ui/use-toast';
 // App
 import { useEffect, useState } from 'react';
-import { Link, useNavigate, useParams } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
 import { emptyUser } from '@/lib/utils';
 import { DeleteUserService, ReadUserService } from '@/services/users.services';
 import { User } from '@/lib/interfaces';
@@ -62,11 +62,9 @@ function ViewUser() {
 	return (
 		<main className='flex-1 overflow-y-auto'>
 			<div className='mx-6 mb-4 mt-6 flex flex-row items-center justify-end'>
-				<Button variant='ghost' size='sm' asChild>
-					<Link to={appUrl + '/usuarios'}>
-						<ArrowLeft className='mr-2 h-4 w-4' />
-						Volver
-					</Link>
+				<Button onClick={() => navigate(-1)} variant='ghost' size='sm'>
+					<ArrowLeft className='mr-2 h-4 w-4' />
+					Volver
 				</Button>
 			</div>
 			<div className='mt-8 flex min-w-80 flex-col items-center px-6'>
@@ -114,7 +112,7 @@ function ViewUser() {
 										se eliminará permanentemente de la base de datos.
 									</section>
 									<DialogFooter>
-										<div className='flex flex-row mt-6 gap-4'>
+										<div className='mt-6 flex flex-row gap-4'>
 											<Button variant='ghost' onClick={() => setOpenDialog(false)}>
 												Cancelar
 											</Button>

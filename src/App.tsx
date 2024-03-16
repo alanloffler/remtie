@@ -8,6 +8,7 @@ import { Toaster } from '@/components/ui/toaster';
 const Login = React.lazy(() => import('./components/login/Login'));
 import Layout from '@/components/layout/Layout';
 import ProtectedRoutes from './components/login/ProtectedRoutes';
+import Loading2 from '@/components/shared/Loading2';
 // If Layout is lazyloading
 // const Layout = React.lazy(() => import("./components/layout/Layout"));
 const ListUsers = React.lazy(() => import('./components/users/ListUsers'));
@@ -16,6 +17,7 @@ const UpdateUser = React.lazy(() => import('./components/users/UpdateUser'));
 const ViewUser = React.lazy(() => import('./components/users/ViewUser'));
 const ListProducts = React.lazy(() => import('./components/products/ListProducts'));
 const ViewProduct = React.lazy(() => import('./components/products/ViewProduct'));
+const CreateProduct = React.lazy(() => import('./components/products/CreateProduct'));
 const UpdateProduct = React.lazy(() => import('./components/products/UpdateProduct'));
 const NotFound = React.lazy(() => import('./components/shared/NotFound'));
 // .env constants
@@ -28,72 +30,80 @@ function App() {
 				<Route path='/' element={<Login />} />
 				<Route path={appUrl} element={<ProtectedRoutes />}>
 					<Route
-						path={appUrl + '/'}
+						path={`${appUrl}/`}
 						element={
-							<React.Suspense fallback={<>...</>}>
+							<React.Suspense fallback={<Loading2 width='60' height='60' color='#0ea5e9' dur={0.75} />}>
 								<Layout />
 							</React.Suspense>
 						}>
 						<Route
-							path={appUrl + '/'}
+							path={`${appUrl}/`}
 							element={
-								<React.Suspense fallback={<>...</>}>
+								<React.Suspense fallback={<Loading2 width='60' height='60' color='#0ea5e9' dur={0.75} />}>
 									<ListProducts />
 								</React.Suspense>
 							}
 						/>
 						<Route
-							path={appUrl + '/usuarios'}
+							path={`${appUrl}/usuarios`}
 							element={
-								<React.Suspense fallback={<>...</>}>
+								<React.Suspense fallback={<Loading2 width='60' height='60' color='#0ea5e9' dur={0.75} />}>
 									<ListUsers />
 								</React.Suspense>
 							}
 						/>
 						<Route
-							path={appUrl + '/usuario/:id'}
+							path={`${appUrl}/usuario/:id`}
 							element={
-								<React.Suspense fallback={<>...</>}>
+								<React.Suspense fallback={<Loading2 width='60' height='60' color='#0ea5e9' dur={0.75} />}>
 									<ViewUser />
 								</React.Suspense>
 							}
 						/>
 						<Route
-							path={appUrl + '/usuario/crear'}
+							path={`${appUrl}/usuario/crear`}
 							element={
-								<React.Suspense fallback={<>...</>}>
+								<React.Suspense fallback={<Loading2 width='60' height='60' color='#0ea5e9' dur={0.75} />}>
 									<CreateNewUser />
 								</React.Suspense>
 							}
 						/>
 						<Route
-							path={appUrl + '/usuario/modificar/:id'}
+							path={`${appUrl}/usuario/modificar/:id`}
 							element={
-								<React.Suspense fallback={<>...</>}>
+								<React.Suspense fallback={<Loading2 width='60' height='60' color='#0ea5e9' dur={0.75} />}>
 									<UpdateUser />
 								</React.Suspense>
 							}
 						/>
 						<Route
-							path={appUrl + '/productos'}
+							path={`${appUrl}/productos`}
 							element={
-								<React.Suspense fallback={<>...</>}>
+								<React.Suspense fallback={<Loading2 width='60' height='60' color='#0ea5e9' dur={0.75} />}>
 									<ListProducts />
 								</React.Suspense>
 							}
 						/>
 						<Route
-							path={appUrl + '/productos/:id'}
+							path={`${appUrl}/productos/:id`}
 							element={
-								<React.Suspense fallback={<>...</>}>
+								<React.Suspense fallback={<Loading2 width='60' height='60' color='#0ea5e9' dur={0.75} />}>
 									<ViewProduct />
 								</React.Suspense>
 							}
 						/>
 						<Route
-							path={appUrl + '/productos/modificar/:id'}
+							path={`${appUrl}/productos/crear`}
 							element={
-								<React.Suspense fallback={<>...</>}>
+								<React.Suspense fallback={<Loading2 width='60' height='60' color='#0ea5e9' dur={0.75} />}>
+									<CreateProduct />
+								</React.Suspense>
+							}
+						/>
+						<Route
+							path={`${appUrl}/productos/modificar/:id`}
+							element={
+								<React.Suspense fallback={<Loading2 width='60' height='60' color='#0ea5e9' dur={0.75} />}>
 									<UpdateProduct />
 								</React.Suspense>
 							}
@@ -103,7 +113,7 @@ function App() {
 				<Route
 					path='*'
 					element={
-						<React.Suspense fallback={<>...</>}>
+						<React.Suspense fallback={<Loading2 width='60' height='60' color='#0ea5e9' dur={0.75} />}>
 							<NotFound />
 						</React.Suspense>
 					}

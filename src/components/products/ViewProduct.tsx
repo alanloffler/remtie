@@ -1,5 +1,5 @@
 // Icons: Lucide (https://lucide.dev/)
-import { ArrowLeft, Bookmark, Pencil, Trash } from 'lucide-react';
+import { ArrowLeft, Bookmark, Pencil, Trash2 } from 'lucide-react';
 // UI: Shadcn-ui (https://ui.shadcn.com/)
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
@@ -35,7 +35,6 @@ function ViewProduct() {
 
 		async function getImages(id: number) {
 			const images: IImage[] = await ImageServices.getByProperty(id);
-			console.log('images', images);
 			setImages(images);
 			if (images.length > 0) setHideImages(true);
 		}
@@ -44,15 +43,34 @@ function ViewProduct() {
 		getImages(propertyId);
 	}, [propertyId]);
 
-	function handleDeleteProduct(id: number | undefined) {
-		console.log('Product deleted', id);
+	function handleDeleteProduct(id: number) {
+		Promise.all(images.map((image) => ImageServices.delete(image.id))).then((response) => {
+			const allOk = response.every((response) => response.status === 200);
+			if (allOk) {
+				ProductsServices.deleteProduct(id)
+					.then((response) => {
+						if (response instanceof Error) toast({ title: 'Error', description: '500 Internal Server Error | ' + response.message, variant: 'destructive', duration: 5000 });
+						if (response.status > 200) {
+							if (response.status === 401) navigate('/');
+							toast({ title: 'Error', description: response.message, variant: 'destructive', duration: 5000 });
+						}
+						if (response.status === 200) {
+							toast({ title: 'Propiedad eliminada', description: response.message, variant: 'success', duration: 5000 });
+							navigate(`${appUrl}/productos`);
+						}
+					})
+					.catch((error) => {
+						toast({ title: 'Error', description: '500 Internal Server Error | ' + error.message, variant: 'destructive', duration: 5000 });
+					});
+			} else {
+				toast({ title: 'Error', description: '400 Bad Request | Images not deleted', variant: 'destructive', duration: 5000 });
+			}
+		});
 		setOpenDialog(false);
-		navigate(`${appUrl}/productos`);
-		// TODO toast and service
 	}
 
-	async function switchActive(check: boolean) {
-		ProductsServices.switchActive((propertyId), check).then((response) => {
+	function switchActive(check: boolean) {
+		ProductsServices.switchActive(propertyId, check).then((response) => {
 			if (response instanceof Error) toast({ title: 'Error', description: '500 Internal Server Error | ' + response.message, variant: 'destructive', duration: 5000 });
 			if (response.status > 200) {
 				if (response.status === 401) navigate('/');
@@ -81,6 +99,9 @@ function ViewProduct() {
 						</div>
 						<CardTitle className='text-md text-slate-800'>{property?.title}</CardTitle>
 						<CardDescription className='text-sm'>{property?.short_description}</CardDescription>
+						<div className='flex pt-2 text-xs font-bold uppercase text-slate-500'>
+							<div className='flex w-auto flex-row items-center rounded-sm bg-slate-200/70 p-1 leading-tight'>{propertyId < 10 ? 'Cod/0' + propertyId : 'Cod/' + propertyId}</div>
+						</div>
 					</CardHeader>
 					<CardContent className='mt-auto px-4 py-2'>
 						<div className='mb-4 flex w-auto flex-row text-sm'>{property?.long_description}</div>
@@ -93,9 +114,6 @@ function ViewProduct() {
 								<Carousel images={images} />
 							</div>
 						)}
-						<div className='flex text-xs font-bold uppercase text-slate-500'>
-							<div className='flex w-auto flex-row items-center rounded-sm bg-slate-200/70 p-1 leading-tight'>{propertyId < 10 ? 'Cod/0' + propertyId : 'Cod/' + propertyId}</div>
-						</div>
 					</CardContent>
 					<CardFooter className='mt-auto justify-between bg-slate-200/50 p-2'>
 						<div className='flex items-center space-x-2'>
@@ -113,18 +131,18 @@ function ViewProduct() {
 								<Pencil className='h-4 w-4' />
 							</Button>
 							<Dialog open={openDialog} onOpenChange={setOpenDialog}>
-								<Button variant='ghost' size='miniIcon' className='rounded-full border bg-white text-slate-400/70 shadow-sm hover:bg-white hover:text-rose-500' asChild>
-									<DialogTrigger>
-										<Trash className='h-4 w-4' />
-									</DialogTrigger>
-								</Button>
+								<DialogTrigger asChild>
+									<Button variant='ghost' size='miniIcon' className='rounded-full border bg-white text-slate-400/70 shadow-sm hover:bg-white hover:text-rose-500'>
+										<Trash2 className='h-4 w-4' />
+									</Button>
+								</DialogTrigger>
 								<DialogContent>
 									<DialogHeader>
 										<DialogTitle>¿Estás realmente seguro?</DialogTitle>
 										<DialogDescription>Esta acción es imposible de revertir.</DialogDescription>
 									</DialogHeader>
 									<div>
-										<section>
+										<section className='text-sm font-normal'>
 											La propiedad
 											<span className='text-md px-1 font-bold text-slate-900'>{property?.title}</span>
 											con el código<span className='text-md px-1 font-bold text-slate-900'>{propertyId < 10 ? 'Cod/0' + propertyId : 'Cod/' + propertyId}</span>
@@ -132,10 +150,15 @@ function ViewProduct() {
 										</section>
 										<DialogFooter>
 											<div className='mt-6 flex flex-row gap-4'>
-												<Button variant='ghost' onClick={() => setOpenDialog(false)}>
+												<Button
+													variant='ghost'
+													onClick={(e) => {
+														e.preventDefault();
+														setOpenDialog(false);
+													}}>
 													Cancelar
 												</Button>
-												<Button variant='delete' onClick={() => handleDeleteProduct(property?.id)}>
+												<Button variant='delete' onClick={() => handleDeleteProduct(propertyId)}>
 													Eliminar
 												</Button>
 											</div>

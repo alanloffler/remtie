@@ -1,15 +1,15 @@
 /* eslint-disable react-hooks/exhaustive-deps */
 // Icons: Lucide (https://lucide.dev/)
-import { ArrowUpDown, Info, Pencil, Plus, Trash } from 'lucide-react';
+import { ArrowUpDown, Info, Pencil, Plus, Trash2 } from 'lucide-react';
 // UI: Shadcn-ui (https://ui.shadcn.com/)
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components//ui/card';
-import { Dialog, DialogHeader, DialogFooter, DialogTrigger, DialogContent, DialogTitle, DialogDescription } from '@/components/ui/dialog';
+import { Dialog, DialogHeader, DialogFooter, DialogContent, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Separator } from '@/components/ui/separator';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { useToast } from '@/components/ui/use-toast';
+import { toast } from '@/components/ui/use-toast';
 // App
 import { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
@@ -17,12 +17,13 @@ import CardView from '@/components/products/CardView';
 import { DataTable } from '@/components/data-table/DataTable';
 import { ColumnDef } from '@tanstack/react-table';
 import CurrencyFormat from '@/components/shared/CurrencyFormat';
-import { Property } from '@/lib/interfaces';
+import { IImage, Property } from '@/lib/interfaces';
 import { IBusiness, ICategory } from '@/lib/inputs.interfaces';
 import { ProductsConfig } from '@/lib/config';
-import { ProductsServices } from '@/services/products.services';
 import { BusinessServices } from '@/services/business.services';
 import { CategoriesServices } from '@/services/categories.services';
+import { ImageServices } from '@/services/image.services';
+import { ProductsServices } from '@/services/products.services';
 import { store } from '@/services/store.services';
 // .env constants
 const appUrl: string = import.meta.env.VITE_APP_URL;
@@ -30,22 +31,21 @@ const appUrl: string = import.meta.env.VITE_APP_URL;
 function ListProducts() {
 	const [properties, setProperties] = useState<Property[]>([]);
 	const [propertiesFiltered, setPropertiesFiltered] = useState<Property[]>([]);
-
 	const [business, setBusiness] = useState<IBusiness[]>([]);
 	const [businessKey, setBusinessKey] = useState<number>(0);
 	const [businessSelected, setBusinessSelected] = useState<string>('');
 	const [showSelects, setShowSelects] = useState(false);
-
 	const [categories, setCategories] = useState<ICategory[]>([]);
 	const [categoryKey, setCategoryKey] = useState<number>(0);
 	const [categorySelected, setCategorySelected] = useState<string>('');
 	const [searchFilter, setSearchFilter] = useState<string>('');
+	const [openDialog, setOpenDialog] = useState(false);
+	const [propertyId, setPropertyId] = useState<number>(0);
 
-    const tabActive: string = store.getState().tabActive;
-    const setTabActive = store.getState().setTabActive;
+	const tabActive: string = store.getState().tabActive;
+	const setTabActive = store.getState().setTabActive;
 
 	const navigate = useNavigate();
-	const { toast } = useToast();
 
 	useEffect(() => {
 		async function getBusiness() {
@@ -61,7 +61,9 @@ function ListProducts() {
 		async function getProducts() {
 			const productsService = await ProductsServices.getProducts();
 			if (productsService instanceof Error) toast({ variant: 'destructive', title: 'Error', description: '500 Internal Server Error | ' + productsService.message, duration: 5000 });
-			if (productsService.status >= 400) toast({ variant: 'destructive', title: 'Error', description: productsService.message, duration: 5000 });
+			if (productsService.status >= 400) {
+                toast({ variant: 'destructive', title: 'Error', description: productsService.message, duration: 5000 });
+            }
 			if (productsService.length > 1) {
 				setShowSelects(true);
 				setProperties(productsService);
@@ -135,39 +137,12 @@ function ListProducts() {
 						<Button onClick={() => navigate(`${appUrl}/productos/modificar/${row.original.id}`)} variant='outline' size='miniIcon' className='hover:bg-white hover:text-emerald-400'>
 							<Pencil className='h-5 w-5' strokeWidth='1.5' />
 						</Button>
-						<Dialog>
-							<Button variant='outline' size='miniIcon' className='hover:bg-white hover:text-rose-400' asChild>
-								<DialogTrigger>
-									<Trash className='h-5 w-5' strokeWidth='1.5' />
-								</DialogTrigger>
-							</Button>
-							<DialogContent>
-								<DialogHeader>
-									<DialogTitle>¿Estás realmente seguro?</DialogTitle>
-									<DialogDescription>Esta acción es imposible de revertir.</DialogDescription>
-								</DialogHeader>
-								<section>
-									La cuenta del usuario
-									<span className='text-md px-1 font-bold text-neutral-900'>{row.original.name}</span>
-									se eliminará permanentemente de la base de datos.
-								</section>
-								<DialogFooter>
-									<div className='flex flex-row gap-4'>
-										<Button variant='ghost' onClick={() => navigate(appUrl + '/productos')}>
-											Cancelar
-										</Button>
-										<Button variant='delete' onClick={() => navigate(appUrl + '/productos')}>
-											Eliminar
-										</Button>
-									</div>
-								</DialogFooter>
-							</DialogContent>
-						</Dialog>
-                        <div className='flex items-center'>
-								<div className={'flex h-4 w-4 items-center rounded-full border pl-1 ' + (row.original.is_active ? 'border-emerald-400 bg-emerald-300' : 'border-slate-300/50 bg-input')}>
-									{/* <span className='flex items-center pl-5 text-xs font-normal text-slate-400/70'>{row.original.is_active ? 'Activo' : 'Inactivo'}</span> */}
-								</div>
-							</div>
+						<Button onClick={() => handleDeleteDialog(row.original.id)} variant='outline' size='miniIcon' className='hover:bg-white hover:text-rose-400'>
+							<Trash2 className='h-5 w-5' strokeWidth='1.5' />
+						</Button>
+						<div className='flex items-center'>
+							<div className={'flex h-4 w-4 items-center rounded-full border pl-1 ' + (row.original.is_active ? 'border-emerald-400 bg-emerald-300' : 'border-slate-300/50 bg-input')}></div>
+						</div>
 					</div>
 				);
 			}
@@ -224,13 +199,37 @@ function ListProducts() {
 		setPropertiesFiltered(applyFilters(properties, ['business_type', 'type'], [businessSelected, categorySelected], searchFilter));
 	}, [businessSelected, categorySelected, searchFilter]);
 
+	function handleDeleteDialog(id: number) {
+		setOpenDialog(true);
+		setPropertyId(id);
+	}
+
+	async function handleDeleteProduct(id: number) {
+		setOpenDialog(false);
+		const images: IImage[] = await ImageServices.getByProperty(id);
+
+		Promise.all([ImageServices.deleteMany(images), ProductsServices.deleteProduct(id)])
+        .then((response) => {
+			// const [response1, response2] = response;
+			// console.log(response1);
+			// console.log(response2);
+			const resultsAll = response.every((res) => res.status === 200);
+			if (resultsAll) {
+				toast({ title: 'Propiedad eliminada', description: 'La propiedad fue eliminada correctamente', variant: 'success', duration: 5000 });
+                navigate(`${appUrl}/productos/`);
+			} else {
+				toast({ title: 'Error', description: '400 Bad Request | La propiedad no pudo ser eliminada', variant: 'destructive', duration: 5000 });
+			}
+		});
+	}
+
 	return (
 		<main className='flex-1 overflow-y-auto'>
 			<div className='mx-8 mb-8 mt-8 flex flex-row items-center justify-between'>
 				<h1 className='text-2xl font-normal text-slate-600'>Productos</h1>
 				<div>
 					<Button variant='default' size='default' asChild>
-						<Link to={appUrl + '/productos'}>
+						<Link to={`${appUrl}/producto/nuevo`}>
 							<Plus className='mr-2 h-4 w-4' />
 							Nuevo
 						</Link>
@@ -314,6 +313,30 @@ function ListProducts() {
 					</TabsContent>
 				</Tabs>
 			</div>
+			{/* Dialog */}
+			<Dialog open={openDialog} onOpenChange={setOpenDialog}>
+				<DialogContent>
+					<DialogHeader>
+						<DialogTitle>¿Estás realmente seguro?</DialogTitle>
+						<DialogDescription>Esta acción es imposible de revertir.</DialogDescription>
+					</DialogHeader>
+					<section>
+						La propiedad
+						<span className='text-md px-1 font-bold text-neutral-900 uppercase'>{propertyId < 10 ? 'Cod/0' + propertyId : 'Cod/' + propertyId}</span>
+						se eliminará permanentemente de la base de datos.
+					</section>
+					<DialogFooter>
+						<div className='flex flex-row gap-4'>
+							<Button variant='ghost' onClick={() => setOpenDialog(false)}>
+								Cancelar
+							</Button>
+							<Button variant='delete' onClick={() => handleDeleteProduct(propertyId)}>
+								Eliminar
+							</Button>
+						</div>
+					</DialogFooter>
+				</DialogContent>
+			</Dialog>
 		</main>
 	);
 }

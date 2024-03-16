@@ -3,18 +3,21 @@ import { useEffect, useState } from 'react';
 import { ReadUserService } from '@/services/users.services';
 import Dot from '@/components/shared/Dot';
 import { User } from '@/lib/interfaces';
+import { useNavigate } from 'react-router-dom';
 // React component
 function UserLogged({ user }: { user: number }) {
 	const [actualUser, setActualUser] = useState<User>();
+    const navigate = useNavigate();
 
 	useEffect(() => {
 		function getUser() {
 			ReadUserService(String(user)).then((data) => {
+                if (data instanceof Error || data.status === 401) navigate('/');
 				if (data) setActualUser(data);
 			});
 		}
 		getUser();
-	}, [user]);
+	}, [navigate, user]);
 
 	return (
 		<div className='mr-2 flex items-center'>

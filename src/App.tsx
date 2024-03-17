@@ -24,6 +24,18 @@ const NotFound = React.lazy(() => import('./components/shared/NotFound'));
 const appUrl: string = import.meta.env.VITE_APP_URL;
 // React component
 function App() {
+	const routes = [
+		{ path: `${appUrl}/`, element: <ListProducts /> },
+		{ path: `${appUrl}/usuarios`, element: <ListUsers /> },
+		{ path: `${appUrl}/usuario/:id`, element: <ViewUser /> },
+		{ path: `${appUrl}/usuario/crear`, element: <CreateNewUser /> },
+		{ path: `${appUrl}/usuario/modificar/:id`, element: <UpdateUser /> },
+		{ path: `${appUrl}/productos`, element: <ListProducts /> },
+		{ path: `${appUrl}/productos/:id`, element: <ViewProduct /> },
+		{ path: `${appUrl}/productos/crear`, element: <CreateProduct /> },
+		{ path: `${appUrl}/productos/modificar/:id`, element: <UpdateProduct /> }
+	];
+
 	return (
 		<>
 			<Routes>
@@ -36,78 +48,15 @@ function App() {
 								<Layout />
 							</React.Suspense>
 						}>
-						<Route
-							path={`${appUrl}/`}
-							element={
-								<React.Suspense fallback={<Loading2 width='60' height='60' color='#0ea5e9' dur={0.75} />}>
-									<ListProducts />
-								</React.Suspense>
-							}
-						/>
-						<Route
-							path={`${appUrl}/usuarios`}
-							element={
-								<React.Suspense fallback={<Loading2 width='60' height='60' color='#0ea5e9' dur={0.75} />}>
-									<ListUsers />
-								</React.Suspense>
-							}
-						/>
-						<Route
-							path={`${appUrl}/usuario/:id`}
-							element={
-								<React.Suspense fallback={<Loading2 width='60' height='60' color='#0ea5e9' dur={0.75} />}>
-									<ViewUser />
-								</React.Suspense>
-							}
-						/>
-						<Route
-							path={`${appUrl}/usuario/crear`}
-							element={
-								<React.Suspense fallback={<Loading2 width='60' height='60' color='#0ea5e9' dur={0.75} />}>
-									<CreateNewUser />
-								</React.Suspense>
-							}
-						/>
-						<Route
-							path={`${appUrl}/usuario/modificar/:id`}
-							element={
-								<React.Suspense fallback={<Loading2 width='60' height='60' color='#0ea5e9' dur={0.75} />}>
-									<UpdateUser />
-								</React.Suspense>
-							}
-						/>
-						<Route
-							path={`${appUrl}/productos`}
-							element={
-								<React.Suspense fallback={<Loading2 width='60' height='60' color='#0ea5e9' dur={0.75} />}>
-									<ListProducts />
-								</React.Suspense>
-							}
-						/>
-						<Route
-							path={`${appUrl}/productos/:id`}
-							element={
-								<React.Suspense fallback={<Loading2 width='60' height='60' color='#0ea5e9' dur={0.75} />}>
-									<ViewProduct />
-								</React.Suspense>
-							}
-						/>
-						<Route
-							path={`${appUrl}/productos/crear`}
-							element={
-								<React.Suspense fallback={<Loading2 width='60' height='60' color='#0ea5e9' dur={0.75} />}>
-									<CreateProduct />
-								</React.Suspense>
-							}
-						/>
-						<Route
-							path={`${appUrl}/productos/modificar/:id`}
-							element={
-								<React.Suspense fallback={<Loading2 width='60' height='60' color='#0ea5e9' dur={0.75} />}>
-									<UpdateProduct />
-								</React.Suspense>
-							}
-						/>
+						{routes.map((route) => (
+							<Route 
+                                path={route.path} 
+                                element={
+                                    <React.Suspense fallback={<Loading2 width='60' height='60' color='#0ea5e9' dur={0.75} />}>
+                                        {route.element}
+                                    </React.Suspense>} 
+                            />))
+                        }
 					</Route>
 				</Route>
 				<Route

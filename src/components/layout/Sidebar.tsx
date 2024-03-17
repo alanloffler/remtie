@@ -48,7 +48,7 @@ function Sidebar() {
         absolute 
         bottom-0 
         top-0
-        z-50
+        z-30
         order-first 
         -translate-x-full 
         overflow-y-auto

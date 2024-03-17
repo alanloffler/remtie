@@ -7,12 +7,12 @@ import { useNavigate } from 'react-router-dom';
 // React component
 function UserLogged({ user }: { user: number }) {
 	const [actualUser, setActualUser] = useState<User>();
-    const navigate = useNavigate();
+	const navigate = useNavigate();
 
 	useEffect(() => {
 		function getUser() {
 			ReadUserService(String(user)).then((data) => {
-                if (data instanceof Error || data.status === 401) navigate('/');
+				if (data instanceof Error || data.status === 401) navigate('/');
 				if (data) setActualUser(data);
 			});
 		}

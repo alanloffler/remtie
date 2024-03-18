@@ -43,8 +43,8 @@ function Sidebar() {
 			ref={sidebarRef}
 			className={`
         ${isOpen ? 'translate-x-0' : '-translate-x-full'} 
-        w-46 
-        md:w-46 
+        w-48 
+        md:w-48 
         absolute 
         bottom-0 
         top-0
@@ -54,12 +54,11 @@ function Sidebar() {
         overflow-y-auto
         border-r
         bg-white
-        p-4 
+        py-4 
+        px-2
         transition
         duration-200 
         ease-in-out 
-        dark:border-[#2e2e2e]
-        dark:bg-dark
         md:relative 
         md:translate-x-0`}>
 			<div className='group flex flex-col gap-4 py-2 data-[collapsed=true]:py-2'>

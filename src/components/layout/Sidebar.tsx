@@ -1,5 +1,5 @@
 // Icons: Lucide (https://lucide.dev/)
-import { Home, UserRound } from 'lucide-react';
+import { Home, LayoutDashboard, UserRound } from 'lucide-react';
 // UI: Shadcn-ui (https://ui.shadcn.com/)
 import { Button } from '@/components/ui/button';
 // App
@@ -42,39 +42,47 @@ function Sidebar() {
 		<nav
 			ref={sidebarRef}
 			className={`
-        ${isOpen ? 'translate-x-0' : '-translate-x-full'} 
-        w-48 
-        md:w-48 
-        absolute 
-        bottom-0 
-        top-0
-        z-30
-        order-first 
-        -translate-x-full 
-        overflow-y-auto
-        border-r
-        bg-white
-        py-4 
-        px-2
-        transition
-        duration-200 
-        ease-in-out 
-        md:relative 
-        md:translate-x-0`}>
-			<div className='group flex flex-col gap-4 py-2 data-[collapsed=true]:py-2'>
-				<div className='grid gap-1 px-2 group-[[data-collapsed=true]]:justify-center group-[[data-collapsed=true]]:px-2'>
-					<Button asChild variant='ghost' onClick={() => handleClick(1)} className={clicked === 1 ? 'bg-accent' : ''}>
-						<Link to={appUrl + '/productos'}>
-							<Home size='24' strokeWidth='2' className='mr-2 h-4 w-4' />
+                ${isOpen ? 'translate-x-0' : '-translate-x-full'} 
+                absolute 
+                bottom-0
+                top-0
+                z-30 
+                order-first 
+                flex 
+                w-48
+                -translate-x-full
+                flex-col 
+                overflow-y-auto 
+                border-r
+                bg-white
+                px-2
+                py-4 
+                transition
+                duration-200
+                ease-in-out 
+                md:relative 
+                md:w-48 
+                md:translate-x-0`}>
+			<div className='group flex w-full flex-col gap-4 py-2'>
+				<div className='grid gap-1 px-2'>
+					<Link to={`${appUrl}/`}>
+						<Button variant='ghost' onClick={() => handleClick(1)} className={`w-full justify-start gap-2 ${clicked === 1 && ' bg-accent'}`}>
+							<LayoutDashboard size='24' strokeWidth='2' className='h-4 w-4' />
+							Tablero
+						</Button>
+					</Link>
+
+					<Link to={`${appUrl}/productos`}>
+						<Button variant='ghost' onClick={() => handleClick(2)} className={`w-full justify-start gap-2 ${clicked === 2 && ' bg-accent'}`}>
+							<Home size='24' strokeWidth='2' className='h-4 w-4' />
 							Productos
-							<span className='ml-auto'></span>
-						</Link>
-					</Button>
-					<Link to={appUrl + '/usuarios'} className='flex flex-col'>
-						<Button variant='ghost' onClick={() => handleClick(2)} className={clicked === 2 ? 'bg-accent' : ''}>
-							<UserRound size='24' strokeWidth='2' className='h=4 mr-2 w-4' />
+						</Button>
+					</Link>
+
+					<Link to={`${appUrl}/usuarios`}>
+						<Button variant='ghost' onClick={() => handleClick(3)} className={`w-full justify-start gap-2 ${clicked === 3 && ' bg-accent'}`}>
+							<UserRound size='24' strokeWidth='2' className='h-4 w-4' />
 							Usuarios
-							<span className='ml-auto'></span>
 						</Button>
 					</Link>
 				</div>

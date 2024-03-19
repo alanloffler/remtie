@@ -26,21 +26,39 @@ export class ProductsServices {
 		}
 	}
 
-    static async deleteProduct(id: number) {
-        if(ProductsServices.abortController) ProductsServices.abortController.abort();
-        ProductsServices.abortController = new AbortController();
-        const signal = ProductsServices.abortController.signal;
+	static async create(data: object) {
+		if (ProductsServices.abortController) ProductsServices.abortController.abort();
+		ProductsServices.abortController = new AbortController();
+		const signal: AbortSignal = ProductsServices.abortController.signal;
 
-        try {
-            const productDeleted = await fetch(`${ProductsServices.apiUrl}/properties/${id}`, {
-                method: 'DELETE',
+		try {
+            const createProduct: Response = await fetch(`${ProductsServices.apiUrl}/properties`, {
+                method: 'POST',
+                headers: { 'content-type': 'application/json;charset=UTF-8' },
+                body: JSON.stringify(data),
                 signal: signal
             });
-            return await productDeleted.json();
-        } catch(error) {
+            return await createProduct.json();
+		} catch (error) {
             return error;
         }
-    }
+	}
+
+	static async deleteProduct(id: number) {
+		if (ProductsServices.abortController) ProductsServices.abortController.abort();
+		ProductsServices.abortController = new AbortController();
+		const signal = ProductsServices.abortController.signal;
+
+		try {
+			const productDeleted = await fetch(`${ProductsServices.apiUrl}/properties/${id}`, {
+				method: 'DELETE',
+				signal: signal
+			});
+			return await productDeleted.json();
+		} catch (error) {
+			return error;
+		}
+	}
 
 	static async update(id: number, data: object) {
 		if (ProductsServices.abortController) ProductsServices.abortController.abort();

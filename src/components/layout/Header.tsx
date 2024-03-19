@@ -22,12 +22,12 @@ function Header() {
 	return (
 		<header className='flex h-[76px] pl-8 pr-5 items-center justify-between border-b border-slate-800 bg-slate-700 shadow-md shadow-slate-300'>
 			<div className='hidden md:inline-flex lg:inline-flex'></div>
-			<Link to={appUrl} onClick={reset}>
+			<Link to={`${appUrl}/`}>
 				<h1 className='text-xl font-bold text-gray-200'>Room 202</h1>
 			</Link>
 			<div className='flex gap-5 items-center'>
-				<Button variant='default' size='sm' onClick={() => Logout()} className='h-9 md:mr-1 bg-slate-300 text-sm text-slate-600 border border-slate-400 hover:bg-slate-200 hover:border-slate-200'>
-					<LogOut strokeWidth='2.5' className='w-4 h-4 mr-2' />
+				<Button variant='default' size='sm' onClick={() => Logout()} className='h-9 md:mr-1 bg-slate-800/50 text-xs uppercase font-normal text-slate-400 border border-slate-800 hover:bg-slate-800/80 hover:text-slate-200 hover:border-slate-800 shadow-sm'>
+					<LogOut strokeWidth='2' className='w-4 h-4 mr-2' />
                     Salir
 				</Button>
 				{/* <ModeToggle /> */}

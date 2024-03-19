@@ -229,7 +229,7 @@ function ListProducts() {
 				<h1 className='text-2xl font-normal text-slate-600'>Productos</h1>
 				<div>
 					<Button variant='default' size='default' asChild>
-						<Link to={`${appUrl}/producto/nuevo`}>
+						<Link to={`${appUrl}/productos/crear`}>
 							<Plus className='mr-2 h-4 w-4' />
 							Nuevo
 						</Link>

@@ -4,7 +4,7 @@ import { ChevronLeft, ChevronRight, Expand } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import Loading from '@/components/shared/Loading';
 import { getImageURL } from '@/lib/image-util';
-import { IImage } from '@/lib/interfaces';
+import { IImage } from '@/lib/interfaces/image.interface';
 import { Dialog, DialogContent } from '@/components/ui/dialog';
 // import { Button } from '../ui/button';
 // Interface

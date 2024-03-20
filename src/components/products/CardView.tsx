@@ -5,17 +5,17 @@ import { Button } from '@/components/ui/button';
 import { Card, CardHeader, CardContent, CardFooter, CardTitle, CardDescription } from '@/components/ui/card';
 // App
 import CurrencyFormat from '@/components/shared/CurrencyFormat';
-import { Property } from '@/lib/interfaces';
+import { IProperty } from '@/lib/interfaces/property.interface';
 import { useNavigate } from 'react-router-dom';
 // .env constants
 const appUrl: string = import.meta.env.VITE_APP_URL;
 // React component
-function CardView({ properties }: { properties: Property[] }) {
+function CardView({ properties }: { properties: IProperty[] }) {
 	const navigate = useNavigate();
 
 	return (
 		<div className='grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4'>
-			{properties.map((property: Property) => (
+			{properties.map((property: IProperty) => (
 				<div className='' key={property.id}>
 					<Card className='flex h-full flex-col rounded-md border-t-[4px]' style={{ borderTopColor: property.color }}>
 						<div onClick={() => navigate(`${appUrl}/productos/${property.id}`)} className='hover:cursor-default'>

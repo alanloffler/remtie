@@ -1,12 +1,12 @@
 import { type ClassValue, clsx } from "clsx";
 import { twMerge } from "tailwind-merge";
-import { User } from "@/lib/interfaces";
+import { IUser } from "@/lib/interfaces/user.interface";
 
 export function cn(...inputs: ClassValue[]) {
     return twMerge(clsx(inputs));
 }
 
-export const emptyUser: User = {
+export const emptyUser: IUser = {
     id: "",
     name: "",
     phone: "",

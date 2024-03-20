@@ -21,7 +21,8 @@ import z from 'zod';
 import { ProductsServices } from '@/services/products.services';
 import { ImageServices } from '@/services/image.services';
 import { getImageURL } from '@/lib/image-util';
-import { IImage, Property } from '@/lib/interfaces';
+import { IProperty } from '@/lib/interfaces/property.interface';
+import { IImage } from '@/lib/interfaces/image.interface';
 import { BusinessServices } from '@/services/business.services';
 import { CategoriesServices } from '@/services/categories.services';
 import { IBusiness, ICategory } from '@/lib/inputs.interfaces';
@@ -33,7 +34,7 @@ function UpdateProduct() {
 	const propertyId = Number(id);
 	const navigate = useNavigate();
 
-	const [property, setProperty] = useState<Property>({} as Property);
+	const [property, setProperty] = useState<IProperty>({} as IProperty);
 	const [images, setImages] = useState<IImage[]>([]);
 	const [business, setBusiness] = useState<IBusiness[]>([]);
 	const [businessKey, setBusinessKey] = useState<number>(0);

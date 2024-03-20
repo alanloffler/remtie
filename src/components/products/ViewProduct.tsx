@@ -12,7 +12,8 @@ import { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { ProductsServices } from '@/services/products.services';
 import { ImageServices } from '@/services/image.services';
-import { IImage, Property } from '@/lib/interfaces';
+import { IProperty } from '@/lib/interfaces/property.interface';
+import { IImage } from '@/lib/interfaces/image.interface';
 import CurrencyFormat from '@/components/shared/CurrencyFormat';
 import Carousel from '@/components/shared/Carousel';
 // .env constants
@@ -22,14 +23,14 @@ function ViewProduct() {
 	const { id } = useParams();
 	const navigate = useNavigate();
 	const propertyId: number = Number(id);
-	const [property, setProperty] = useState<Property>();
+	const [property, setProperty] = useState<IProperty>();
 	const [images, setImages] = useState<IImage[]>([]);
 	const [openDialog, setOpenDialog] = useState<boolean>(false);
 	const [hideImages, setHideImages] = useState<boolean>(false);
 
 	useEffect(() => {
 		async function getProperty() {
-			const property: Property = await ProductsServices.getProduct(propertyId);
+			const property: IProperty = await ProductsServices.getProduct(propertyId);
 			setProperty(property);
 		}
 

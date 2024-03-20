@@ -1,4 +1,4 @@
-import { IImage } from '@/lib/interfaces';
+import { IImage } from '@/lib/interfaces/image.interface';
 import { FieldValues } from 'react-hook-form';
 
 export class ImageServices {

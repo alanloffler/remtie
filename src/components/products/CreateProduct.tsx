@@ -21,7 +21,7 @@ import z from 'zod';
 import { ProductsServices } from '@/services/products.services';
 import { ImageServices } from '@/services/image.services';
 import { getImageURL } from '@/lib/image-util';
-import { IImage } from '@/lib/interfaces';
+import { IImage } from '@/lib/interfaces/image.interface';
 import { BusinessServices } from '@/services/business.services';
 import { CategoriesServices } from '@/services/categories.services';
 import { IBusiness, ICategory } from '@/lib/inputs.interfaces';
@@ -65,9 +65,6 @@ function CreateProduct() {
 	});
 
 	useEffect(() => {
-		// ImageServices.getByProperty(propertyId).then((response) => {
-		// 	setImages(response);
-		// });
 		BusinessServices.getBusiness().then((response) => {
 			setBusiness(response);
 			setBusinessKey(Math.random());

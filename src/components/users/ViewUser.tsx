@@ -10,14 +10,14 @@ import { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { emptyUser } from '@/lib/utils';
 import { DeleteUserService, ReadUserService } from '@/services/users.services';
-import { User } from '@/lib/interfaces';
+import { IUser } from '@/lib/interfaces/user.interface';
 import Dot from '@/components/shared/Dot';
 // .env constants
 const appUrl: string = import.meta.env.VITE_APP_URL;
 // React component
 function ViewUser() {
 	const { id } = useParams();
-	const [user, setUser] = useState<User>(emptyUser);
+	const [user, setUser] = useState<IUser>(emptyUser);
 	const [date, setDate] = useState<Date>();
 	const [openDialog, setOpenDialog] = useState<boolean>(false);
 	const navigate = useNavigate();

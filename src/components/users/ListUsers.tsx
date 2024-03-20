@@ -11,7 +11,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { ColumnDef } from '@tanstack/react-table';
 import { DataTable } from '@/components/data-table/DataTable';
 import { UsersConfig } from '@/lib/config';
-import { User } from '@/lib/interfaces';
+import { IUser } from '@/lib/interfaces/user.interface';
 import { DeleteUserService, GetAllUsers } from '@/services/users.services';
 import Dot from '@/components/shared/Dot';
 // .env constants
@@ -19,7 +19,7 @@ const appUrl: string = import.meta.env.VITE_APP_URL;
 // React component
 function ListUsers() {
 	const navigate = useNavigate();
-	const [users, setUsers] = useState<User[]>([]);
+	const [users, setUsers] = useState<IUser[]>([]);
 	const [openDialog, setOpenDialog] = useState(false);
 	const [userDialog, setUserDialog] = useState<IUserDialog>({ id: '', name: '' });
 
@@ -28,7 +28,7 @@ function ListUsers() {
 		name: string;
 	}
 
-	const columns: ColumnDef<User>[] = [
+	const columns: ColumnDef<IUser>[] = [
 		{
 			accessorKey: 'id',
 			header: ({ column }) => {

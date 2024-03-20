@@ -17,7 +17,8 @@ import CardView from '@/components/products/CardView';
 import { DataTable } from '@/components/data-table/DataTable';
 import { ColumnDef } from '@tanstack/react-table';
 import CurrencyFormat from '@/components/shared/CurrencyFormat';
-import { IImage, Property } from '@/lib/interfaces';
+import { IProperty } from '@/lib/interfaces/property.interface';
+import { IImage } from '@/lib/interfaces/image.interface';
 import { IBusiness, ICategory } from '@/lib/inputs.interfaces';
 import { ProductsConfig } from '@/lib/config';
 import { BusinessServices } from '@/services/business.services';
@@ -29,8 +30,8 @@ import { store } from '@/services/store.services';
 const appUrl: string = import.meta.env.VITE_APP_URL;
 // React component
 function ListProducts() {
-	const [properties, setProperties] = useState<Property[]>([]);
-	const [propertiesFiltered, setPropertiesFiltered] = useState<Property[]>([]);
+	const [properties, setProperties] = useState<IProperty[]>([]);
+	const [propertiesFiltered, setPropertiesFiltered] = useState<IProperty[]>([]);
 	const [business, setBusiness] = useState<IBusiness[]>([]);
 	const [businessKey, setBusinessKey] = useState<number>(0);
 	const [businessSelected, setBusinessSelected] = useState<string>('');
@@ -76,7 +77,7 @@ function ListProducts() {
 		getProducts();
 	}, []);
 
-	const columns: ColumnDef<Property>[] = [
+	const columns: ColumnDef<IProperty>[] = [
 		// Id
 		{
 			accessorKey: 'id',
@@ -176,9 +177,9 @@ function ListProducts() {
 	}
 
 	useEffect(() => {
-		function applyFilters(prop: Property[], filterAttributes: string[], filterValues: string[], search: string) {
+		function applyFilters(prop: IProperty[], filterAttributes: string[], filterValues: string[], search: string) {
 			// Selects filters
-			const filteredProperties = prop.filter((property: Property) => {
+			const filteredProperties = prop.filter((property: IProperty) => {
 				return filterAttributes.every((attribute, index) => {
 					if (filterValues[index] !== '') {
 						return property[attribute] === filterValues[index];

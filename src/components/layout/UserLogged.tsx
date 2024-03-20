@@ -2,11 +2,11 @@
 import { useEffect, useState } from 'react';
 import { ReadUserService } from '@/services/users.services';
 import Dot from '@/components/shared/Dot';
-import { User } from '@/lib/interfaces';
+import { IUser } from '@/lib/interfaces/user.interface';
 import { useNavigate } from 'react-router-dom';
 // React component
 function UserLogged({ user }: { user: number }) {
-	const [actualUser, setActualUser] = useState<User>();
+	const [actualUser, setActualUser] = useState<IUser>();
 	const navigate = useNavigate();
 
 	useEffect(() => {

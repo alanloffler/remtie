@@ -13,14 +13,14 @@ import { Link, useNavigate, useParams } from 'react-router-dom';
 import { useForm, FormProvider } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { User } from '@/lib/interfaces';
+import { IUser } from '@/lib/interfaces/user.interface';
 import { ReadUserService, UpdateUserService } from '@/services/users.services';
 // .env constants
 const appUrl: string = import.meta.env.VITE_APP_URL;
 // React component
 function UpdateUser() {
 	const { id } = useParams();
-	const [user, setUser] = useState<User>();
+	const [user, setUser] = useState<IUser>();
 	const navigate = useNavigate();
 
 	const userFormSchema = z.object({
@@ -37,7 +37,7 @@ function UpdateUser() {
 		})
 	});
 
-	const form = useForm<User>({
+	const form = useForm<IUser>({
 		resolver: zodResolver(userFormSchema),
 		values: {
 			name: '',
@@ -65,7 +65,7 @@ function UpdateUser() {
 		});
 	}, [form, id, navigate]);
 
-	function onSubmit(values: User) {
+	function onSubmit(values: IUser) {
 		if (values.password === '') values.password = user?.password;
 		UpdateUserService(`${id}`, values).then((response) => {
 			if (response instanceof Error) toast({ title: 'Error', description: '500 Internal Server Error | ' + response.message, variant: 'destructive', duration: 5000 });

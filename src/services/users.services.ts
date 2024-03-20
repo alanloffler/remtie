@@ -1,6 +1,6 @@
 // TODO: change to a class like others services
 // Imports
-import { User } from '@/lib/interfaces';
+import { IUser } from '@/lib/interfaces/user.interface';
 import { store } from './store.services';
 // .env constants
 const apiUrl: string = import.meta.env.VITE_REACT_BACKEND_API;
@@ -22,7 +22,7 @@ async function GetAllUsers() {
 	}
 }
 
-async function CreateUser(data: User) {
+async function CreateUser(data: IUser) {
 	try {
 		const query: Response = await fetch(apiUrl + '/auth/signup', {
 			method: 'POST',
@@ -51,7 +51,7 @@ async function ReadUserService(id: string) {
 	}
 }
 
-async function UpdateUserService(id: string, data: User) {
+async function UpdateUserService(id: string, data: IUser) {
 	try {
         const token = store.getState().authToken;
 		const query: Response = await fetch(apiUrl + '/users/' + Number(id), {

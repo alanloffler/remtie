@@ -2,7 +2,6 @@ function useLocaleDate() {
 	return (date: string | undefined) => {
 		if (date) {
 			const newDate = new Date(date);
-			console.log(newDate);
 			const day: string = String(newDate.getDate()).padStart(2, '0');
 			const month: string = String(newDate.getMonth() + 1).padStart(2, '0');
 			const year: string = String(newDate.getFullYear()).slice(-2);

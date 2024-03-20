@@ -24,7 +24,7 @@ import { getImageURL } from '@/lib/image-util';
 import { IImage } from '@/lib/interfaces/image.interface';
 import { BusinessServices } from '@/services/business.services';
 import { CategoriesServices } from '@/services/categories.services';
-import { IBusiness, ICategory } from '@/lib/inputs.interfaces';
+import { IBusiness, ICategory } from '@/lib/interfaces/inputs.interface';
 import { propertySchema } from '@/lib/schemas/property.schema';
 import { imageFormSchema } from '@/lib/schemas/image.schema';
 import { store } from '@/services/store.services';

@@ -19,7 +19,7 @@ import { ColumnDef } from '@tanstack/react-table';
 import CurrencyFormat from '@/components/shared/CurrencyFormat';
 import { IProperty } from '@/lib/interfaces/property.interface';
 import { IImage } from '@/lib/interfaces/image.interface';
-import { IBusiness, ICategory } from '@/lib/inputs.interfaces';
+import { IBusiness, ICategory } from '@/lib/interfaces/inputs.interface';
 import { ProductsConfig } from '@/lib/config';
 import { BusinessServices } from '@/services/business.services';
 import { CategoriesServices } from '@/services/categories.services';

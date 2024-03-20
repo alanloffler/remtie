@@ -9,7 +9,7 @@ import { Switch } from '@/components/ui/switch';
 import { toast } from '@/components/ui/use-toast';
 // App
 import { useEffect, useState } from 'react';
-import { Link, useNavigate, useParams } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
 import { ProductsServices } from '@/services/products.services';
 import { ImageServices } from '@/services/image.services';
 import { IImage, Property } from '@/lib/interfaces';
@@ -83,11 +83,9 @@ function ViewProduct() {
 	return (
 		<main className='flex-1 overflow-y-auto'>
 			<div className='mx-6 mb-4 mt-6 flex flex-row items-center justify-end'>
-				<Button variant='ghost' size='sm' asChild>
-					<Link to={appUrl + '/productos'}>
-						<ArrowLeft className='mr-2 h-4 w-4' />
-						Volver
-					</Link>
+				<Button variant='ghost' size='sm' onClick={() => navigate(-1)}>
+					<ArrowLeft className='mr-2 h-4 w-4' />
+					Volver
 				</Button>
 			</div>
 			<div className='mt-6 flex min-w-80 flex-col items-center px-6'>

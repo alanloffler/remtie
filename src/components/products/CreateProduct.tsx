@@ -65,9 +65,9 @@ function CreateProduct() {
 	});
 
 	useEffect(() => {
-		ImageServices.getByProperty(propertyId).then((response) => {
-			setImages(response);
-		});
+		// ImageServices.getByProperty(propertyId).then((response) => {
+		// 	setImages(response);
+		// });
 		BusinessServices.getBusiness().then((response) => {
 			setBusiness(response);
 			setBusinessKey(Math.random());
@@ -393,7 +393,7 @@ function CreateProduct() {
 										La imágen
 										<span className='text-md px-1 font-bold text-slate-900'>{imageDialog.name}</span>
 										de la propiedad
-										<span className='text-md px-1 font-bold uppercase text-slate-900'>{property.id < 10 ? 'Cod/0' + property.id : 'Cod/' + property.id}</span>
+										{/* <span className='text-md px-1 font-bold uppercase text-slate-900'>{property.id < 10 ? 'Cod/0' + property.id : 'Cod/' + property.id}</span> */}
 										se eliminará permanentemente de la base de datos.
 									</section>
 									<DialogFooter>

@@ -1,15 +1,14 @@
 // App
 import { useEffect } from 'react';
 import * as d3 from 'd3';
-import { IDashboardHeader } from '@/lib/interfaces/dashboard.interface';
+import { IDashboardData } from '@/lib/interfaces/dashboard.interface';
 // Interface Pie Chart
 interface IProps {
-	data: IDashboardHeader[];
+	data: IDashboardData[];
 	outerRadius: number;
 	innerRadius: number;
 	margins: number;
 }
-
 // React component
 function PieChart({ data, innerRadius, outerRadius, margins }: IProps) {
 	const margin = {
@@ -39,7 +38,7 @@ function PieChart({ data, innerRadius, outerRadius, margins }: IProps) {
 			const arcGenerator = d3.arc<unknown>().innerRadius(innerRadius).outerRadius(outerRadius);
 
 			const pieGenerator = d3
-				.pie<IDashboardHeader>()
+				.pie<IDashboardData>()
 				.padAngle(0)
 				.value((d) => d.total);
 

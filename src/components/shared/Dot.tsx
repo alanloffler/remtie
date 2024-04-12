@@ -6,7 +6,7 @@ import { useEffect, useState } from 'react';
 interface Dot {
 	margin?: string;
 	text?: string;
-	type?: string;
+	role?: string;
 	width: string;
 	fontSize?: string;
 }
@@ -34,7 +34,7 @@ const colors: Colors = {
 // React component
 function Dot(props: Dot) {
 	const [text, setText] = useState<string | undefined>('');
-	const [type, setType] = useState<string | undefined>('');
+	const [role, setRole] = useState<string | undefined>('');
 	const [dotColor, setDotColor] = useState<string>('');
 	const [textColor, setTextColor] = useState<string>('');
 
@@ -47,17 +47,17 @@ function Dot(props: Dot) {
 
 	useEffect(() => {
 		setText(props.text);
-		setType(props.type);
+		setRole(props.role);
 
-		if (type === 'admin') {
+		if (role === 'admin') {
 			setDotColor(colors.admin.dot);
 			setTextColor(colors.admin.text);
 		}
-		if (type === 'user') {
+		if (role === 'user') {
 			setDotColor(colors.user.dot);
 			setTextColor(colors.user.text);
 		}
-	}, [props.text, props.type, type]);
+	}, [props.text, props.role, role]);
 
 	return (
 		<div className={cn('flex justify-center rounded-[50%] border', dotColor)} style={styles}>

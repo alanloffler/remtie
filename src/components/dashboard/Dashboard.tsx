@@ -1,33 +1,46 @@
+// Icons: Lucide (https://lucide.dev/)
+import { Hourglass } from 'lucide-react';
 // UI: Shadcn-ui (https://ui.shadcn.com/)
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
+import { toast } from '@/components/ui/use-toast';
 // App
 import DashboardHeader from '@/components/dashboard/DashboardHeader';
+import LatestProperties from '@/components/dashboard/LatestProperties';
 import PieChart from '@/components/dashboard/PieChart';
-import { useEffect, useState } from 'react';
 import { DashboardServices } from '@/services/dashboard.services';
-import { IDashboardHeader } from '@/lib/interfaces/dashboard.interface';
-import { Hourglass } from 'lucide-react';
-import LatestProperties from './LatestProperties';
+import { IDashboardData } from '@/lib/interfaces/dashboard.interface';
+import { useCapitalize } from '@/hooks/useCapitalize';
+import { useEffect, useState } from 'react';
 // .env constants
-const appUrl: string = import.meta.env.VITE_APP_URL;
-
+const APP_URL: string = import.meta.env.VITE_APP_URL;
 // React component
 function Dashboard() {
-	const [data, setData] = useState<IDashboardHeader[]>([]);
+	const [data, setData] = useState<IDashboardData[]>([]);
+	const [showDashboardHeader, setShowDashboardHeader] = useState<boolean>(false);
+	const capitalize = useCapitalize();
 
 	useEffect(() => {
-		DashboardServices.getPropertiesByCategory().then((res) => {
-			setData(res);
+		// handle error
+		DashboardServices.getHeaderData().then((response) => {
+			console.log('header', response);
+			if (Array.isArray(response)) {
+				if (response.length > 0) {
+					setData(response as IDashboardData[]);
+					setShowDashboardHeader(true);
+                } else {
+					console.log('empty array');
+				}
+			}
+            if (response.statusCode > 399) toast({ title: String(response.statusCode), description: response.message, variant: 'destructive', duration: 5000 });
+            if (response instanceof Error) toast({ title: 'Error', description: '500 Internal Server Error | ' + response.message, variant: 'destructive', duration: 5000 });
 		});
 	}, []);
 
 	return (
 		<main className='flex-1 overflow-y-auto'>
 			<div className='mx-8 mb-8 mt-8 flex flex-col gap-8'>
-				<div className='flex flex-row'>
-					<DashboardHeader data={data} />
-				</div>
+				<div className='flex flex-row'>{showDashboardHeader && <DashboardHeader data={data as IDashboardData[]} />}</div>
 				<div className='grid-col grid gap-8 md:flex md:flex-row'>
 					<div className='md:w-fit'>
 						<Card className=''>
@@ -45,11 +58,11 @@ function Dashboard() {
 								<PieChart data={data} outerRadius={70} innerRadius={30} margins={10} />
 								<div className='ml-4 flex flex-row items-center gap-2 text-xs'>
 									<ul className=''>
-										{data.map((d) => {
+										{data?.map((d) => {
 											return (
 												<li key={d.category} className='flex items-center gap-2 p-1'>
 													<div style={{ background: d.color }} className='h-3 w-3 rounded-full shadow-sm'></div>
-													{d.category}
+													{capitalize(d.category)}
 												</li>
 											);
 										})}
@@ -68,7 +81,7 @@ function Dashboard() {
 								<Separator orientation='horizontal' />
 							</CardHeader>
 							<CardContent className='flex flex-row p-4'>
-								<LatestProperties limit={5} baseUrl={`${appUrl}/productos`} />
+								<LatestProperties limit={5} baseUrl={`${APP_URL}/productos`} />
 							</CardContent>
 						</Card>
 					</div>

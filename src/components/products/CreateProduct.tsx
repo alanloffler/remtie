@@ -1,6 +1,7 @@
 // Icons: Lucide (https://lucide.dev/)
 import { ArrowLeft, Trash2 } from 'lucide-react';
 // UI: Shadcn-ui (https://ui.shadcn.com/)
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
@@ -27,7 +28,7 @@ import { CategoriesServices } from '@/services/categories.services';
 import { IBusiness, ICategory } from '@/lib/interfaces/inputs.interface';
 import { propertySchema } from '@/lib/schemas/property.schema';
 import { imageFormSchema } from '@/lib/schemas/image.schema';
-import { store } from '@/services/store.services';
+import { useCapitalize } from '@/hooks/useCapitalize';
 // React component
 function CreateProduct() {
 	const navigate = useNavigate();
@@ -39,6 +40,8 @@ function CreateProduct() {
 	const [categoriesKey, setCategoriesKey] = useState<number>(0);
 	const [openDialog, setOpenDialog] = useState<boolean>(false);
 	const [imageDialog, setImageDialog] = useState<IImage>({ id: 0, name: '', propertyId: 0 });
+    const [propertyCreated, setPropertyCreated] = useState<boolean>(false);
+	const capitalize = useCapitalize();
 
 	const propertyForm = useForm<z.infer<typeof propertySchema>>({
 		resolver: zodResolver(propertySchema),
@@ -76,21 +79,27 @@ function CreateProduct() {
 	}, [propertyId, propertyForm]);
 
 	function handleSubmitProduct(values: z.infer<typeof propertySchema>) {
-		const color = categories.find((cat) => cat.value === values.type)?.color;
-		const propertyData = { ...values, color: color ? color : '', created_by: store.getState().userId };
-        // console.log(propertyData);
+		const color = categories.find((cat) => cat.name === values.type)?.color;
+		let isActive: number;
+		// const propertyData = { ...values, color: color ? color : '', created_by: store.getState().userId };
+		values.is_active === true ? (isActive = 1) : (isActive = 0);
+		const propertyData = { ...values, color: color ? color : '', is_active: isActive };
+
 		ProductsServices.create(propertyData).then((response) => {
-			console.log(response);
-			if (response.status === 200) toast({ title: 'Propiedad creada', description: response.message, variant: 'success', duration: 5000 });
+			if (response.id) {
+				toast({ title: '200', description: 'Propiedad creada', variant: 'success', duration: 5000 });
+				setPropertyCreated(true);
+                setPropertyId(response.id);
+			}
+			if (response.statusCode > 399) toast({ title: response.statusCode, description: response.message, variant: 'destructive', duration: 5000 });
 			if (response instanceof Error) toast({ title: 'Error', description: '500 Internal Server Error | ' + response.message, variant: 'destructive', duration: 5000 });
-			if (response.status === 400) toast({ title: 'Error', description: response.message, variant: 'destructive', duration: 5000 });
-			if (response.status === 401) navigate('/');
 		});
 	}
 
 	function handleSubmitImage(data: FieldValues) {
 		ImageServices.create(propertyId, data.file[0])
 			.then((response) => {
+                // ver esto del toast como vienen los mensajes de la base de datos
 				if (response instanceof Error) toast({ title: 'Error', description: '500 Internal Server Error | ' + response.message, variant: 'destructive', duration: 5000 });
 				if (response.status > 200) {
 					toast({ title: 'Error', description: response.message, variant: 'destructive', duration: 5000 });
@@ -135,7 +144,7 @@ function CreateProduct() {
 										Descripción
 										<Separator className='mt-2' />
 									</div>
-									<div className='flex py-4 w-1/2 flex-col gap-4 md:w-2/3 md:flex-row md:gap-6'>
+									<div className='flex w-1/2 flex-col gap-4 py-4 md:w-2/3 md:flex-row md:gap-6'>
 										<FormField
 											control={propertyForm.control}
 											name='business_type'
@@ -150,8 +159,8 @@ function CreateProduct() {
 														</FormControl>
 														<SelectContent>
 															{business?.map((el) => (
-																<SelectItem key={el.id} value={el.value} className='text-sm'>
-																	{el.name}
+																<SelectItem key={el.id} value={el.name} className='text-sm'>
+																	{capitalize(el.name)}
 																</SelectItem>
 															))}
 														</SelectContent>
@@ -174,8 +183,8 @@ function CreateProduct() {
 														</FormControl>
 														<SelectContent>
 															{categories?.map((el) => (
-																<SelectItem key={el.id} value={el.value} className='text-sm'>
-																	{el.name}
+																<SelectItem key={el.id} value={el.name} className='text-sm'>
+																	{capitalize(el.name)}
 																</SelectItem>
 															))}
 														</SelectContent>
@@ -339,6 +348,7 @@ function CreateProduct() {
 											variant='ghost'
 											onClick={(e) => {
 												e.preventDefault();
+												imageForm.reset();
 												navigate(-1);
 											}}>
 											Cancelar
@@ -350,9 +360,102 @@ function CreateProduct() {
 								</div>
 							</form>
 						</FormProvider>
+						{propertyCreated && (
+							<div className=''>
+								<Accordion type='single' collapsible>
+									<AccordionItem value='item-1' className='border-none'>
+										<AccordionTrigger className='justify-start'>Agregar imágenes</AccordionTrigger>
+										<AccordionContent className='px-4'>
+											<div className='grid gap-4'>
+												{images.map((img, i) => {
+													return (
+														<Card key={img.id} className='px-2 py-2 bg-slate-100'>
+															<div className='flex flex-row place-items-center justify-between'>
+																<div className='flex h-5 flex-row'>
+																	<img src={getImageURL(`../../../api-nest-mysql/uploads/${img.name}`)} />
+																	<h2 className='flex flex-row place-items-center pl-3 text-xs font-medium text-slate-900'># {i + 1}</h2>
+																</div>
+																<div className='hidden flex-row text-xs font-light text-slate-400 xs:block md:block lg:block'>{img.name}</div>
+																<Button
+																	onClick={() => {
+																		setOpenDialog(true);
+																		setImageDialog({ id: img.id, name: img.name, propertyId: img.propertyId });
+																	}}
+																	variant='ghost'
+																	size='miniIcon'
+																	className='rounded-full border bg-white text-slate-400/70 shadow-sm hover:bg-white hover:text-rose-500'>
+																	<Trash2 className='h-4 w-4' />
+																</Button>
+															</div>
+														</Card>
+													);
+												})}
+												<Dialog open={openDialog} onOpenChange={setOpenDialog}>
+													<DialogContent>
+														<DialogHeader>
+															<DialogTitle>¿Estás realmente seguro?</DialogTitle>
+															<DialogDescription>Esta acción es imposible de revertir.</DialogDescription>
+														</DialogHeader>
+														<div>
+															<section className='text-sm font-normal'>
+																La imágen
+																<span className='text-md px-1 font-bold text-slate-900'>{imageDialog.name}</span>
+																de la propiedad se eliminará permanentemente de la base de datos.
+															</section>
+															<DialogFooter>
+																<div className='mt-6 flex flex-row gap-4'>
+																	<Button variant='ghost' onClick={() => setOpenDialog(false)}>
+																		Cancelar
+																	</Button>
+																	<Button variant='delete' onClick={() => handleDeleteImage(imageDialog.id)}>
+																		Eliminar
+																	</Button>
+																</div>
+															</DialogFooter>
+														</div>
+													</DialogContent>
+												</Dialog>
+											</div>
+											<FormProvider {...imageForm}>
+												<form onSubmit={imageForm.handleSubmit(handleSubmitImage)}>
+													<div className='mt-8 grid w-full max-w-sm items-center gap-1.5'>
+														<FormField
+															control={imageForm.control}
+															name='file'
+															render={() => (
+																<FormItem className='w-full space-y-1'>
+																	<FormLabel className='font-semibold text-slate-500'>Agregar imágen</FormLabel>
+																	<FormControl>
+																		<Input {...imageForm.register('file')} name='file' type='file' accept='image/*' className='w-full hover:cursor-pointer' />
+																	</FormControl>
+																	<FormMessage />
+																</FormItem>
+															)}
+														/>
+													</div>
+													<div className='mt-8 flex flex-row justify-end space-x-4'>
+														<Button
+															variant='ghost'
+															onClick={(e) => {
+																e.preventDefault();
+																imageForm.reset();
+															}}>
+															Cancelar
+														</Button>
+														<Button variant='default' size='default' className='w-auto' type='submit'>
+															Guardar
+														</Button>
+													</div>
+												</form>
+											</FormProvider>
+										</AccordionContent>
+									</AccordionItem>
+								</Accordion>
+							</div>
+						)}
 					</CardContent>
 				</Card>
-				<div className='my-8 flex w-full flex-col md:w-[500px] lg:w-[650px]'>
+				{/* <div className='my-8 flex w-full flex-col md:w-[500px] lg:w-[650px]'>
 					<h1 className='font-semibold text-slate-800'>Gestión de imágenes</h1>
 					<Separator className='mt-2' />
 					<div className='mt-6 grid gap-4'>
@@ -390,7 +493,7 @@ function CreateProduct() {
 										La imágen
 										<span className='text-md px-1 font-bold text-slate-900'>{imageDialog.name}</span>
 										de la propiedad
-										{/* <span className='text-md px-1 font-bold uppercase text-slate-900'>{property.id < 10 ? 'Cod/0' + property.id : 'Cod/' + property.id}</span> */}
+										<span className='text-md px-1 font-bold uppercase text-slate-900'>{property.id < 10 ? 'Cod/0' + property.id : 'Cod/' + property.id}</span>
 										se eliminará permanentemente de la base de datos.
 									</section>
 									<DialogFooter>
@@ -439,7 +542,7 @@ function CreateProduct() {
 							</div>
 						</form>
 					</FormProvider>
-				</div>
+				</div> */}
 			</div>
 		</main>
 	);

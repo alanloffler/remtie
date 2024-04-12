@@ -4,31 +4,27 @@ import { CardTitle, CardDescription, CardHeader, CardContent, Card } from '@/com
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 // App
+import { ILogin } from '@/lib/interfaces/login.interface';
+import { store } from '@/services/store.services';
 import { useEffect, useState } from 'react';
+import { useForm } from 'react-hook-form';
 import { useNavigate } from 'react-router-dom';
 import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { useForm } from 'react-hook-form';
-import { store } from '@/services/store.services';
-// .env constants
-const apiUrl: string = import.meta.env.VITE_REACT_BACKEND_API;
+// Constants
+const API_URL: string = import.meta.env.VITE_REACT_BACKEND_API;
+const SIGN_IN_URL: string = API_URL + '/auth/login';
 // Form schema
 const formSchema = z.object({
 	email: z.string().email({ message: 'Formato de e-mail inválido' }),
 	password: z.string().min(6, { message: 'La contraseña debe poseer al menos 6 caracteres' })
 });
-// Interfaces
-interface ILogin {
-	token: string;
-	userId: string;
-	message: string;
-	status: number;
-}
 // React component
 function Login() {
 	const setAuthorized = store.getState().setAuthorized;
 	const setAuthToken = store.getState().setAuthToken;
 	const setUserId = store.getState().setUserId;
+	const setRole = store.getState().setRole;
 	const [statusMessage, setStatusMessage] = useState<string>();
 	const navigate = useNavigate();
 	const form = useForm<z.infer<typeof formSchema>>({
@@ -45,20 +41,21 @@ function Login() {
 
 	async function onSubmit(values: z.infer<typeof formSchema>) {
 		SendData(values).then((response: ILogin) => {
-			if (response instanceof Error) setStatusMessage('500 Internal Server Error | ' + response.message);
-			if (response.status === 400) setStatusMessage(response.message);
 			if (response.token && response.userId) {
 				setAuthToken(response.token);
 				setUserId(Number(response.userId));
 				setAuthorized(true);
+				setRole(response.role);
 				navigate(import.meta.env.VITE_APP_URL);
 			}
+			if (response.statusCode > 399) setStatusMessage(response.message);
+			if (response instanceof Error) setStatusMessage('500 Internal Server Error | ' + response.message);
 		});
 	}
 
 	async function SendData(values: z.infer<typeof formSchema>) {
 		try {
-			const query = await fetch(apiUrl + '/auth/signin', {
+			const query = await fetch(SIGN_IN_URL, {
 				method: 'POST',
 				headers: {
 					'Content-Type': 'application/json'

@@ -1,5 +1,5 @@
 // Icons: Lucide (https://lucide.dev/)
-import { ArrowLeft, Mail, Pencil, Phone, Trash2 } from 'lucide-react';
+import { ArrowLeft, BadgeX, Mail, Pencil, Phone, Trash2 } from 'lucide-react';
 // UI: Shadcn-ui (https://ui.shadcn.com/)
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardFooter } from '@/components/ui/card';
@@ -9,21 +9,25 @@ import { toast } from '@/components/ui/use-toast';
 import { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { emptyUser } from '@/lib/utils';
-import { DeleteUserService, ReadUserService } from '@/services/users.services';
+import { UsersServices } from '@/services/users.services';
 import { IUser } from '@/lib/interfaces/user.interface';
 import Dot from '@/components/shared/Dot';
+import { Roles } from '@/lib/constants';
+import { store } from '@/services/store.services';
 // .env constants
-const appUrl: string = import.meta.env.VITE_APP_URL;
+const APP_URL: string = import.meta.env.VITE_APP_URL;
 // React component
 function ViewUser() {
-	const { id } = useParams();
+	const id = Number(useParams().id);
 	const [user, setUser] = useState<IUser>(emptyUser);
 	const [date, setDate] = useState<Date>();
 	const [openDialog, setOpenDialog] = useState<boolean>(false);
 	const navigate = useNavigate();
 
 	useEffect(() => {
-		ReadUserService(String(id)).then((response) => {
+        UsersServices
+        .findOne(id)
+        .then((response) => {
 			if (response.type !== '') {
 				setUser(response);
 				const _date = new Date(response.created_at);
@@ -41,10 +45,12 @@ function ViewUser() {
 		});
 	}, [id, navigate]);
 
-	function deleteUser(id: string) {
-		DeleteUserService(id).then((response) => {
+	function removeSoft(id: number) {
+		UsersServices
+        .removeSoft(id)
+        .then((response) => {
 			if (response.status === 200) {
-				navigate(appUrl + '/usuarios');
+				navigate(`${APP_URL}/usuarios`);
 				toast({ title: 'Usuario eliminado', description: response.message, variant: 'success', duration: 5000 });
 			}
 			if (response.status > 200) {
@@ -59,6 +65,10 @@ function ViewUser() {
 		});
 	}
 
+    function remove(id: number): void {
+        console.log(id);
+    }
+
 	return (
 		<main className='flex-1 overflow-y-auto'>
 			<div className='mx-6 mb-4 mt-6 flex flex-row items-center justify-end'>
@@ -71,9 +81,9 @@ function ViewUser() {
 				<Card className='mb-8 min-w-[350px] dark:border-[#2e2e2e] dark:bg-[#292a2d] md:w-[500px]'>
 					<CardContent className='mx-0 px-0'>
 						<div className='flex flex-col items-center'>
-							<Dot type={user.type} text={user.type.charAt(0).toUpperCase()} width='90px' fontSize='60px' margin='-20px' />
+							<Dot role={user.role} text={user.role?.charAt(0).toUpperCase()} width='90px' fontSize='60px' margin='-20px' />
 							<div className='mt-12 text-3xl font-bold'>{user?.name}</div>
-							<div className='mt-2 text-sm text-neutral-400'>{user?.type === 'admin' ? 'Administrador' : 'Usuario'}</div>
+							<div className='mt-2 text-sm text-neutral-400'>{user?.role === 'admin' ? 'Administrador' : 'Usuario'}</div>
 							<div className='my-8 flex items-center gap-2 italic'>
 								<Mail className='h-4 w-4' />
 								{user?.email}
@@ -83,48 +93,55 @@ function ViewUser() {
 								{user?.phone}
 							</div>
 							<div className='flex text-sm font-extralight text-neutral-500'>
-								{user?.type === 'admin' ? 'Administrador desde el ' : 'Usuario desde el '}
+								{user?.role === 'admin' ? 'Administrador desde el ' : 'Usuario desde el '}
 								{date?.getDate() + ' '}
 								{date?.toLocaleString('default', { month: 'long' })}
 								{' de ' + date?.getFullYear()}
 							</div>
 						</div>
 					</CardContent>
-					<CardFooter className='justify-end gap-2 bg-slate-200/50 p-2'>
-						<Button onClick={() => navigate(appUrl + '/usuario/modificar/' + user?.id)} variant='ghost' size='miniIcon' className='rounded-full border bg-white text-slate-400/70 shadow-sm hover:bg-white hover:text-emerald-500'>
-							<Pencil className='h-4 w-4' />
-						</Button>
-						<Dialog open={openDialog} onOpenChange={setOpenDialog}>
-							<Button variant='ghost' size='miniIcon' className='rounded-full border bg-white text-slate-400/70 shadow-sm hover:bg-white hover:text-rose-500' asChild>
-								<DialogTrigger>
-									<Trash2 className='h-4 w-4' />
-								</DialogTrigger>
-							</Button>
-							<DialogContent>
-								<DialogHeader>
-									<DialogTitle>¿Estás realmente seguro?</DialogTitle>
-									<DialogDescription>Esta acción es imposible de revertir.</DialogDescription>
-								</DialogHeader>
-								<div>
-									<section className='text-sm font-normal'>
-										La cuenta del usuario
-										<span className='text-md px-1 font-bold text-slate-900'>{user?.name}</span>
-										se eliminará permanentemente de la base de datos.
-									</section>
-									<DialogFooter>
-										<div className='mt-6 flex flex-row gap-4'>
-											<Button variant='ghost' onClick={() => setOpenDialog(false)}>
-												Cancelar
-											</Button>
-											<Button variant='delete' onClick={() => deleteUser(`${user?.id}`)}>
-												Eliminar
-											</Button>
-										</div>
-									</DialogFooter>
-								</div>
-							</DialogContent>
-						</Dialog>
-					</CardFooter>
+                    {(store.getState().role === Roles.ADMIN || store.getState().userId === Number(user?.id)) && (
+                        <CardFooter className='justify-end gap-2 bg-slate-200/50 p-2'>
+                            <Button onClick={() => navigate(`${APP_URL}/usuario/modificar/${user.id}`)} variant='ghost' size='miniIcon' className='rounded-full border bg-white text-slate-400/70 shadow-sm hover:bg-white hover:text-emerald-500'>
+                                <Pencil className='h-4 w-4' />
+                            </Button>
+                            <Dialog open={openDialog} onOpenChange={setOpenDialog}>
+                                <Button variant='ghost' size='miniIcon' className='rounded-full border bg-white text-slate-400/70 shadow-sm hover:bg-white hover:text-rose-500' asChild>
+                                    <DialogTrigger>
+                                        <Trash2 className='h-4 w-4' />
+                                    </DialogTrigger>
+                                </Button>
+                                <DialogContent>
+                                    <DialogHeader>
+                                        <DialogTitle>¿Estás realmente seguro?</DialogTitle>
+                                        <DialogDescription>Esta acción es imposible de revertir.</DialogDescription>
+                                    </DialogHeader>
+                                    <div>
+                                        <section className='text-sm font-normal'>
+                                            La cuenta del usuario
+                                            <span className='text-md px-1 font-bold text-slate-900'>{user?.name}</span>
+                                            se eliminará permanentemente de la base de datos.
+                                        </section>
+                                        <DialogFooter>
+                                            <div className='mt-6 flex flex-row gap-4'>
+                                                <Button variant='ghost' onClick={() => setOpenDialog(false)}>
+                                                    Cancelar
+                                                </Button>
+                                                <Button variant='delete' onClick={() => removeSoft(user.id)}>
+                                                    Eliminar
+                                                </Button>
+                                            </div>
+                                        </DialogFooter>
+                                    </div>
+                                </DialogContent>
+                            </Dialog>
+                            {(store.getState().role === Roles.ADMIN && store.getState().userId !== Number(user?.id)) && (
+                            <Button onClick={() => remove(user.id)} variant='ghost' size='miniIcon' className='rounded-full border bg-white text-slate-400/70 shadow-sm hover:bg-white hover:text-emerald-500'>
+                                <BadgeX className='h-5 w-5' strokeWidth='1.5' />
+                            </Button>
+                            )}
+                        </CardFooter>
+                    )}
 				</Card>
 			</div>
 		</main>

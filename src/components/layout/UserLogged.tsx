@@ -1,19 +1,21 @@
-// Imports
-import { useEffect, useState } from 'react';
-import { ReadUserService } from '@/services/users.services';
+// App
 import Dot from '@/components/shared/Dot';
 import { IUser } from '@/lib/interfaces/user.interface';
+import { UsersServices } from '@/services/users.services';
+import { store } from '@/services/store.services';
+import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 // React component
 function UserLogged({ user }: { user: number }) {
-	const [actualUser, setActualUser] = useState<IUser>();
+	const [actualUser, setActualUser] = useState<IUser | undefined>();
 	const navigate = useNavigate();
 
 	useEffect(() => {
 		function getUser() {
-			ReadUserService(String(user)).then((data) => {
+			UsersServices.findOne(user).then((data) => {
 				if (data instanceof Error || data.status === 401) navigate('/');
 				if (data) setActualUser(data);
+                store.setState({ username: data.name });
 			});
 		}
 		getUser();
@@ -21,7 +23,7 @@ function UserLogged({ user }: { user: number }) {
 
 	return (
 		<div className='mr-2 flex items-center'>
-			<Dot type={actualUser?.type} text={actualUser?.name.charAt(0).toUpperCase()} width='24px' />
+			<Dot role={actualUser?.role} text={actualUser?.name.charAt(0).toUpperCase()} width='24px' />
 			<div className='ml-2 flex text-sm text-slate-400'>{actualUser?.name}</div>
 		</div>
 	);

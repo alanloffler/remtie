@@ -8,48 +8,47 @@ import { Input } from '@/components/ui/input';
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from '@/components/ui/select';
 import { toast } from '@/components/ui/use-toast';
 // App
-import { useEffect, useState } from 'react';
-import { Link, useNavigate, useParams } from 'react-router-dom';
-import { useForm, FormProvider } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
-import { z } from 'zod';
+import { FormEvent, useEffect, useState } from 'react';
 import { IUser } from '@/lib/interfaces/user.interface';
-import { ReadUserService, UpdateUserService } from '@/services/users.services';
+import { Link, useNavigate, useParams } from 'react-router-dom';
+import { Roles } from '@/lib/constants';
+import { UsersServices } from '@/services/users.services';
+import { useForm, FormProvider } from 'react-hook-form';
+import { z } from 'zod';
+import { zodResolver } from '@hookform/resolvers/zod';
 // .env constants
-const appUrl: string = import.meta.env.VITE_APP_URL;
+const APP_URL: string = import.meta.env.VITE_APP_URL;
 // React component
 function UpdateUser() {
-	const { id } = useParams();
-	const [user, setUser] = useState<IUser>();
+	const id = Number(useParams().id);
 	const navigate = useNavigate();
+	const [user, setUser] = useState<IUser>({} as IUser);
 
 	const userFormSchema = z.object({
 		name: z.string().min(3, {
 			message: 'El nombre debe poseer al menos 3 caracteres'
 		}),
 		email: z.string().email({ message: 'Formato de e-mail inválido' }),
-		password: z.string(),
-		phone: z.string().min(10, {
-			message: 'El teléfono debe poseer al menos 10 números'
-		}),
-		type: z.string().min(1, {
+		password: z.string().optional(),
+		phone: z.string().optional(),
+		role: z.string().min(1, {
 			message: 'Debes seleccionar un tipo'
 		})
 	});
 
-	const form = useForm<IUser>({
+	const form = useForm<z.infer<typeof userFormSchema>>({
 		resolver: zodResolver(userFormSchema),
-		values: {
+		defaultValues: {
 			name: '',
 			email: '',
 			password: '',
-			phone: '',
-			type: ''
+			phone: undefined,
+			role: ''
 		}
 	});
 
 	useEffect(() => {
-		ReadUserService(`${id}`).then((response) => {
+		UsersServices.findOne(id).then((response) => {
 			if (response.status > 200) {
 				toast({ title: 'Error', description: response.message, variant: 'destructive', duration: 5000 });
 				if (response.status === 401) navigate('/');
@@ -60,24 +59,28 @@ function UpdateUser() {
 				form.setValue('name', response.name);
 				form.setValue('email', response.email);
 				form.setValue('phone', response.phone);
-				form.setValue('type', response.type);
+				form.setValue('phone', response.phone);
+				form.setValue('role', response.role);
 			}
 		});
 	}, [form, id, navigate]);
 
-	function onSubmit(values: IUser) {
-		if (values.password === '') values.password = user?.password;
-		UpdateUserService(`${id}`, values).then((response) => {
-			if (response instanceof Error) toast({ title: 'Error', description: '500 Internal Server Error | ' + response.message, variant: 'destructive', duration: 5000 });
-			if (response.status > 200) {
-				toast({ title: 'Error', description: response.message, variant: 'destructive', duration: 5000 });
-				if (response.status === 401) navigate('/');
-			}
-			if (response.status === 200) {
-				navigate(appUrl + '/usuarios');
-				toast({ title: 'Usuario modificado', description: response.message, variant: 'success', duration: 5000 });
-			}
+	function onSubmit(values: z.infer<typeof userFormSchema>) {
+		if (values.password === '') values.password = user.password;
+		UsersServices.update(id, values).then((response) => {
+			console.log(response);
+            if (response.status === 200) {
+                toast({ title: response.status, description: response.message, variant: 'success', duration: 5000 });
+                navigate(`${APP_URL}/usuarios`);
+            }
+			if (response.statusCode > 399) toast({ title: response.statusCode, description: response.message, variant: 'destructive', duration: 5000 });
+            if (response instanceof Error) toast({ title: 'Error', description: '500 Internal Server Error | ' + response.message, variant: 'destructive', duration: 5000 });
 		});
+	}
+
+	function handleCancel(event: FormEvent<HTMLButtonElement>) {
+		event.preventDefault();
+		navigate(`${APP_URL}/usuarios`);
 	}
 
 	return (
@@ -85,7 +88,7 @@ function UpdateUser() {
 			<div className='flex flex-row items-center justify-between px-8 pt-8'>
 				<h1 className='text-2xl font-normal text-slate-600'>Modificar Usuario</h1>
 				<Button variant='ghost' size='sm' asChild>
-					<Link to={appUrl + '/usuarios'}>
+					<Link to={`${APP_URL}/usuarios`}>
 						<ArrowLeft className='mr-2 h-4 w-4' />
 						Volver
 					</Link>
@@ -155,19 +158,19 @@ function UpdateUser() {
 											/>
 											<FormField
 												control={form.control}
-												name='type'
+												name='role'
 												render={({ field }) => (
 													<FormItem>
 														<FormLabel>Tipo</FormLabel>
-														<Select value={field.value} onValueChange={(event) => field.onChange(event)}>
+														<Select {...field} value={field.value} onValueChange={(event) => field.onChange(event)}>
 															<FormControl>
 																<SelectTrigger>
 																	<SelectValue placeholder='' />
 																</SelectTrigger>
 															</FormControl>
 															<SelectContent>
-																<SelectItem value='admin'>Administrador</SelectItem>
-																<SelectItem value='user'>Usuario</SelectItem>
+																<SelectItem value={Roles.ADMIN}>Administrador</SelectItem>
+																<SelectItem value={Roles.USER}>Usuario</SelectItem>
 															</SelectContent>
 														</Select>
 														<FormMessage />
@@ -179,7 +182,7 @@ function UpdateUser() {
 								</div>
 								<div className='flex flex-row items-center justify-end pr-6'>
 									<div className='flex'>
-										<Button variant='ghost' className='mr-4' onClick={() => navigate(appUrl + '/usuarios')}>
+										<Button variant='ghost' className='mr-4' onClick={handleCancel}>
 											Cancelar
 										</Button>
 										<Button type='submit' variant='default' size='default'>

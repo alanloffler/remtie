@@ -12,7 +12,8 @@ import { Link, useNavigate } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { CreateUser } from '@/services/users.services';
+import { UsersServices } from '@/services/users.services';
+import { FormEvent } from 'react';
 // react-hook-form schema
 const formSchema = z.object({
 	name: z.string().min(3, {
@@ -22,17 +23,16 @@ const formSchema = z.object({
 	password: z.string().min(6, {
 		message: 'El password debe poseer al menos 6 caracteres'
 	}),
-	phone: z.string().min(10, {
-		message: 'El teléfono debe poseer al menos 10 números'
-	}),
-	type: z.string().min(1, {
+	phone: z.string().optional(),
+	role: z.string().min(1, {
 		message: 'Debes seleccionar un tipo'
 	})
 });
 // .env constants
-const appUrl: string = import.meta.env.VITE_APP_URL;
+const APP_URL: string = import.meta.env.VITE_APP_URL;
 // React component
 function CreateNewUser() {
+    const navigate = useNavigate();
 	const form = useForm<z.infer<typeof formSchema>>({
 		resolver: zodResolver(formSchema),
 		defaultValues: {
@@ -40,30 +40,35 @@ function CreateNewUser() {
 			email: '',
 			password: '',
 			phone: '',
-			type: ''
+			role: ''
 		}
 	});
 
-	const navigate = useNavigate();
-
 	function onSubmit(values: z.infer<typeof formSchema>) {
-		CreateUser(values).then((response) => {
-			if (response === 400 || undefined) toast({ title: 'Error', description: 'El usuario no ha sido creado', variant: 'destructive', duration: 5000 });
-			if (response === 401) toast({ title: 'Error', description: 'No tienes permisos', variant: 'destructive', duration: 5000 });
-			if (response === 422) toast({ title: 'Error', description: 'El e-mail que querés registrar ya se encuentra en uso', variant: 'destructive', duration: 5000 });
-			if (response.status === 200) {
-				toast({ title: 'Nuevo Usuario', description: 'El usuario se ha creado correctamente', variant: 'success', duration: 5000 });
-				navigate(appUrl + '/usuarios');
+		UsersServices
+        .create(values)
+        .then((response) => {
+            //console.log(response);
+			if (response.id > 0) {
+				toast({ title: 'Usuario creado', description: 'El usuario se ha creado correctamente', variant: 'success', duration: 5000 });
+				navigate(`${APP_URL}/usuarios`);
 			}
+            if (response.statusCode > 399) toast({ title: response.statusCode, description: response.message, variant: 'destructive', duration: 5000 });
+            if (response instanceof Error) toast({ title: 'Error', description: '500 Internal Server Error | ' + response.message, variant: 'destructive', duration: 5000 });
 		});
 	}
+
+    function handleCancel(event: FormEvent<HTMLButtonElement>) {
+        event.preventDefault();
+        navigate(`${APP_URL}/usuarios`);
+    }
 
 	return (
 		<main className='flex-1 overflow-y-auto'>
 			<div className='flex flex-row items-center justify-between px-8 pt-8'>
 				<h1 className='text-2xl font-normal text-slate-600'>Crear Usuario</h1>
 				<Button variant='ghost' size='sm' asChild>
-					<Link to={appUrl + '/usuarios'}>
+					<Link to={`${APP_URL}/usuarios`}>
 						<ArrowLeft strokeWidth='2' className='mr-2 h-4 w-4' />
 						Volver
 					</Link>
@@ -133,7 +138,7 @@ function CreateNewUser() {
 											/>
 											<FormField
 												control={form.control}
-												name='type'
+												name='role'
 												render={({ field }) => (
 													<FormItem>
 														<FormLabel>Tipo</FormLabel>
@@ -157,7 +162,7 @@ function CreateNewUser() {
 								</div>
 								<div className='flex flex-row items-center justify-end pr-6'>
 									<div className='flex'>
-										<Button variant='ghost' className='mr-4' onClick={() => navigate(appUrl + '/usuarios')}>
+										<Button variant='ghost' className='mr-4' onClick={handleCancel}>
 											Cancelar
 										</Button>
 										<Button type='submit' variant='default' size='default'>

@@ -6,31 +6,37 @@ import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
 // Types
 type State = {
-	isOpen: boolean;
-	clicked: number;
-	authorized: boolean;
 	authToken: string;
-	userId: number;
+	authorized: boolean;
+	clicked: number;
+	isOpen: boolean;
 	tabActive: string;
+	userId: number;
+    username: string;
+    role: string;
 };
 
 type Actions = {
 	isClicked: (item: number) => void;
-	toggleOpen: () => void;
-	setAuthorized: (token: boolean) => void;
-	setAuthToken: (token: string) => void;
-	setUserId: (id: number) => void;
-	setTabActive: (tab: string) => void;
 	reset: () => void;
+	setAuthToken: (token: string) => void;
+	setAuthorized: (token: boolean) => void;
+	setTabActive: (tab: string) => void;
+	setUserId: (id: number) => void;
+	setUsername: (username: string) => void;
+	toggleOpen: () => void;
+    setRole: (role: string) => void;
 };
 
 const initialState: State = {
-	isOpen: false,
-	clicked: 0,
-	authorized: false,
 	authToken: '',
+	authorized: false,
+	clicked: 0,
+	isOpen: false,
+	tabActive: 'card',
 	userId: 0,
-	tabActive: 'card'
+    username: '',
+    role: '',
 };
 
 export const store = create<State & Actions>()(
@@ -57,6 +63,14 @@ export const store = create<State & Actions>()(
 			setUserId: (id) => {
 				set(() => ({ userId: id }));
 			},
+            username: '',
+            setUsername: (username) => {
+              set(() => ({ username: username }));
+            },
+            role: '',
+            setRole: (role) => {
+              set(() => ({ role: role }));  
+            },
 			tabActive: '',
 			setTabActive: (tab: string) => {
 				set(() => ({ tabActive: tab }));

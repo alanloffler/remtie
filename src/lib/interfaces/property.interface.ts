@@ -13,6 +13,7 @@ export interface IProperty {
 	created_by: number;
 	created_at?: string;
 	updated_at?: string;
+    deletedAt?: string;
 	[attribute: string]: string | number | boolean | undefined;
 	color: string;
 }

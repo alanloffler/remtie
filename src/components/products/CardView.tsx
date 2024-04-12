@@ -8,7 +8,7 @@ import CurrencyFormat from '@/components/shared/CurrencyFormat';
 import { IProperty } from '@/lib/interfaces/property.interface';
 import { useNavigate } from 'react-router-dom';
 // .env constants
-const appUrl: string = import.meta.env.VITE_APP_URL;
+const APP_URL: string = import.meta.env.VITE_APP_URL;
 // React component
 function CardView({ properties }: { properties: IProperty[] }) {
 	const navigate = useNavigate();
@@ -18,7 +18,7 @@ function CardView({ properties }: { properties: IProperty[] }) {
 			{properties.map((property: IProperty) => (
 				<div className='' key={property.id}>
 					<Card className='flex h-full flex-col rounded-md border-t-[4px]' style={{ borderTopColor: property.color }}>
-						<div onClick={() => navigate(`${appUrl}/productos/${property.id}`)} className='hover:cursor-default'>
+						<div onClick={() => navigate(`${APP_URL}/productos/${property.id}`)} className='hover:cursor-default'>
 							<CardHeader className='flex-grow rounded-sm p-4'>
 								<div className='flex items-center gap-2'>
 									<Bookmark strokeWidth='2' className='h-5 w-5' style={{ color: property.color }} />
@@ -44,10 +44,10 @@ function CardView({ properties }: { properties: IProperty[] }) {
 								</div>
 							</div>
 							<div className='flex items-center space-x-2'>
-								<Button onClick={() => navigate(`${appUrl}/productos/${property.id}`)} variant='ghost' size='miniIcon' className='rounded-full border bg-white text-slate-400/70 shadow-sm hover:bg-white hover:text-sky-400'>
+								<Button onClick={() => navigate(`${APP_URL}/productos/${property.id}`)} variant='ghost' size='miniIcon' className='rounded-full border bg-white text-slate-400/70 shadow-sm hover:bg-white hover:text-sky-400'>
 									<FileText className='h-4 w-4' />
 								</Button>
-								<Button onClick={() => navigate(`${appUrl}/productos/modificar/${property?.id}`)} variant='ghost' size='miniIcon' className='rounded-full border bg-white text-slate-400/70 shadow-sm hover:bg-white hover:text-emerald-500'>
+								<Button onClick={() => navigate(`${APP_URL}/productos/modificar/${property?.id}`)} variant='ghost' size='miniIcon' className='rounded-full border bg-white text-slate-400/70 shadow-sm hover:bg-white hover:text-emerald-500'>
 									<Pencil className='h-4 w-4' />
 								</Button>
 							</div>
@@ -58,5 +58,6 @@ function CardView({ properties }: { properties: IProperty[] }) {
 		</div>
 	);
 }
+
 // Export React component
 export default CardView;

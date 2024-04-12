@@ -1,5 +1,5 @@
 // Icons: Lucide (https://lucide.dev/)
-import { ArrowLeft, Trash2 } from 'lucide-react';
+import { ArrowLeft, Trash2, BadgeX } from 'lucide-react';
 // UI: Shadcn-ui (https://ui.shadcn.com/)
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
@@ -13,27 +13,32 @@ import { Switch } from '@/components/ui/switch';
 import { Textarea } from '@/components/ui/textarea';
 import { toast } from '@/components/ui/use-toast';
 // App
-import { useNavigate, useParams } from 'react-router-dom';
-import { useEffect, useState } from 'react';
-import { FieldValues, FormProvider, useForm } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
 import z from 'zod';
-import { ProductsServices } from '@/services/products.services';
-import { ImageServices } from '@/services/image.services';
-import { getImageURL } from '@/lib/image-util';
-import { IProperty } from '@/lib/interfaces/property.interface';
-import { IImage } from '@/lib/interfaces/image.interface';
 import { BusinessServices } from '@/services/business.services';
 import { CategoriesServices } from '@/services/categories.services';
+import { FieldValues, FormProvider, useForm } from 'react-hook-form';
 import { IBusiness, ICategory } from '@/lib/interfaces/inputs.interface';
-import { propertySchema } from '@/lib/schemas/property.schema';
+import { IImage } from '@/lib/interfaces/image.interface';
+import { IProperty } from '@/lib/interfaces/property.interface';
+import { ImageServices } from '@/services/image.services';
+import { ProductsServices } from '@/services/products.services';
+import { getImageURL } from '@/lib/image-util';
 import { imageFormSchema } from '@/lib/schemas/image.schema';
+import { propertySchema } from '@/lib/schemas/property.schema';
+import { useCapitalize } from '@/hooks/useCapitalize';
+import { useEffect, useState } from 'react';
+import { useNavigate, useParams } from 'react-router-dom';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { store } from '@/services/store.services';
+
+import { jwtDecode } from 'jwt-decode';
 // React component
 function UpdateProduct() {
 	const { id } = useParams();
 	const propertyId = Number(id);
 	const navigate = useNavigate();
-
+	const capitalize = useCapitalize();
+	const [isAdmin, setIsAdmin] = useState<boolean>(false);
 	const [property, setProperty] = useState<IProperty>({} as IProperty);
 	const [images, setImages] = useState<IImage[]>([]);
 	const [business, setBusiness] = useState<IBusiness[]>([]);
@@ -42,6 +47,7 @@ function UpdateProduct() {
 	const [categoriesKey, setCategoriesKey] = useState<number>(0);
 	const [openDialog, setOpenDialog] = useState<boolean>(false);
 	const [imageDialog, setImageDialog] = useState<IImage>({ id: 0, name: '', propertyId: 0 });
+	const [deleteAction, setDeleteAction] = useState<string>('');
 
 	const propertyForm = useForm<z.infer<typeof propertySchema>>({
 		resolver: zodResolver(propertySchema),
@@ -98,9 +104,15 @@ function UpdateProduct() {
 		});
 	}, [propertyId, propertyForm]);
 
+	useEffect(() => {
+		const payload = jwtDecode(store.getState().authToken);
+		setIsAdmin(payload.role === 'admin');
+	}, []);
+
 	function handleSubmitProduct(values: z.infer<typeof propertySchema>) {
-		const color = categories.find((cat) => cat.value === values.type)?.color;
-		const propertyData = { ...values, color: color ? color : '', created_by: property.created_by };
+		const color = categories.find((cat) => cat.name === values.type)?.color;
+		const isActive: number = values.is_active === true ? 1 : 0;
+		const propertyData = { ...values, color: color ? color : '', is_active: isActive };
 		ProductsServices.update(propertyId, propertyData).then((response) => {
 			console.log(response);
 			if (response.status === 200) toast({ title: 'Propiedad modificada', description: response.message, variant: 'success', duration: 5000 });
@@ -114,28 +126,59 @@ function UpdateProduct() {
 		ImageServices.create(propertyId, data.file[0])
 			.then((response) => {
 				if (response instanceof Error) toast({ title: 'Error', description: '500 Internal Server Error | ' + response.message, variant: 'destructive', duration: 5000 });
-				if (response.status > 200) {
-					toast({ title: 'Error', description: response.message, variant: 'destructive', duration: 5000 });
-					if (response.status === 401) navigate('/');
-				}
-				if (response.status === 200) {
+				console.log(response);
+				if (response.status < 400) {
 					ImageServices.getByProperty(propertyId).then((response) => {
 						setImages(response);
 					});
-					toast({ title: 'Imágen guardada', description: response.message, variant: 'success', duration: 5000 });
+					toast({ title: response.status, description: response.message, variant: 'success', duration: 5000 });
 					imageForm.reset();
 				}
+				if (response.status > 399) toast({ title: response.status, description: response.message, variant: 'destructive', duration: 5000 });
+				// if (response.status === 401) navigate('/');
+				// if (response.status > 200) {
+				// 	toast({ title: 'Error', description: response.message, variant: 'destructive', duration: 5000 });
+				// 	if (response.status === 401) navigate('/');
+				// }
+				// if (response.status === 200) {
+				// 	ImageServices.getByProperty(propertyId).then((response) => {
+				// 		setImages(response);
+				// 	});
+				// 	toast({ title: 'Imágen guardada', description: response.message, variant: 'success', duration: 5000 });
+				// 	imageForm.reset();
+				// }
 			})
 			.catch((error) => console.log(error)); // toast here
 	}
 
 	function handleDeleteImage(id: number) {
-		ImageServices.delete(id).then((response) => {
-			if (response.status === 200) {
-				setImages(images.filter((img) => img.id !== id));
-			}
-		});
+		if (deleteAction === 'softDelete') {
+			ImageServices.deleteSoft(id).then((response) => {
+				if (response.status === 200) {
+					setImages(images.filter((img) => img.id !== id));
+				}
+			});
+		}
+		if (deleteAction === 'hardDelete') {
+			ImageServices.delete(id).then((response) => {
+				if (response.status === 200) {
+					setImages(images.filter((img) => img.id !== id));
+				}
+			});
+		}
+
 		setOpenDialog(false);
+	}
+
+	function switchActive(check: boolean) {
+		ProductsServices.switchActive(propertyId, check).then((response) => {
+			if (response instanceof Error) toast({ title: 'Error', description: '500 Internal Server Error | ' + response.message, variant: 'destructive', duration: 5000 });
+			if (response.status > 200) {
+				if (response.status === 401) navigate('/');
+				toast({ title: 'Error', description: response.message, variant: 'destructive', duration: 5000 });
+			}
+			if (response.status === 200) toast({ title: 'Propiedad actualizada', description: response.message, variant: 'success', duration: 5000 });
+		});
 	}
 
 	return (
@@ -175,8 +218,8 @@ function UpdateProduct() {
 														</FormControl>
 														<SelectContent>
 															{business?.map((el) => (
-																<SelectItem key={el.id} value={el.value} className='text-sm'>
-																	{el.name}
+																<SelectItem key={el.id} value={el.name} className='text-sm'>
+																	{capitalize(el.name)}
 																</SelectItem>
 															))}
 														</SelectContent>
@@ -199,8 +242,8 @@ function UpdateProduct() {
 														</FormControl>
 														<SelectContent>
 															{categories?.map((el) => (
-																<SelectItem key={el.id} value={el.value} className='text-sm'>
-																	{el.name}
+																<SelectItem key={el.id} value={el.name} className='text-sm'>
+																	{capitalize(el.name)}
 																</SelectItem>
 															))}
 														</SelectContent>
@@ -349,7 +392,7 @@ function UpdateProduct() {
 													<FormItem className='flex w-full justify-end'>
 														<FormControl>
 															<div className='flex items-center space-x-2'>
-																<Switch id='is_active' checked={field.value} onCheckedChange={field.onChange} className='data-[state=checked]:bg-emerald-500 data-[state=unchecked]:bg-input' />
+																<Switch key={+new Date()} id='is_active' defaultChecked={field.value} onCheckedChange={(check: boolean) => switchActive(check)} className='data-[state=checked]:bg-emerald-500 data-[state=unchecked]:bg-input' />
 																<Label htmlFor='is_active'>Activo</Label>
 															</div>
 														</FormControl>
@@ -390,16 +433,32 @@ function UpdateProduct() {
 											<h2 className='flex flex-row place-items-center pl-3 text-xs font-medium text-slate-900'># {i + 1}</h2>
 										</div>
 										<div className='hidden flex-row text-xs font-light text-slate-400 xs:block md:block lg:block'>{img.name}</div>
-										<Button
-											onClick={() => {
-												setOpenDialog(true);
-												setImageDialog({ id: img.id, name: img.name, propertyId: img.propertyId });
-											}}
-											variant='ghost'
-											size='miniIcon'
-											className='rounded-full border bg-white text-slate-400/70 shadow-sm hover:bg-white hover:text-rose-500'>
-											<Trash2 className='h-4 w-4' />
-										</Button>
+										<div className='flex flex-row gap-2'>
+											<Button
+												onClick={() => {
+													setOpenDialog(true);
+													setImageDialog({ id: img.id, name: img.name, propertyId: img.propertyId });
+													setDeleteAction('softDelete');
+												}}
+												variant='ghost'
+												size='miniIcon'
+												className='rounded-full border bg-white text-slate-400/70 shadow-sm hover:bg-white hover:text-rose-500'>
+												<Trash2 className='h-4 w-4' />
+											</Button>
+											{isAdmin && (
+												<Button
+													onClick={() => {
+														setOpenDialog(true);
+														setImageDialog({ id: img.id, name: img.name, propertyId: img.propertyId });
+														setDeleteAction('hardDelete');
+													}}
+													variant='ghost'
+													size='miniIcon'
+													className='rounded-full border bg-white text-slate-400/70 shadow-sm hover:bg-white hover:text-rose-500'>
+													<BadgeX className='h-5 w-5' strokeWidth='1.5' />
+												</Button>
+											)}
+										</div>
 									</div>
 								</Card>
 							);

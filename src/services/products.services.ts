@@ -1,12 +1,18 @@
+import { store } from "./store.services";
+
 export class ProductsServices {
-	static readonly apiUrl: string = import.meta.env.VITE_REACT_BACKEND_API;
+	static readonly API_URL: string = import.meta.env.VITE_REACT_BACKEND_API;
 	static abortController = new AbortController();
 
 	static async getProducts() {
 		try {
-			const query: Response = await fetch(ProductsServices.apiUrl + '/properties', {
+            const token = store.getState().authToken;
+			const query: Response = await fetch(`${ProductsServices.API_URL}/properties`, {
 				method: 'GET',
-				headers: { 'content-type': 'application/json;charset=UTF-8' }
+				headers: { 
+                    'content-type': 'application/json;charset=UTF-8',
+                    Authorization: 'Bearer ' + token
+                }
 			});
 			return await query.json();
 		} catch (error) {
@@ -16,9 +22,13 @@ export class ProductsServices {
 
 	static async getProduct(id: number) {
 		try {
-			const query: Response = await fetch(ProductsServices.apiUrl + '/properties/' + id, {
+            const token = store.getState().authToken;
+			const query: Response = await fetch(`${ProductsServices.API_URL}/properties/${id}`, {
 				method: 'GET',
-				headers: { 'content-type': 'application/json;charset=UTF-8' }
+				headers: {
+                    'content-type': 'application/json;charset=UTF-8',
+                    Authorization: 'Bearer ' + token
+                }
 			});
 			return await query.json();
 		} catch (error) {
@@ -27,21 +37,25 @@ export class ProductsServices {
 	}
 
 	static async create(data: object) {
+        const token = store.getState().authToken;
 		if (ProductsServices.abortController) ProductsServices.abortController.abort();
 		ProductsServices.abortController = new AbortController();
 		const signal: AbortSignal = ProductsServices.abortController.signal;
 
 		try {
-            const createProduct: Response = await fetch(`${ProductsServices.apiUrl}/properties`, {
-                method: 'POST',
-                headers: { 'content-type': 'application/json;charset=UTF-8' },
-                body: JSON.stringify(data),
-                signal: signal
-            });
-            return await createProduct.json();
+			const createProduct: Response = await fetch(`${ProductsServices.API_URL}/properties`, {
+				method: 'POST',
+				headers: {
+                    'content-type': 'application/json;charset=UTF-8',
+                    Authorization: 'Bearer ' + token
+                },
+				body: JSON.stringify(data),
+				signal: signal
+			});
+			return await createProduct.json();
 		} catch (error) {
-            return error;
-        }
+			return error;
+		}
 	}
 
 	static async deleteProduct(id: number) {
@@ -50,9 +64,13 @@ export class ProductsServices {
 		const signal = ProductsServices.abortController.signal;
 
 		try {
-			const productDeleted = await fetch(`${ProductsServices.apiUrl}/properties/${id}`, {
+            const token = store.getState().authToken;
+			const productDeleted = await fetch(`${ProductsServices.API_URL}/properties/${id}/soft`, {
 				method: 'DELETE',
-				signal: signal
+				signal: signal,
+                headers: {
+                    Authorization: 'Bearer ' + token
+                }
 			});
 			return await productDeleted.json();
 		} catch (error) {
@@ -66,9 +84,13 @@ export class ProductsServices {
 		const signal: AbortSignal = ProductsServices.abortController.signal;
 
 		try {
-			const update: Response = await fetch(`${ProductsServices.apiUrl}/properties/${id}`, {
-				method: 'PUT',
-				headers: { 'content-type': 'application/json;charset=UTF-8' },
+            const token = store.getState().authToken;
+			const update: Response = await fetch(`${ProductsServices.API_URL}/properties/${id}`, {
+				method: 'PATCH',
+				headers: {
+                    'content-type': 'application/json;charset=UTF-8',
+                    Authorization: 'Bearer ' + token
+                },
 				body: JSON.stringify(data),
 				signal: signal
 			});
@@ -84,10 +106,14 @@ export class ProductsServices {
 		const signal = ProductsServices.abortController.signal;
 
 		try {
-			const query: Response = await fetch(`${ProductsServices.apiUrl}/properties/${id}`, {
+            const token = store.getState().authToken;
+			const query: Response = await fetch(`${ProductsServices.API_URL}/properties/${id}/active`, {
 				method: 'PATCH',
-				headers: { 'content-type': 'application/json;charset=UTF-8' },
-				body: JSON.stringify({ active: active }),
+				headers: {
+                    'content-type': 'application/json;charset=UTF-8',
+                    Authorization: 'Bearer ' + token
+                },
+				body: JSON.stringify({ is_active: active === true ? 1 : 0 }),
 				signal: signal
 			});
 			return await query.json();

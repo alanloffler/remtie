@@ -1,6 +1,6 @@
 /* eslint-disable react-hooks/exhaustive-deps */
 // Icons: Lucide (https://lucide.dev/)
-import { ArrowUpDown, Info, Pencil, Plus, Trash2 } from 'lucide-react';
+import { ArrowUpDown, BadgeX, CheckCircle, CircleOff, Info, Pencil, Plus, Trash2 } from 'lucide-react';
 // UI: Shadcn-ui (https://ui.shadcn.com/)
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components//ui/card';
@@ -11,23 +11,26 @@ import { Separator } from '@/components/ui/separator';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { toast } from '@/components/ui/use-toast';
 // App
-import { useEffect, useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
 import CardView from '@/components/products/CardView';
-import { DataTable } from '@/components/data-table/DataTable';
-import { ColumnDef } from '@tanstack/react-table';
 import CurrencyFormat from '@/components/shared/CurrencyFormat';
-import { IProperty } from '@/lib/interfaces/property.interface';
-import { IImage } from '@/lib/interfaces/image.interface';
-import { IBusiness, ICategory } from '@/lib/interfaces/inputs.interface';
-import { ProductsConfig } from '@/lib/config';
+import InfoCard from '@/components/shared/InfoCard';
 import { BusinessServices } from '@/services/business.services';
 import { CategoriesServices } from '@/services/categories.services';
+import { ColumnDef } from '@tanstack/react-table';
+import { DataTable } from '@/components/data-table/DataTable';
+import { IBusiness, ICategory } from '@/lib/interfaces/inputs.interface';
+import { IImage } from '@/lib/interfaces/image.interface';
+import { IProperty } from '@/lib/interfaces/property.interface';
 import { ImageServices } from '@/services/image.services';
+import { Link, useNavigate } from 'react-router-dom';
+import { ProductsConfig } from '@/lib/config';
 import { ProductsServices } from '@/services/products.services';
+import { ReactElement, useEffect, useState } from 'react';
 import { store } from '@/services/store.services';
+import { useCapitalize } from '@/hooks/useCapitalize';
+import { Roles } from '@/lib/constants';
 // .env constants
-const appUrl: string = import.meta.env.VITE_APP_URL;
+const APP_URL: string = import.meta.env.VITE_APP_URL;
 // React component
 function ListProducts() {
 	const [properties, setProperties] = useState<IProperty[]>([]);
@@ -42,11 +45,20 @@ function ListProducts() {
 	const [searchFilter, setSearchFilter] = useState<string>('');
 	const [openDialog, setOpenDialog] = useState(false);
 	const [propertyId, setPropertyId] = useState<number>(0);
+	const [showInfoCard, setShowInfoCard] = useState<boolean>(false);
+	const [showCard, setShowCard] = useState<boolean>(false);
 
 	const tabActive: string = store.getState().tabActive;
 	const setTabActive = store.getState().setTabActive;
 
 	const navigate = useNavigate();
+	const capitalize = useCapitalize();
+
+	const content: ReactElement = (
+		<div>
+			No hay propiedades creadas por <span className='px-1 font-bold'>{store.getState().username}</span>
+		</div>
+	);
 
 	useEffect(() => {
 		async function getBusiness() {
@@ -60,18 +72,21 @@ function ListProducts() {
 		}
 
 		async function getProducts() {
-			const productsService = await ProductsServices.getProducts();
-			if (productsService instanceof Error) toast({ variant: 'destructive', title: 'Error', description: '500 Internal Server Error | ' + productsService.message, duration: 5000 });
-			if (productsService.status >= 400) {
-                toast({ variant: 'destructive', title: 'Error', description: productsService.message, duration: 5000 });
-            }
-			if (productsService.length > 1) {
-				setShowSelects(true);
-				setProperties(productsService);
-				setPropertiesFiltered(productsService);
-			}
+			ProductsServices.getProducts().then((response) => {
+				if (Array.isArray(response)) {
+					if (response.length > 0) {
+						setShowSelects(true);
+						setProperties(response);
+						setPropertiesFiltered(response);
+						setShowCard(true);
+					} else {
+						setShowInfoCard(true);
+					}
+				}
+				if (response.statusCode > 399) toast({ title: response.statusCode, description: response.message, variant: 'destructive', duration: 5000 });
+				if (response instanceof Error) toast({ title: 'Error', description: '500 Internal Server Error | ' + response.message, variant: 'destructive', duration: 5000 });
+			});
 		}
-
 		getBusiness();
 		getCategories();
 		getProducts();
@@ -125,24 +140,37 @@ function ListProducts() {
 				return <CurrencyFormat value={row.original.price} locale='es-AR' digits={0} className='font-semibold italic tracking-tight' />;
 			}
 		},
-		// Actions
+		//#region Actions
 		{
 			header: ProductsConfig.headers[6],
 			id: 'actions',
 			cell: ({ row }) => {
 				return (
 					<div className='flex flex-row gap-2'>
-						<Button onClick={() => navigate(appUrl + '/productos/' + row.original.id)} variant='outline' size='miniIcon' className='hover:bg-white hover:text-sky-400'>
+						<Button onClick={() => navigate(APP_URL + '/productos/' + row.original.id)} variant='outline' size='miniIcon' className='hover:bg-white hover:text-sky-400'>
 							<Info className='h-5 w-5' strokeWidth='1.5' />
 						</Button>
-						<Button onClick={() => navigate(`${appUrl}/productos/modificar/${row.original.id}`)} variant='outline' size='miniIcon' className='hover:bg-white hover:text-emerald-400'>
+						<Button onClick={() => navigate(`${APP_URL}/productos/modificar/${row.original.id}`)} variant='outline' size='miniIcon' className='hover:bg-white hover:text-emerald-400'>
 							<Pencil className='h-5 w-5' strokeWidth='1.5' />
 						</Button>
-						<Button onClick={() => handleDeleteDialog(row.original.id)} variant='outline' size='miniIcon' className='hover:bg-white hover:text-rose-400'>
-							<Trash2 className='h-5 w-5' strokeWidth='1.5' />
-						</Button>
+						{/* TODO RESTORE PROPERTY */}
+						{row.original.deletedAt === null ? (
+							<Button onClick={() => handleDeleteDialog(row.original.id)} variant='outline' size='miniIcon' className='hover:bg-white hover:text-rose-400'>
+								<Trash2 className='h-5 w-5' strokeWidth='1.5' />
+							</Button>
+						) : (
+							<Button variant='outline' size='miniIcon' className='hover:bg-white hover:text-emerald-400'>
+								<CheckCircle className='h-5 w-5' strokeWidth='1.5' />
+							</Button>
+						)}
+						{/* TODO HARD REMOVE */}
+						{store.getState().role === Roles.ADMIN && (
+							<Button onClick={() => handleDeleteDialog(row.original.id)} variant='outline' size='miniIcon' className='hover:bg-white hover:text-rose-400'>
+								<BadgeX className='h-5 w-5' strokeWidth='1.5' />
+							</Button>
+						)}
 						<div className='flex items-center'>
-							<div className={'flex h-4 w-4 items-center rounded-full border pl-1 ' + (row.original.is_active ? 'border-emerald-400 bg-emerald-300' : 'border-slate-300/50 bg-input')}></div>
+							{row.original.deletedAt ? <CircleOff className='h-4 w-4' /> : <div className={'flex h-4 w-4 items-center rounded-full border pl-1 ' + (row.original.is_active ? 'border-emerald-400 bg-emerald-300' : 'border-slate-300/50 bg-input')}></div>}
 						</div>
 					</div>
 				);
@@ -209,15 +237,14 @@ function ListProducts() {
 		setOpenDialog(false);
 		const images: IImage[] = await ImageServices.getByProperty(id);
 
-		Promise.all([ImageServices.deleteMany(images), ProductsServices.deleteProduct(id)])
-        .then((response) => {
+		Promise.all([ImageServices.deleteMany(images), ProductsServices.deleteProduct(id)]).then((response) => {
 			// const [response1, response2] = response;
 			// console.log(response1);
 			// console.log(response2);
 			const resultsAll = response.every((res) => res.status === 200);
 			if (resultsAll) {
 				toast({ title: 'Propiedad eliminada', description: 'La propiedad fue eliminada correctamente', variant: 'success', duration: 5000 });
-                navigate(`${appUrl}/productos/`);
+				navigate(`${APP_URL}/productos/`);
 			} else {
 				toast({ title: 'Error', description: '400 Bad Request | La propiedad no pudo ser eliminada', variant: 'destructive', duration: 5000 });
 			}
@@ -230,7 +257,7 @@ function ListProducts() {
 				<h1 className='text-2xl font-normal text-slate-600'>Productos</h1>
 				<div>
 					<Button variant='default' size='default' asChild>
-						<Link to={`${appUrl}/productos/crear`}>
+						<Link to={`${APP_URL}/productos/crear`}>
 							<Plus className='mr-2 h-4 w-4' />
 							Nuevo
 						</Link>
@@ -262,8 +289,8 @@ function ListProducts() {
 									<SelectContent>
 										{showSelects &&
 											business?.map((el) => (
-												<SelectItem key={el.id} value={el.value} className='text-sm'>
-													{el.name}
+												<SelectItem key={el.id} value={el.name} className='text-sm'>
+													{capitalize(el.name)}
 												</SelectItem>
 											))}
 										<Separator orientation='horizontal' className=' bg-slate-200' />
@@ -281,8 +308,8 @@ function ListProducts() {
 									<SelectContent>
 										{showSelects &&
 											categories?.map((el) => (
-												<SelectItem key={el.id} value={el.value} className='text-sm'>
-													{el.name}
+												<SelectItem key={el.id} value={el.name} className='text-sm'>
+													{capitalize(el.name)}
 												</SelectItem>
 											))}
 										<Separator orientation='horizontal' className=' bg-slate-200' />
@@ -305,7 +332,12 @@ function ListProducts() {
 						</div>
 					</div>
 					<TabsContent value='card' className='py-6 pb-8'>
-						<CardView properties={propertiesFiltered} />
+						{showCard && <CardView properties={propertiesFiltered} />}
+						{showInfoCard && (
+							<div className='flex justify-center'>
+								<InfoCard content={content} />
+							</div>
+						)}
 					</TabsContent>
 					<TabsContent value='list' className='py-6 pb-8'>
 						<Card className='p-6'>
@@ -323,7 +355,7 @@ function ListProducts() {
 					</DialogHeader>
 					<section>
 						La propiedad
-						<span className='text-md px-1 font-bold text-neutral-900 uppercase'>{propertyId < 10 ? 'Cod/0' + propertyId : 'Cod/' + propertyId}</span>
+						<span className='text-md px-1 font-bold uppercase text-neutral-900'>{propertyId < 10 ? 'Cod/0' + propertyId : 'Cod/' + propertyId}</span>
 						se eliminará permanentemente de la base de datos.
 					</section>
 					<DialogFooter>

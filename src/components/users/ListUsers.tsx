@@ -1,5 +1,5 @@
 // Icons: Lucide (https://lucide.dev/)
-import { ArrowUpDown, Info, Pencil, Plus, Trash2 } from 'lucide-react';
+import { ArrowUpDown, BadgeX, CheckCircle, CircleOff, Info, Pencil, Plus, Trash2 } from 'lucide-react';
 // UI: Shadcn-ui (https://ui.shadcn.com/)
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
@@ -11,22 +11,21 @@ import { Link, useNavigate } from 'react-router-dom';
 import { ColumnDef } from '@tanstack/react-table';
 import { DataTable } from '@/components/data-table/DataTable';
 import { UsersConfig } from '@/lib/config';
-import { IUser } from '@/lib/interfaces/user.interface';
-import { DeleteUserService, GetAllUsers } from '@/services/users.services';
+import { IUser, IUserDialog } from '@/lib/interfaces/user.interface';
+import { UsersServices } from '@/services/users.services';
 import Dot from '@/components/shared/Dot';
+import { store } from '@/services/store.services';
+import { Roles } from '@/lib/constants';
 // .env constants
-const appUrl: string = import.meta.env.VITE_APP_URL;
+const APP_URL: string = import.meta.env.VITE_APP_URL;
 // React component
 function ListUsers() {
 	const navigate = useNavigate();
 	const [users, setUsers] = useState<IUser[]>([]);
 	const [openDialog, setOpenDialog] = useState(false);
-	const [userDialog, setUserDialog] = useState<IUserDialog>({ id: '', name: '' });
-
-	interface IUserDialog {
-		id: string | undefined;
-		name: string;
-	}
+	const [userDialog, setUserDialog] = useState<IUserDialog>({ id: 0, name: '', title: '', subtitle: '', message: <span></span> });
+	const [isAdmin, setIsAdmin] = useState<boolean>(false);
+	const [dialogAction, setDialogAction] = useState<string>('');
 
 	const columns: ColumnDef<IUser>[] = [
 		{
@@ -50,7 +49,7 @@ function ListUsers() {
 			header: '',
 			cell: ({ row }) => {
 				const item = row.original;
-				return <Dot type={item.type} width='14px' />;
+				return <>{item.deletedAt !== null ? <CircleOff className='h-4 w-4' /> : <Dot role={item.role} width='14px' />}</>;
 			}
 		},
 		{
@@ -86,25 +85,86 @@ function ListUsers() {
 			cell: ({ row }) => {
 				return (
 					<div className='flex flex-row gap-2'>
-						<Button onClick={() => navigate(appUrl + '/usuario/' + Number(row.original.id))} variant='outline' size='miniIcon' className='hover:bg-white hover:text-sky-400'>
+						<Button onClick={() => navigate(`${APP_URL}/usuario/${Number(row.original.id)}`)} variant='outline' size='miniIcon' className='hover:bg-white hover:text-sky-400'>
 							<Info className='h-5 w-5' strokeWidth='1.5' />
 						</Button>
-						<Button onClick={() => navigate(appUrl + '/usuario/modificar/' + Number(row.original.id))} variant='outline' size='miniIcon' className='hover:bg-white hover:text-emerald-400'>
-							<Pencil className='h-5 w-5' strokeWidth='1.5' />
-						</Button>
-						<Button
-							onClick={() => {
-								setOpenDialog(true);
-								setUserDialog({
-									id: row.original.id,
-									name: row.original.name
-								});
-							}}
-							variant='outline'
-							size='miniIcon'
-							className='hover:bg-white hover:text-rose-400'>
-							<Trash2 className='h-5 w-5' strokeWidth='1.5' />
-						</Button>
+						{(isAdmin || (store.getState().userId === Number(row.original.id) && !isAdmin)) && (
+							<>
+								{/* Edit */}
+								<Button onClick={() => navigate(`${APP_URL}/usuario/modificar/${Number(row.original.id)}`)} variant='outline' size='miniIcon' className='hover:bg-white hover:text-emerald-400'>
+									<Pencil className='h-5 w-5' strokeWidth='1.5' />
+								</Button>
+								{/* Soft Delete or Restore */}
+								{row.original.deletedAt === null ? (
+									<Button
+										onClick={() => {
+											setOpenDialog(true);
+											setUserDialog({
+												id: Number(row.original.id),
+												name: row.original.name,
+												title: '¿Estás realmente seguro?',
+												subtitle: 'Esta acción es imposible de revertir.',
+												message: (
+													<>
+														La cuenta del usuario <span className='text-md font-bold text-slate-900'>{row.original.name}</span> va a ser eliminada en la base de datos, y ya no estará activa.
+													</>
+												)
+											});
+											setDialogAction('removeSoft');
+										}}
+										variant='outline'
+										size='miniIcon'
+										className='hover:bg-white hover:text-rose-400'>
+										<Trash2 className='h-5 w-5' strokeWidth='1.5' />
+									</Button>
+								) : (
+									<Button
+										onClick={() => {
+											setOpenDialog(true);
+											setUserDialog({
+												id: Number(row.original.id),
+												name: row.original.name,
+												title: '¿Estás realmente seguro?',
+												subtitle: 'Esta acción es posible de revertir luego.',
+												message: (
+													<>
+														La cuenta del usuario <span className='text-md font-bold text-slate-900'>{row.original.name}</span> va a ser restaurada de la base de datos, y volverá a estar activa.
+													</>
+												)
+											});
+											setDialogAction('restore');
+										}}
+										variant='outline'
+										size='miniIcon'
+										className='hover:bg-white hover:text-emerald-400'>
+										<CheckCircle className='h-5 w-5' strokeWidth='1.5' />
+									</Button>
+								)}
+								{store.getState().userId !== Number(row.original.id) && (
+									<Button
+										onClick={() => {
+											setOpenDialog(true);
+											setUserDialog({
+												id: Number(row.original.id),
+												name: row.original.name,
+												title: '¿Estás realmente seguro?',
+												subtitle: 'Esta acción es imposible de revertir.',
+												message: (
+													<>
+														La cuenta del usuario <span className='text-md font-bold text-slate-900'>{row.original.name}</span> va a ser eliminada permanentemente de la base de datos.
+													</>
+												)
+											});
+                                            setDialogAction('remove');
+										}}
+										variant='outline'
+										size='miniIcon'
+										className='hover:bg-white hover:text-rose-400'>
+										<BadgeX className='h-5 w-5' strokeWidth='1.5' />
+									</Button>
+								)}
+							</>
+						)}
 					</div>
 				);
 			}
@@ -112,7 +172,7 @@ function ListUsers() {
 	];
 
 	async function getAllUsers() {
-		GetAllUsers().then((response) => {
+		UsersServices.getAll().then((response) => {
 			if (response.status > 400) {
 				toast({ title: 'Error', description: response.message, variant: 'destructive', duration: 5000 });
 				if (response.status === 401) navigate('/');
@@ -123,34 +183,78 @@ function ListUsers() {
 	}
 
 	useEffect(() => {
+		setIsAdmin(store.getState().role === Roles.ADMIN);
 		getAllUsers();
 		// eslint-disable-next-line react-hooks/exhaustive-deps
 	}, []);
-
-	function deleteUser(id: string | undefined) {
+    // ACTIONS
+	function removeSoft(id: number) {
 		if (!id) return;
-		DeleteUserService(id).then((response) => {
-			if (response.status === 200) {
-				setOpenDialog(false);
-				getAllUsers();
-				toast({ title: 'Usuario eliminado', description: response.message, variant: 'success', duration: 5000 });
-			}
-			if (response.status > 200) toast({ title: 'Error', description: response.message, variant: 'destructive', duration: 5000 });
+
+        UsersServices
+        .removeSoft(id)
+        .then((response) => {
+            console.log(response);
+            if (response.status === 200) {
+                toast({ title: response.status, description: response.message, variant: 'success', duration: 5000 });
+                getAllUsers();
+            }
+			if (response.statusCode > 399) toast({ title: response.statusCode, description: response.message, variant: 'destructive', duration: 5000 });
 			if (response instanceof Error) toast({ title: 'Error', description: '500 Internal Server Error | ' + response.message, variant: 'destructive', duration: 5000 });
 			setOpenDialog(false);
 		});
 	}
 
+    function restore(id: number) {
+        UsersServices
+        .restore(id)
+        .then(response => {
+            console.log(response);
+            if (response.status === 200) {
+                toast({ title: response.status, description: response.message, variant: 'success', duration: 5000 });
+                getAllUsers();
+            }
+            if (response.statusCode > 399) toast({ title: response.statusCode, description: response.message, variant: 'destructive', duration: 5000 });
+            if (response instanceof Error) toast({ title: 'Error', description: '500 Internal Server Error | ' + response.message, variant: 'destructive', duration: 5000 });
+            setOpenDialog(false);
+        });
+    }
+
+    function remove(id: number) {
+        UsersServices
+        .remove(id)
+        .then(response => {
+            console.log(response);
+            if (response.status === 200) {
+                toast({ title: response.status, description: response.message, variant: 'success', duration: 5000 });
+                getAllUsers();
+            }
+            if (response.statusCode > 399) toast({ title: response.statusCode, description: response.message, variant: 'destructive', duration: 5000 });
+            if (response instanceof Error) toast({ title: 'Error', description: '500 Internal Server Error | ' + response.message, variant: 'destructive', duration: 5000 });
+            setOpenDialog(false);
+        });
+    }
+
 	return (
 		<main className='flex-1 overflow-y-auto'>
 			<div className='flex flex-row items-center justify-between px-8 pt-8'>
 				<h1 className='text-2xl font-normal text-slate-600'>Usuarios</h1>
-				<Button variant='default' size='default' asChild>
-					<Link to={appUrl + '/usuario/crear'}>
-						<Plus className='mr-2 h-4 w-4' />
-						Nuevo
-					</Link>
-				</Button>
+				{isAdmin && (
+					<Button variant='default' size='default' asChild>
+						<Link to={`${APP_URL}/usuario/crear`}>
+							<Plus className='mr-2 h-4 w-4' />
+							Nuevo
+						</Link>
+					</Button>
+				)}
+				{!isAdmin && (
+					<Button variant='default' size='default' asChild>
+						<Link to={`${APP_URL}/usuario/modificar/${store.getState().userId}`}>
+							<Pencil className='mr-2 h-4 w-4' />
+							Editá tus datos
+						</Link>
+					</Button>
+				)}
 			</div>
 			<div className='container mx-auto pt-8'>
 				<Card className='p-6'>
@@ -159,33 +263,41 @@ function ListUsers() {
 			</div>
 			<div className='mt-6 flex flex-row justify-start px-8'>
 				<div className='mr-6 flex flex-row items-center space-x-2 text-sm font-light text-slate-500'>
-					<Dot type='admin' width='14px' />
+					<Dot role='admin' width='14px' />
 					<span>Administrador</span>
 				</div>
 				<div className='mr-6 flex flex-row items-center space-x-2 text-sm font-light text-slate-500'>
-					<Dot type='user' width='14px' />
+					<Dot role='user' width='14px' />
 					<span>Usuario</span>
 				</div>
 			</div>
 			<Dialog open={openDialog} onOpenChange={setOpenDialog}>
 				<DialogContent>
 					<DialogHeader>
-						<DialogTitle>¿Estás realmente seguro?</DialogTitle>
-						<DialogDescription>Esta acción es imposible de revertir.</DialogDescription>
+						<DialogTitle>{userDialog.title}</DialogTitle>
+						<DialogDescription>{userDialog.subtitle}</DialogDescription>
 					</DialogHeader>
-					<section className='text-sm font-normal'>
-						La cuenta del usuario
-						<span className='text-md px-1 font-bold text-slate-900'>{userDialog.name}</span>
-						se eliminará permanentemente de la base de datos.
-					</section>
+					<section className='text-sm font-normal'>{userDialog.message}</section>
 					<DialogFooter>
 						<div className='mt-6 flex flex-row gap-4'>
 							<Button variant='ghost' onClick={() => setOpenDialog(false)}>
 								Cancelar
 							</Button>
-							<Button variant='delete' onClick={() => deleteUser(userDialog.id)}>
-								Eliminar
-							</Button>
+							{dialogAction === 'removeSoft' && (
+								<Button variant='delete' onClick={() => removeSoft(userDialog.id)}>
+									Eliminar
+								</Button>
+							)}
+							{dialogAction === 'restore' && (
+								<Button variant='default' onClick={() => restore(userDialog.id)}>
+									Restaurar
+								</Button>
+							)}
+							{dialogAction === 'remove' && (
+								<Button variant='delete' onClick={() => remove(userDialog.id)}>
+									Eliminar
+								</Button>
+							)}
 						</div>
 					</DialogFooter>
 				</DialogContent>

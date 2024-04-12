@@ -1,14 +1,19 @@
-import { IImage } from '@/lib/interfaces/image.interface';
 import { FieldValues } from 'react-hook-form';
+import { IImage } from '@/lib/interfaces/image.interface';
+import { store } from './store.services';
 
 export class ImageServices {
-	static readonly apiUrl: string = import.meta.env.VITE_REACT_BACKEND_API;
+	static readonly API_URL: string = import.meta.env.VITE_REACT_BACKEND_API;
 
 	static async getByProperty(id: number) {
 		try {
-			const query: Response = await fetch(ImageServices.apiUrl + `/images/${id}`, {
+			const token = store.getState().authToken;
+			const query: Response = await fetch(ImageServices.API_URL + `/images/${id}/allByProperty`, {
 				method: 'GET',
-				headers: { 'content-type': 'application/json;charset=UTF-8' }
+				headers: {
+					'content-type': 'application/json;charset=UTF-8',
+					Authorization: 'Bearer ' + token
+				}
 			});
 			return await query.json();
 		} catch (e) {
@@ -17,14 +22,15 @@ export class ImageServices {
 	}
 
 	static async create(id: number, data: FieldValues) {
-		console.log(data, id);
 		const formData = new FormData();
 		formData.append('file', data as Blob);
 		try {
-			const query: Response = await fetch(ImageServices.apiUrl + '/images/' + Number(id), {
+			const token: string = store.getState().authToken;
+			const query: Response = await fetch(`${ImageServices.API_URL}/images/upload/${id}/`, {
 				method: 'POST',
-				// No headers because of boundary in multipart/form-data
-				body: formData
+				body: formData,
+				// No other headers because of boundary in multipart/form-data
+				headers: { Authorization: 'Bearer ' + token }
 			});
 			return await query.json();
 		} catch (e) {
@@ -32,11 +38,30 @@ export class ImageServices {
 		}
 	}
 
+	static async deleteSoft(id: number) {
+		try {
+            const token: string = store.getState().authToken;
+			const query: Response = await fetch(ImageServices.API_URL + `/images/${id}/soft`, {
+				method: 'DELETE',
+				headers: {
+                    'content-type': 'application/json;charset=UTF-8',
+                    Authorization: 'Bearer ' + token
+                }
+			});
+			return await query.json();
+		} catch (e) {
+			return e;
+		}
+	}
 	static async delete(id: number) {
 		try {
-			const query: Response = await fetch(ImageServices.apiUrl + `/images/${id}`, {
+            const token: string = store.getState().authToken;
+			const query: Response = await fetch(ImageServices.API_URL + `/images/${id}`, {
 				method: 'DELETE',
-				headers: { 'content-type': 'application/json;charset=UTF-8' }
+				headers: {
+                    'content-type': 'application/json;charset=UTF-8',
+                    Authorization: 'Bearer ' + token
+                }
 			});
 			return await query.json();
 		} catch (e) {

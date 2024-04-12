@@ -1,6 +1,8 @@
-export interface IDashboardHeader {
+export interface IDashboardData {
 	category: string;
-	total: number;
-	percentage: number;
 	color: string;
+	percentage: number;
+	plural: string;
+	total: number;
+    owner: number;
 }

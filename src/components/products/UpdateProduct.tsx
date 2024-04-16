@@ -25,20 +25,19 @@ import { ProductsServices } from '@/services/products.services';
 import { getImageURL } from '@/lib/image-util';
 import { imageFormSchema } from '@/lib/schemas/image.schema';
 import { propertySchema } from '@/lib/schemas/property.schema';
+import { store } from '@/services/store.services';
 import { useCapitalize } from '@/hooks/useCapitalize';
 import { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { store } from '@/services/store.services';
-
-import { jwtDecode } from 'jwt-decode';
+import { Roles } from '@/lib/constants';
 // React component
 function UpdateProduct() {
 	const { id } = useParams();
 	const propertyId = Number(id);
 	const navigate = useNavigate();
 	const capitalize = useCapitalize();
-	const [isAdmin, setIsAdmin] = useState<boolean>(false);
+	// const [isAdmin, setIsAdmin] = useState<boolean>(false);
 	const [property, setProperty] = useState<IProperty>({} as IProperty);
 	const [images, setImages] = useState<IImage[]>([]);
 	const [business, setBusiness] = useState<IBusiness[]>([]);
@@ -74,7 +73,7 @@ function UpdateProduct() {
 	});
 
 	useEffect(() => {
-		ProductsServices.getProduct(propertyId).then((response) => {
+		ProductsServices.findOne(propertyId).then((response) => {
 			if (response.status > 400) console.log('error', response); //manage toast
 			if (response.id > 0) {
 				setProperty(response);
@@ -103,11 +102,6 @@ function UpdateProduct() {
 			setCategoriesKey(Math.random());
 		});
 	}, [propertyId, propertyForm]);
-
-	useEffect(() => {
-		const payload = jwtDecode(store.getState().authToken);
-		setIsAdmin(payload.role === 'admin');
-	}, []);
 
 	function handleSubmitProduct(values: z.infer<typeof propertySchema>) {
 		const color = categories.find((cat) => cat.name === values.type)?.color;
@@ -445,7 +439,7 @@ function UpdateProduct() {
 												className='rounded-full border bg-white text-slate-400/70 shadow-sm hover:bg-white hover:text-rose-500'>
 												<Trash2 className='h-4 w-4' />
 											</Button>
-											{isAdmin && (
+											{store.getState().role === Roles.ADMIN && (
 												<Button
 													onClick={() => {
 														setOpenDialog(true);

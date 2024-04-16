@@ -30,7 +30,7 @@ function ViewProduct() {
 
 	useEffect(() => {
 		async function getProperty() {
-			const property: IProperty = await ProductsServices.getProduct(propertyId);
+			const property: IProperty = await ProductsServices.findOne(propertyId);
 			setProperty(property);
 		}
 
@@ -44,11 +44,13 @@ function ViewProduct() {
 		getImages(propertyId);
 	}, [propertyId]);
 
+
+    // TODO:  THIS MUST BE DONE LIKE IN LISTPRODUCTS WITH THE NEW API FROM NESTJS
 	function handleDeleteProduct(id: number) {
 		Promise.all(images.map((image) => ImageServices.delete(image.id))).then((response) => {
 			const allOk = response.every((response) => response.status === 200);
 			if (allOk) {
-				ProductsServices.deleteProduct(id)
+				ProductsServices.removeSoft(id)
 					.then((response) => {
 						if (response instanceof Error) toast({ title: 'Error', description: '500 Internal Server Error | ' + response.message, variant: 'destructive', duration: 5000 });
 						if (response.status > 200) {

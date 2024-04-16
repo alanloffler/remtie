@@ -19,16 +19,14 @@ import { CategoriesServices } from '@/services/categories.services';
 import { ColumnDef } from '@tanstack/react-table';
 import { DataTable } from '@/components/data-table/DataTable';
 import { IBusiness, ICategory } from '@/lib/interfaces/inputs.interface';
-import { IImage } from '@/lib/interfaces/image.interface';
 import { IProperty } from '@/lib/interfaces/property.interface';
-import { ImageServices } from '@/services/image.services';
 import { Link, useNavigate } from 'react-router-dom';
 import { ProductsConfig } from '@/lib/config';
 import { ProductsServices } from '@/services/products.services';
 import { ReactElement, useEffect, useState } from 'react';
+import { Roles } from '@/lib/constants';
 import { store } from '@/services/store.services';
 import { useCapitalize } from '@/hooks/useCapitalize';
-import { Roles } from '@/lib/constants';
 // .env constants
 const APP_URL: string = import.meta.env.VITE_APP_URL;
 // React component
@@ -60,33 +58,34 @@ function ListProducts() {
 		</div>
 	);
 
-	useEffect(() => {
-		async function getBusiness() {
-			const business = await BusinessServices.getBusiness();
-			setBusiness(business);
-		}
+	async function getBusiness() {
+		const business = await BusinessServices.getBusiness();
+		setBusiness(business);
+	}
 
-		async function getCategories() {
-			const categories = await CategoriesServices.getCategories();
-			setCategories(categories);
-		}
+	async function getCategories() {
+		const categories = await CategoriesServices.getCategories();
+		setCategories(categories);
+	}
 
-		async function getProducts() {
-			ProductsServices.getProducts().then((response) => {
-				if (Array.isArray(response)) {
-					if (response.length > 0) {
-						setShowSelects(true);
-						setProperties(response);
-						setPropertiesFiltered(response);
-						setShowCard(true);
-					} else {
-						setShowInfoCard(true);
-					}
+	async function getProducts() {
+		ProductsServices.findAll().then((response) => {
+			if (Array.isArray(response)) {
+				if (response.length > 0) {
+					setShowSelects(true);
+					setProperties(response);
+					setPropertiesFiltered(response);
+					setShowCard(true);
+				} else {
+					setShowInfoCard(true);
 				}
-				if (response.statusCode > 399) toast({ title: response.statusCode, description: response.message, variant: 'destructive', duration: 5000 });
-				if (response instanceof Error) toast({ title: 'Error', description: '500 Internal Server Error | ' + response.message, variant: 'destructive', duration: 5000 });
-			});
-		}
+			}
+			if (response.statusCode > 399) toast({ title: response.statusCode, description: response.message, variant: 'destructive', duration: 5000 });
+			if (response instanceof Error) toast({ title: 'Error', description: '500 Internal Server Error | ' + response.message, variant: 'destructive', duration: 5000 });
+		});
+	}
+
+	useEffect(() => {
 		getBusiness();
 		getCategories();
 		getProducts();
@@ -147,25 +146,29 @@ function ListProducts() {
 			cell: ({ row }) => {
 				return (
 					<div className='flex flex-row gap-2'>
-						<Button onClick={() => navigate(APP_URL + '/productos/' + row.original.id)} variant='outline' size='miniIcon' className='hover:bg-white hover:text-sky-400'>
-							<Info className='h-5 w-5' strokeWidth='1.5' />
-						</Button>
-						<Button onClick={() => navigate(`${APP_URL}/productos/modificar/${row.original.id}`)} variant='outline' size='miniIcon' className='hover:bg-white hover:text-emerald-400'>
-							<Pencil className='h-5 w-5' strokeWidth='1.5' />
-						</Button>
-						{/* TODO RESTORE PROPERTY */}
+						{row.original.deletedAt === null && (
+							<>
+								<Button onClick={() => navigate(APP_URL + '/productos/' + row.original.id)} variant='outline' size='miniIcon' className='hover:bg-white hover:text-sky-400'>
+									<Info className='h-5 w-5' strokeWidth='1.5' />
+								</Button>
+								<Button onClick={() => navigate(`${APP_URL}/productos/modificar/${row.original.id}`)} variant='outline' size='miniIcon' className='hover:bg-white hover:text-emerald-400'>
+									<Pencil className='h-5 w-5' strokeWidth='1.5' />
+								</Button>
+							</>
+						)}
+						{/* TODO RESTORE PROPERTY CONTINUE WITH DIALOG LIKE USERS */}
 						{row.original.deletedAt === null ? (
 							<Button onClick={() => handleDeleteDialog(row.original.id)} variant='outline' size='miniIcon' className='hover:bg-white hover:text-rose-400'>
 								<Trash2 className='h-5 w-5' strokeWidth='1.5' />
 							</Button>
 						) : (
-							<Button variant='outline' size='miniIcon' className='hover:bg-white hover:text-emerald-400'>
+							<Button onClick={() => handleRestore(row.original.id)} variant='outline' size='miniIcon' className='hover:bg-white hover:text-emerald-400'>
 								<CheckCircle className='h-5 w-5' strokeWidth='1.5' />
 							</Button>
 						)}
 						{/* TODO HARD REMOVE */}
 						{store.getState().role === Roles.ADMIN && (
-							<Button onClick={() => handleDeleteDialog(row.original.id)} variant='outline' size='miniIcon' className='hover:bg-white hover:text-rose-400'>
+							<Button onClick={() => handleRemove(row.original.id)} variant='outline' size='miniIcon' className='hover:bg-white hover:text-rose-400'>
 								<BadgeX className='h-5 w-5' strokeWidth='1.5' />
 							</Button>
 						)}
@@ -233,21 +236,33 @@ function ListProducts() {
 		setPropertyId(id);
 	}
 
-	async function handleDeleteProduct(id: number) {
-		setOpenDialog(false);
-		const images: IImage[] = await ImageServices.getByProperty(id);
-
-		Promise.all([ImageServices.deleteMany(images), ProductsServices.deleteProduct(id)]).then((response) => {
-			// const [response1, response2] = response;
-			// console.log(response1);
-			// console.log(response2);
-			const resultsAll = response.every((res) => res.status === 200);
-			if (resultsAll) {
-				toast({ title: 'Propiedad eliminada', description: 'La propiedad fue eliminada correctamente', variant: 'success', duration: 5000 });
-				navigate(`${APP_URL}/productos/`);
-			} else {
-				toast({ title: 'Error', description: '400 Bad Request | La propiedad no pudo ser eliminada', variant: 'destructive', duration: 5000 });
+	async function handleRestore(id: number) {
+		ProductsServices.restore(id).then((response) => {
+			if (response.statusCode === 200) {
+				toast({ title: response.statusCode, description: response.message, variant: 'success', duration: 5000 });
+				getProducts();
 			}
+			if (response.statusCode > 399) toast({ title: response.statusCode, description: response.message, variant: 'destructive', duration: 5000 });
+			if (response instanceof Error) toast({ title: 'Error', description: '500 Internal Server Error | ' + response.message, variant: 'destructive', duration: 5000 });
+			setOpenDialog(false);
+		});
+	}
+
+	async function handleDeleteProduct(id: number) {
+		ProductsServices.removeSoft(id).then((response) => {
+			if (response.statusCode === 200) {
+				toast({ title: response.statusCode, description: response.message, variant: 'success', duration: 5000 });
+				getProducts();
+			}
+			if (response.statusCode > 399) toast({ title: response.statusCode, description: response.message, variant: 'destructive', duration: 5000 });
+			if (response instanceof Error) toast({ title: 'Error', description: '500 Internal Server Error | ' + response.message, variant: 'destructive', duration: 5000 });
+		});
+		setOpenDialog(false);
+	}
+
+	async function handleRemove(id: number) {
+		ProductsServices.remove(id).then((response) => {
+			console.log(response);
 		});
 	}
 

@@ -21,19 +21,17 @@ function Dashboard() {
 	const capitalize = useCapitalize();
 
 	useEffect(() => {
-		// handle error
 		DashboardServices.getHeaderData().then((response) => {
-			console.log('header', response);
 			if (Array.isArray(response)) {
 				if (response.length > 0) {
 					setData(response as IDashboardData[]);
 					setShowDashboardHeader(true);
-                } else {
+				} else {
 					console.log('empty array');
 				}
 			}
-            if (response.statusCode > 399) toast({ title: String(response.statusCode), description: response.message, variant: 'destructive', duration: 5000 });
-            if (response instanceof Error) toast({ title: 'Error', description: '500 Internal Server Error | ' + response.message, variant: 'destructive', duration: 5000 });
+			if (response.statusCode > 399) toast({ title: String(response.statusCode), description: response.message, variant: 'destructive', duration: 5000 });
+			if (response instanceof Error) toast({ title: 'Error', description: '500 Internal Server Error | ' + response.message, variant: 'destructive', duration: 5000 });
 		});
 	}, []);
 

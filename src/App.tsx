@@ -9,6 +9,7 @@ const Login = React.lazy(() => import('./components/login/Login'));
 import Layout from '@/components/layout/Layout';
 import ProtectedRoutes from './components/login/ProtectedRoutes';
 import Loading2 from '@/components/shared/Loading2';
+import { store } from './services/store.services';
 // If Layout is lazyloading
 // const Layout = React.lazy(() => import("./components/layout/Layout"));
 const Dashboard = React.lazy(() => import('./components/dashboard/Dashboard'));
@@ -21,29 +22,31 @@ const ViewProduct = React.lazy(() => import('./components/products/ViewProduct')
 const CreateProduct = React.lazy(() => import('./components/products/CreateProduct'));
 const UpdateProduct = React.lazy(() => import('./components/products/UpdateProduct'));
 const NotFound = React.lazy(() => import('./components/shared/NotFound'));
+const Settings = React.lazy(() => import('./components/settings/Settings'));
 // .env constants
-const appUrl: string = import.meta.env.VITE_APP_URL;
+const APP_URL: string = import.meta.env.VITE_APP_URL;
 // React component
 function App() {
 	const routes = [
-		{ path: `${appUrl}/`, element: <Dashboard /> },
-		{ path: `${appUrl}/usuarios`, element: <ListUsers /> },
-		{ path: `${appUrl}/usuario/:id`, element: <ViewUser /> },
-		{ path: `${appUrl}/usuario/crear`, element: <CreateNewUser /> },
-		{ path: `${appUrl}/usuario/modificar/:id`, element: <UpdateUser /> },
-		{ path: `${appUrl}/productos`, element: <ListProducts /> },
-		{ path: `${appUrl}/productos/:id`, element: <ViewProduct /> },
-		{ path: `${appUrl}/productos/crear`, element: <CreateProduct /> },
-		{ path: `${appUrl}/productos/modificar/:id`, element: <UpdateProduct /> }
+		{ path: `${APP_URL}/`, element: <Dashboard /> },
+		{ path: `${APP_URL}/usuarios`, element: <ListUsers /> },
+		{ path: `${APP_URL}/usuario/:id`, element: <ViewUser /> },
+		{ path: `${APP_URL}/usuario/crear`, element: <CreateNewUser /> },
+		{ path: `${APP_URL}/usuario/modificar/:id`, element: <UpdateUser /> },
+		{ path: `${APP_URL}/productos`, element: <ListProducts /> },
+		{ path: `${APP_URL}/productos/:id`, element: <ViewProduct /> },
+		{ path: `${APP_URL}/productos/crear`, element: <CreateProduct /> },
+		{ path: `${APP_URL}/productos/modificar/:id`, element: <UpdateProduct /> },
+		{ path: `${APP_URL}/config`, element: <Settings role={store.getState().role} />},
 	];
 
 	return (
 		<>
 			<Routes>
 				<Route path='/' element={<Login />} />
-				<Route path={appUrl} element={<ProtectedRoutes />}>
+				<Route path={APP_URL} element={<ProtectedRoutes />}>
 					<Route
-						path={`${appUrl}/`}
+						path={`${APP_URL}/`}
 						element={
 							<React.Suspense fallback={<Loading2 width='60' height='60' color='#0ea5e9' dur={0.75} />}>
 								<Layout />

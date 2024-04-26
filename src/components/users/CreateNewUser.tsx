@@ -8,12 +8,12 @@ import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { toast } from '@/components/ui/use-toast';
 // App
-import { Link, useNavigate } from 'react-router-dom';
-import { useForm } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
-import { z } from 'zod';
-import { UsersServices } from '@/services/users.services';
 import { FormEvent } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
+import { UsersServices } from '@/services/users.services';
+import { useForm } from 'react-hook-form';
+import { z } from 'zod';
+import { zodResolver } from '@hookform/resolvers/zod';
 // react-hook-form schema
 const formSchema = z.object({
 	name: z.string().min(3, {
@@ -32,7 +32,7 @@ const formSchema = z.object({
 const APP_URL: string = import.meta.env.VITE_APP_URL;
 // React component
 function CreateNewUser() {
-    const navigate = useNavigate();
+	const navigate = useNavigate();
 	const form = useForm<z.infer<typeof formSchema>>({
 		resolver: zodResolver(formSchema),
 		defaultValues: {
@@ -45,23 +45,20 @@ function CreateNewUser() {
 	});
 
 	function onSubmit(values: z.infer<typeof formSchema>) {
-		UsersServices
-        .create(values)
-        .then((response) => {
-            //console.log(response);
-			if (response.id > 0) {
-				toast({ title: 'Usuario creado', description: 'El usuario se ha creado correctamente', variant: 'success', duration: 5000 });
+		UsersServices.create(values).then((response) => {
+			if (response.statusCode === 200) {
+				toast({ title: response.statusCode, description: response.message, variant: 'success', duration: 5000 });
 				navigate(`${APP_URL}/usuarios`);
 			}
-            if (response.statusCode > 399) toast({ title: response.statusCode, description: response.message, variant: 'destructive', duration: 5000 });
-            if (response instanceof Error) toast({ title: 'Error', description: '500 Internal Server Error | ' + response.message, variant: 'destructive', duration: 5000 });
+			if (response.statusCode > 399) toast({ title: response.statusCode, description: response.message, variant: 'destructive', duration: 5000 });
+			if (response instanceof Error) toast({ title: 'Error', description: '500 Internal Server Error | ' + response.message, variant: 'destructive', duration: 5000 });
 		});
 	}
 
-    function handleCancel(event: FormEvent<HTMLButtonElement>) {
-        event.preventDefault();
-        navigate(`${APP_URL}/usuarios`);
-    }
+	function handleCancel(event: FormEvent<HTMLButtonElement>) {
+		event.preventDefault();
+		navigate(`${APP_URL}/usuarios`);
+	}
 
 	return (
 		<main className='flex-1 overflow-y-auto'>

@@ -1,3 +1,5 @@
+import { IUser } from "./user.interface";
+
 export interface IProperty {
 	id: number;
 	type: string;
@@ -5,6 +7,7 @@ export interface IProperty {
 	business_type: string;
 	title: string;
 	short_description: string;
+	long_description: string;
 	street: string;
 	city: string;
 	state: string;
@@ -14,6 +17,7 @@ export interface IProperty {
 	created_at?: string;
 	updated_at?: string;
     deletedAt?: string;
-	[attribute: string]: string | number | boolean | undefined;
+	[attribute: string]: string | number | boolean | undefined | IUser;
 	color: string;
+    user?: IUser;
 }

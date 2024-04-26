@@ -22,6 +22,7 @@ import { IImage } from '@/lib/interfaces/image.interface';
 import { IProperty } from '@/lib/interfaces/property.interface';
 import { ImageServices } from '@/services/image.services';
 import { ProductsServices } from '@/services/products.services';
+import { Roles } from '@/lib/constants';
 import { getImageURL } from '@/lib/image-util';
 import { imageFormSchema } from '@/lib/schemas/image.schema';
 import { propertySchema } from '@/lib/schemas/property.schema';
@@ -30,23 +31,21 @@ import { useCapitalize } from '@/hooks/useCapitalize';
 import { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { Roles } from '@/lib/constants';
 // React component
 function UpdateProduct() {
 	const { id } = useParams();
-	const propertyId = Number(id);
-	const navigate = useNavigate();
 	const capitalize = useCapitalize();
-	// const [isAdmin, setIsAdmin] = useState<boolean>(false);
-	const [property, setProperty] = useState<IProperty>({} as IProperty);
-	const [images, setImages] = useState<IImage[]>([]);
+	const navigate = useNavigate();
+	const propertyId = Number(id);
 	const [business, setBusiness] = useState<IBusiness[]>([]);
 	const [businessKey, setBusinessKey] = useState<number>(0);
 	const [categories, setCategories] = useState<ICategory[]>([]);
 	const [categoriesKey, setCategoriesKey] = useState<number>(0);
-	const [openDialog, setOpenDialog] = useState<boolean>(false);
-	const [imageDialog, setImageDialog] = useState<IImage>({ id: 0, name: '', propertyId: 0 });
 	const [deleteAction, setDeleteAction] = useState<string>('');
+	const [imageDialog, setImageDialog] = useState<IImage>({ id: 0, name: '', propertyId: 0 });
+	const [images, setImages] = useState<IImage[]>([]);
+	const [openDialog, setOpenDialog] = useState<boolean>(false);
+	const [property, setProperty] = useState<IProperty>({} as IProperty);
 
 	const propertyForm = useForm<z.infer<typeof propertySchema>>({
 		resolver: zodResolver(propertySchema),
@@ -71,10 +70,9 @@ function UpdateProduct() {
 			file: undefined
 		}
 	});
-
+    // #region Find property
 	useEffect(() => {
 		ProductsServices.findOne(propertyId).then((response) => {
-			if (response.status > 400) console.log('error', response); //manage toast
 			if (response.id > 0) {
 				setProperty(response);
 				propertyForm.setValue('type', response.type);
@@ -89,30 +87,34 @@ function UpdateProduct() {
 				propertyForm.setValue('price', response.price);
 				propertyForm.setValue('is_active', Boolean(response.is_active));
 			}
+            if (response.statusCode > 399) toast({ title: response.statusCode, description: response.message, variant: 'destructive', duration: 5000 });
+            if (response instanceof Error) toast({ title: 'Error', description: '500 Internal Server Error | ' + response.message, variant: 'destructive', duration: 5000 });
 		});
-		ImageServices.getByProperty(propertyId).then((response) => {
+
+		ImageServices.findByProperty(propertyId).then((response) => {
 			setImages(response);
 		});
-		BusinessServices.getBusiness().then((response) => {
+
+		BusinessServices.findAll().then((response) => {
 			setBusiness(response);
 			setBusinessKey(Math.random());
 		});
-		CategoriesServices.getCategories().then((response) => {
+
+		CategoriesServices.findAll().then((response) => {
 			setCategories(response);
 			setCategoriesKey(Math.random());
 		});
 	}, [propertyId, propertyForm]);
-
+    // #endregion
+    // #region Submit actions
 	function handleSubmitProduct(values: z.infer<typeof propertySchema>) {
-		const color = categories.find((cat) => cat.name === values.type)?.color;
+		const color: string | undefined = categories.find((cat) => cat.name === values.type)?.color;
 		const isActive: number = values.is_active === true ? 1 : 0;
 		const propertyData = { ...values, color: color ? color : '', is_active: isActive };
 		ProductsServices.update(propertyId, propertyData).then((response) => {
-			console.log(response);
-			if (response.status === 200) toast({ title: 'Propiedad modificada', description: response.message, variant: 'success', duration: 5000 });
+			if (response.statusCode === 200) toast({ title: response.statusCode, description: response.message, variant: 'success', duration: 5000 });
+			if (response.statusCode > 399) toast({ title: response.statusCode, description: response.message, variant: 'destructive', duration: 5000 });
 			if (response instanceof Error) toast({ title: 'Error', description: '500 Internal Server Error | ' + response.message, variant: 'destructive', duration: 5000 });
-			if (response.status === 400) toast({ title: 'Error', description: response.message, variant: 'destructive', duration: 5000 });
-			if (response.status === 401) navigate('/');
 		});
 	}
 
@@ -122,7 +124,7 @@ function UpdateProduct() {
 				if (response instanceof Error) toast({ title: 'Error', description: '500 Internal Server Error | ' + response.message, variant: 'destructive', duration: 5000 });
 				console.log(response);
 				if (response.status < 400) {
-					ImageServices.getByProperty(propertyId).then((response) => {
+					ImageServices.findByProperty(propertyId).then((response) => {
 						setImages(response);
 					});
 					toast({ title: response.status, description: response.message, variant: 'success', duration: 5000 });
@@ -147,14 +149,14 @@ function UpdateProduct() {
 
 	function handleDeleteImage(id: number) {
 		if (deleteAction === 'softDelete') {
-			ImageServices.deleteSoft(id).then((response) => {
+			ImageServices.removeSoft(id).then((response) => {
 				if (response.status === 200) {
 					setImages(images.filter((img) => img.id !== id));
 				}
 			});
 		}
 		if (deleteAction === 'hardDelete') {
-			ImageServices.delete(id).then((response) => {
+			ImageServices.remove(id).then((response) => {
 				if (response.status === 200) {
 					setImages(images.filter((img) => img.id !== id));
 				}
@@ -166,12 +168,9 @@ function UpdateProduct() {
 
 	function switchActive(check: boolean) {
 		ProductsServices.switchActive(propertyId, check).then((response) => {
+			if (response.statusCode === 200) toast({ title: response.statusCode, description: response.message, variant: 'success', duration: 5000 });
+			if (response.statusCode > 399) toast({ title: response.statusCode, description: response.message, variant: 'destructive', duration: 5000 });
 			if (response instanceof Error) toast({ title: 'Error', description: '500 Internal Server Error | ' + response.message, variant: 'destructive', duration: 5000 });
-			if (response.status > 200) {
-				if (response.status === 401) navigate('/');
-				toast({ title: 'Error', description: response.message, variant: 'destructive', duration: 5000 });
-			}
-			if (response.status === 200) toast({ title: 'Propiedad actualizada', description: response.message, variant: 'success', duration: 5000 });
 		});
 	}
 
@@ -211,7 +210,7 @@ function UpdateProduct() {
 															</SelectTrigger>
 														</FormControl>
 														<SelectContent>
-															{business?.map((el) => (
+															{business.map((el) => (
 																<SelectItem key={el.id} value={el.name} className='text-sm'>
 																	{capitalize(el.name)}
 																</SelectItem>
@@ -235,7 +234,7 @@ function UpdateProduct() {
 															</SelectTrigger>
 														</FormControl>
 														<SelectContent>
-															{categories?.map((el) => (
+															{categories.map((el) => (
 																<SelectItem key={el.id} value={el.name} className='text-sm'>
 																	{capitalize(el.name)}
 																</SelectItem>

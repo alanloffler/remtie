@@ -69,8 +69,8 @@ function UpdateUser() {
 		if (values.password === '') values.password = user.password;
 		UsersServices.update(id, values).then((response) => {
 			console.log(response);
-            if (response.status === 200) {
-                toast({ title: response.status, description: response.message, variant: 'success', duration: 5000 });
+            if (response.statusCode === 200) {
+                toast({ title: response.statusCode, description: response.message, variant: 'success', duration: 5000 });
                 navigate(`${APP_URL}/usuarios`);
             }
 			if (response.statusCode > 399) toast({ title: response.statusCode, description: response.message, variant: 'destructive', duration: 5000 });

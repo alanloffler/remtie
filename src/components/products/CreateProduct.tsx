@@ -15,7 +15,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { toast } from '@/components/ui/use-toast';
 // App
 import { useNavigate } from 'react-router-dom';
-import { useEffect, useState } from 'react';
+import { FormEvent, useEffect, useState } from 'react';
 import { FieldValues, FormProvider, useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import z from 'zod';
@@ -40,8 +40,9 @@ function CreateProduct() {
 	const [categoriesKey, setCategoriesKey] = useState<number>(0);
 	const [openDialog, setOpenDialog] = useState<boolean>(false);
 	const [imageDialog, setImageDialog] = useState<IImage>({ id: 0, name: '', propertyId: 0 });
-    const [propertyCreated, setPropertyCreated] = useState<boolean>(false);
+	const [propertyCreated, setPropertyCreated] = useState<boolean>(false);
 	const capitalize = useCapitalize();
+	const [chosenImage, setChosenImage] = useState<string>('');
 
 	const propertyForm = useForm<z.infer<typeof propertySchema>>({
 		resolver: zodResolver(propertySchema),
@@ -68,11 +69,11 @@ function CreateProduct() {
 	});
 
 	useEffect(() => {
-		BusinessServices.getBusiness().then((response) => {
+		BusinessServices.findAll().then((response) => {
 			setBusiness(response);
 			setBusinessKey(Math.random());
 		});
-		CategoriesServices.getCategories().then((response) => {
+		CategoriesServices.findAll().then((response) => {
 			setCategories(response);
 			setCategoriesKey(Math.random());
 		});
@@ -89,7 +90,7 @@ function CreateProduct() {
 			if (response.id) {
 				toast({ title: '200', description: 'Propiedad creada', variant: 'success', duration: 5000 });
 				setPropertyCreated(true);
-                setPropertyId(response.id);
+				setPropertyId(response.id);
 			}
 			if (response.statusCode > 399) toast({ title: response.statusCode, description: response.message, variant: 'destructive', duration: 5000 });
 			if (response instanceof Error) toast({ title: 'Error', description: '500 Internal Server Error | ' + response.message, variant: 'destructive', duration: 5000 });
@@ -99,30 +100,34 @@ function CreateProduct() {
 	function handleSubmitImage(data: FieldValues) {
 		ImageServices.create(propertyId, data.file[0])
 			.then((response) => {
-                // ver esto del toast como vienen los mensajes de la base de datos
-				if (response instanceof Error) toast({ title: 'Error', description: '500 Internal Server Error | ' + response.message, variant: 'destructive', duration: 5000 });
-				if (response.status > 200) {
-					toast({ title: 'Error', description: response.message, variant: 'destructive', duration: 5000 });
-					if (response.status === 401) navigate('/');
-				}
-				if (response.status === 200) {
-					ImageServices.getByProperty(propertyId).then((response) => {
+				if (response.statusCode === 200) {
+					ImageServices.findByProperty(propertyId).then((response) => {
+						// TODO manage errors when loading images uploaded
 						setImages(response);
 					});
-					toast({ title: 'Imágen guardada', description: response.message, variant: 'success', duration: 5000 });
+					toast({ title: response.statusCode, description: response.message, variant: 'success', duration: 5000 });
 					imageForm.reset();
 				}
+				if (response.statusCode > 399) toast({ title: response.statusCode, description: response.message, variant: 'destructive', duration: 5000 });
+				if (response instanceof Error) toast({ title: 'Error', description: '500 Internal Server Error | ' + response.message, variant: 'destructive', duration: 5000 });
 			})
-			.catch((error) => console.log(error)); // toast here
+			.catch((error) => console.log(error)); // TODO toast here
 	}
 
 	function handleDeleteImage(id: number) {
-		ImageServices.delete(id).then((response) => {
-			if (response.status === 200) {
+		ImageServices.remove(id).then((response) => {
+			if (response.statusCode === 200) {
 				setImages(images.filter((img) => img.id !== id));
+				toast({ title: response.statusCode, description: response.message, variant: 'success', duration: 5000 });
 			}
+			if (response.statusCode > 399) toast({ title: response.statusCode, description: response.message, variant: 'destructive', duration: 5000 });
+			if (response instanceof Error) toast({ title: 'Error', description: '500 Internal Server Error | ' + response.message, variant: 'destructive', duration: 5000 });
 		});
 		setOpenDialog(false);
+	}
+
+	function handleInputChange(event: FormEvent<HTMLInputElement>) {
+		setChosenImage(event.currentTarget.value.split('\\')[2]);
 	}
 
 	return (
@@ -135,7 +140,7 @@ function CreateProduct() {
 				</Button>
 			</div>
 			<div className='mt-6 flex flex-col items-center justify-center px-4'>
-				<Card className='flex w-full flex-row py-8 md:w-[500px] lg:w-[650px]'>
+				<Card className='mb-10 flex w-full flex-row py-8 md:w-[500px] lg:w-[650px]'>
 					<CardContent className='mx-0 w-full p-0'>
 						<FormProvider {...propertyForm}>
 							<form onSubmit={propertyForm.handleSubmit(handleSubmitProduct)} className='space-y-8'>
@@ -158,7 +163,7 @@ function CreateProduct() {
 															</SelectTrigger>
 														</FormControl>
 														<SelectContent>
-															{business?.map((el) => (
+															{business.map((el) => (
 																<SelectItem key={el.id} value={el.name} className='text-sm'>
 																	{capitalize(el.name)}
 																</SelectItem>
@@ -182,7 +187,7 @@ function CreateProduct() {
 															</SelectTrigger>
 														</FormControl>
 														<SelectContent>
-															{categories?.map((el) => (
+															{categories.map((el) => (
 																<SelectItem key={el.id} value={el.name} className='text-sm'>
 																	{capitalize(el.name)}
 																</SelectItem>
@@ -360,19 +365,20 @@ function CreateProduct() {
 								</div>
 							</form>
 						</FormProvider>
+						{/* {true && ( */}
 						{propertyCreated && (
-							<div className=''>
+							<div className='px-8'>
 								<Accordion type='single' collapsible>
 									<AccordionItem value='item-1' className='border-none'>
-										<AccordionTrigger className='justify-start'>Agregar imágenes</AccordionTrigger>
-										<AccordionContent className='px-4'>
-											<div className='grid gap-4'>
+										<AccordionTrigger className='justify-start pb-0 pt-4'>Agregar imágenes</AccordionTrigger>
+										<AccordionContent className='py-0'>
+											<div className='grid gap-4 pt-6'>
 												{images.map((img, i) => {
 													return (
-														<Card key={img.id} className='px-2 py-2 bg-slate-100'>
+														<Card key={img.id} className='bg-slate-100/50 px-1 py-1'>
 															<div className='flex flex-row place-items-center justify-between'>
 																<div className='flex h-5 flex-row'>
-																	<img src={getImageURL(`../../../api-nest-mysql/uploads/${img.name}`)} />
+																	<img src={getImageURL(img.name)} />
 																	<h2 className='flex flex-row place-items-center pl-3 text-xs font-medium text-slate-900'># {i + 1}</h2>
 																</div>
 																<div className='hidden flex-row text-xs font-light text-slate-400 xs:block md:block lg:block'>{img.name}</div>
@@ -418,33 +424,39 @@ function CreateProduct() {
 											</div>
 											<FormProvider {...imageForm}>
 												<form onSubmit={imageForm.handleSubmit(handleSubmitImage)}>
-													<div className='mt-8 grid w-full max-w-sm items-center gap-1.5'>
+													<div className='mt-6 grid w-full grid-cols-1 items-center gap-1.5'>
 														<FormField
 															control={imageForm.control}
 															name='file'
 															render={() => (
-																<FormItem className='w-full space-y-1'>
-																	<FormLabel className='font-semibold text-slate-500'>Agregar imágen</FormLabel>
-																	<FormControl>
-																		<Input {...imageForm.register('file')} name='file' type='file' accept='image/*' className='w-full hover:cursor-pointer' />
-																	</FormControl>
+																<FormItem className='grid grid-cols-1 items-center justify-between space-y-4 md:grid-cols-3 md:space-y-0'>
+																	<div className='flex flex-row items-center gap-2 md:col-span-2'>
+																		<FormLabel className='h-fit rounded-md border bg-slate-100/70 p-2 font-semibold text-slate-500 hover:cursor-pointer hover:bg-slate-100'>Seleccionar imágen</FormLabel>
+																		<span className='text-md flex flex-row font-light text-slate-600'>{chosenImage}</span>
+																		<FormControl>
+																			<Input {...imageForm.register('file')} name='file' type='file' accept='image/*' className='m-0 h-0 w-0 p-0 opacity-0 hover:cursor-pointer' onChange={(e) => handleInputChange(e)} />
+																		</FormControl>
+																	</div>
+																	<div className='flex flex-row place-content-end gap-4 md:col-span-1'>
+																		<Button
+																			variant='outline'
+																			size='sm'
+																			onClick={(e) => {
+																				e.preventDefault();
+																				imageForm.reset();
+																				setChosenImage('');
+																			}}
+																			className='w-auto px-2 text-xs'>
+																			Cancelar
+																		</Button>
+																		<Button variant='default' size='sm' className='w-auto border-slate-400 bg-slate-400 px-2 text-xs hover:border-slate-500 hover:bg-slate-500' type='submit'>
+																			Guardar
+																		</Button>
+																	</div>
 																	<FormMessage />
 																</FormItem>
 															)}
 														/>
-													</div>
-													<div className='mt-8 flex flex-row justify-end space-x-4'>
-														<Button
-															variant='ghost'
-															onClick={(e) => {
-																e.preventDefault();
-																imageForm.reset();
-															}}>
-															Cancelar
-														</Button>
-														<Button variant='default' size='default' className='w-auto' type='submit'>
-															Guardar
-														</Button>
 													</div>
 												</form>
 											</FormProvider>

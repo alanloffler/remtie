@@ -1,13 +1,15 @@
-import { store } from './store.services';
+import { Roles } from '@/lib/constants';
+import { store } from '@/services/store.services';
 
 export class ProductsServices {
 	static readonly API_URL: string = import.meta.env.VITE_REACT_BACKEND_API;
-	static abortController = new AbortController();
+	static abortController: AbortController = new AbortController();
 
 	static async findAll() {
 		try {
-			const token = store.getState().authToken;
-			const query: Response = await fetch(`${ProductsServices.API_URL}/properties`, {
+			const token: string = store.getState().authToken;
+			const sql: string = `${ProductsServices.API_URL}/properties`;
+			const query: Response = await fetch(sql, {
 				method: 'GET',
 				headers: {
 					'content-type': 'application/json;charset=UTF-8',
@@ -21,15 +23,12 @@ export class ProductsServices {
 	}
 
 	static async findOne(id: number) {
-		if (ProductsServices.abortController) ProductsServices.abortController.abort();
-		ProductsServices.abortController = new AbortController();
-		const signal = ProductsServices.abortController.signal;
-
 		try {
-			const token = store.getState().authToken;
-			const query: Response = await fetch(`${ProductsServices.API_URL}/properties/${id}`, {
+			const token: string = store.getState().authToken;
+			let sql: string = `${ProductsServices.API_URL}/properties/${id}`;
+			if (store.getState().role === Roles.ADMIN) sql = `${ProductsServices.API_URL}/properties/${id}/withDeleted`;
+			const query: Response = await fetch(sql, {
 				method: 'GET',
-				signal: signal,
 				headers: {
 					'content-type': 'application/json;charset=UTF-8',
 					Authorization: `Bearer ${token}`
@@ -42,13 +41,13 @@ export class ProductsServices {
 	}
 
 	static async create(data: object) {
-		const token = store.getState().authToken;
 		if (ProductsServices.abortController) ProductsServices.abortController.abort();
 		ProductsServices.abortController = new AbortController();
 		const signal: AbortSignal = ProductsServices.abortController.signal;
-
 		try {
-			const createProduct: Response = await fetch(`${ProductsServices.API_URL}/properties`, {
+			const token: string = store.getState().authToken;
+			const sql: string = `${ProductsServices.API_URL}/properties`;
+			const query: Response = await fetch(sql, {
 				method: 'POST',
 				signal: signal,
 				body: JSON.stringify(data),
@@ -57,7 +56,7 @@ export class ProductsServices {
 					Authorization: `Bearer ${token}`
 				}
 			});
-			return await createProduct.json();
+			return await query.json();
 		} catch (error) {
 			return error;
 		}
@@ -67,10 +66,10 @@ export class ProductsServices {
 		if (ProductsServices.abortController) ProductsServices.abortController.abort();
 		ProductsServices.abortController = new AbortController();
 		const signal: AbortSignal = ProductsServices.abortController.signal;
-
 		try {
-			const token = store.getState().authToken;
-			const update: Response = await fetch(`${ProductsServices.API_URL}/properties/${id}`, {
+			const token: string = store.getState().authToken;
+			const sql: string = `${ProductsServices.API_URL}/properties/${id}`;
+			const query: Response = await fetch(sql, {
 				method: 'PATCH',
 				signal: signal,
 				body: JSON.stringify(data),
@@ -79,7 +78,7 @@ export class ProductsServices {
 					Authorization: `Bearer ${token}`
 				}
 			});
-			return await update.json();
+			return await query.json();
 		} catch (error) {
 			return error;
 		}
@@ -88,19 +87,18 @@ export class ProductsServices {
 	static async restore(id: number) {
 		if (ProductsServices.abortController) ProductsServices.abortController.abort();
 		ProductsServices.abortController = new AbortController();
-		const signal = ProductsServices.abortController.signal;
-
+		const signal: AbortSignal = ProductsServices.abortController.signal;
 		try {
 			const token: string = store.getState().authToken;
 			const sql: string = `${ProductsServices.API_URL}/properties/${id}/restore`;
-			const propertyRestored = await fetch(sql, {
+			const query: Response = await fetch(sql, {
 				method: 'PATCH',
 				signal: signal,
 				headers: {
 					Authorization: `Bearer ${token}`
 				}
 			});
-			return await propertyRestored.json();
+			return await query.json();
 		} catch (error) {
 			return error;
 		}
@@ -109,18 +107,18 @@ export class ProductsServices {
 	static async removeSoft(id: number) {
 		if (ProductsServices.abortController) ProductsServices.abortController.abort();
 		ProductsServices.abortController = new AbortController();
-		const signal = ProductsServices.abortController.signal;
-
+		const signal: AbortSignal = ProductsServices.abortController.signal;
 		try {
-			const token = store.getState().authToken;
-			const productDeleted = await fetch(`${ProductsServices.API_URL}/properties/${id}/soft`, {
+			const token: string = store.getState().authToken;
+			const sql: string = `${ProductsServices.API_URL}/properties/${id}/soft`;
+			const query: Response = await fetch(sql, {
 				method: 'DELETE',
 				signal: signal,
 				headers: {
 					Authorization: `Bearer ${token}`
 				}
 			});
-			return await productDeleted.json();
+			return await query.json();
 		} catch (error) {
 			return error;
 		}
@@ -129,19 +127,19 @@ export class ProductsServices {
 	static async remove(id: number) {
 		if (ProductsServices.abortController) ProductsServices.abortController.abort();
 		ProductsServices.abortController = new AbortController();
-		const signal = ProductsServices.abortController.signal;
-
+		const signal: AbortSignal = ProductsServices.abortController.signal;
 		try {
-			const token = store.getState().authToken;
-			const removeProperty: Response = await fetch(`${ProductsServices.API_URL}/properties/${id}`, {
+			const token: string = store.getState().authToken;
+			const sql: string = `${ProductsServices.API_URL}/properties/${id}`;
+			const query: Response = await fetch(sql, {
 				method: 'DELETE',
 				signal: signal,
 				headers: {
-                    'content-type': 'application/json;charset=UTF-8',
+					'content-type': 'application/json;charset=UTF-8',
 					Authorization: `Bearer ${token}`
 				}
 			});
-			return await removeProperty.json();
+			return await query.json();
 		} catch (error) {
 			return error;
 		}
@@ -150,14 +148,14 @@ export class ProductsServices {
 	static async switchActive(id: number, active: boolean) {
 		if (ProductsServices.abortController) ProductsServices.abortController.abort();
 		ProductsServices.abortController = new AbortController();
-		const signal = ProductsServices.abortController.signal;
-
+		const signal: AbortSignal = ProductsServices.abortController.signal;
 		try {
-			const token = store.getState().authToken;
-			const query: Response = await fetch(`${ProductsServices.API_URL}/properties/${id}/active`, {
+			const token: string = store.getState().authToken;
+			const sql: string = `${ProductsServices.API_URL}/properties/${id}/active`;
+			const query: Response = await fetch(sql, {
 				method: 'PATCH',
-                signal: signal,
-                body: JSON.stringify({ is_active: active === true ? 1 : 0 }),
+				signal: signal,
+				body: JSON.stringify({ is_active: active === true ? 1 : 0 }),
 				headers: {
 					'content-type': 'application/json;charset=UTF-8',
 					Authorization: `Bearer ${token}`

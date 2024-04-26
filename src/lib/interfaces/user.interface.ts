@@ -1,5 +1,3 @@
-import { ReactElement } from 'react';
-
 export interface IUser {
 	createdAt?: string;
 	deletedAt?: string;
@@ -19,12 +17,4 @@ export interface IUserCreate {
 	password?: string;
 	phone?: string;
 	role: string;
-}
-
-export interface IUserDialog {
-	id: number;
-	message: ReactElement;
-	name: string;
-	subtitle: string;
-	title: string;
 }

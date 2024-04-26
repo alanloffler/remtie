@@ -7,24 +7,26 @@ import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 // React component
 function UserLogged({ user }: { user: number }) {
-	const [actualUser, setActualUser] = useState<IUser | undefined>();
+	const [actualUser, setActualUser] = useState<IUser>();
 	const navigate = useNavigate();
 
 	useEffect(() => {
 		function getUser() {
 			UsersServices.findOne(user).then((data) => {
-				if (data instanceof Error || data.status === 401) navigate('/');
-				if (data) setActualUser(data);
-                store.setState({ username: data.name });
+                if (data.id) {
+                    setActualUser(data);
+                    store.setState({ username: data.name });
+                }
+                if (data.statusCode > 399 || data instanceof Error) navigate('/');
 			});
 		}
 		getUser();
 	}, [navigate, user]);
 
 	return (
-		<div className='mr-2 flex items-center'>
-			<Dot role={actualUser?.role} text={actualUser?.name.charAt(0).toUpperCase()} width='24px' />
-			<div className='ml-2 flex text-sm text-slate-400'>{actualUser?.name}</div>
+		<div className='flex items-center space-x-2'>
+			<Dot role={actualUser?.role} text={actualUser?.name.charAt(0).toUpperCase()} width='20px' />
+			<div className='text-sm text-slate-500'>{actualUser?.name}</div>
 		</div>
 	);
 }

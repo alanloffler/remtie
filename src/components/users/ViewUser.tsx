@@ -1,73 +1,122 @@
 // Icons: Lucide (https://lucide.dev/)
-import { ArrowLeft, BadgeX, Mail, Pencil, Phone, Trash2 } from 'lucide-react';
+import { ArrowLeft, BadgeX, CheckCircle, Mail, Pencil, Phone, Trash2 } from 'lucide-react';
 // UI: Shadcn-ui (https://ui.shadcn.com/)
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardFooter } from '@/components/ui/card';
-import { Dialog, DialogHeader, DialogFooter, DialogTrigger, DialogContent, DialogTitle, DialogDescription } from '@/components/ui/dialog';
+import { Dialog, DialogHeader, DialogFooter, DialogContent, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { toast } from '@/components/ui/use-toast';
 // App
-import { useEffect, useState } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
-import { emptyUser } from '@/lib/utils';
-import { UsersServices } from '@/services/users.services';
-import { IUser } from '@/lib/interfaces/user.interface';
 import Dot from '@/components/shared/Dot';
+import { IDialog } from '@/lib/interfaces/dialog.interface';
+import { IUser } from '@/lib/interfaces/user.interface';
+import { ReactElement, useEffect, useState } from 'react';
 import { Roles } from '@/lib/constants';
+import { UsersServices } from '@/services/users.services';
+import { emptyUser } from '@/lib/utils';
 import { store } from '@/services/store.services';
+import { useNavigate, useParams } from 'react-router-dom';
 // .env constants
 const APP_URL: string = import.meta.env.VITE_APP_URL;
 // React component
 function ViewUser() {
 	const id = Number(useParams().id);
-	const [user, setUser] = useState<IUser>(emptyUser);
 	const [date, setDate] = useState<Date>();
+	const [dialogAction, setDialogAction] = useState<string>('');
 	const [openDialog, setOpenDialog] = useState<boolean>(false);
+	const [user, setUser] = useState<IUser>(emptyUser);
+	const [userDialog, setUserDialog] = useState<IDialog>({ id: 0, name: '', title: '', subtitle: '', message: <span></span> });
 	const navigate = useNavigate();
+	const [updateUI, setUpdateUI] = useState<number>(0);
 
+	// #region Load User
 	useEffect(() => {
-        UsersServices
-        .findOne(id)
-        .then((response) => {
-			if (response.type !== '') {
+		UsersServices.findOne(id).then((response) => {
+			if (response.id) {
 				setUser(response);
-				const _date = new Date(response.created_at);
+				const _date = new Date(response.createdAt);
 				setDate(_date);
 			}
-			if (response.status > 200) {
-				toast({ title: 'Error', description: response.message, variant: 'destructive', duration: 5000 });
-				if (response.status === 401) {
-					navigate('/');
-				}
-			}
-			if (response instanceof Error) {
-				toast({ title: 'Error', description: '500 Internal Server Error | ' + response.message, variant: 'destructive', duration: 5000 });
-			}
+			if (response.statusCode > 399) toast({ title: response.statusCode, description: response.message, variant: 'destructive', duration: 5000 });
+			if (response instanceof Error) toast({ title: 'Error', description: '500 Internal Server Error | ' + response.message, variant: 'destructive', duration: 5000 });
 		});
-	}, [id, navigate]);
-
-	function removeSoft(id: number) {
-		UsersServices
-        .removeSoft(id)
-        .then((response) => {
-			if (response.status === 200) {
-				navigate(`${APP_URL}/usuarios`);
-				toast({ title: 'Usuario eliminado', description: response.message, variant: 'success', duration: 5000 });
+	}, [id, navigate, updateUI]);
+	// #region Actions
+	async function removeSoft(id: number) {
+		UsersServices.removeSoft(id).then((response) => {
+			if (response.statusCode === 200) {
+				setUpdateUI(Math.random());
+				toast({ title: response.statusCode, description: response.message, variant: 'success', duration: 5000 });
 			}
-			if (response.status > 200) {
-				setOpenDialog(false);
-				toast({ title: 'Error', description: response.message, variant: 'destructive', duration: 5000 });
-				if (response.status === 401) navigate('/');
-			}
-			if (response instanceof Error) {
-				setOpenDialog(false);
-				toast({ title: 'Error', description: '500 Internal Server Error | ' + response.message, variant: 'destructive', duration: 5000 });
-			}
+			if (response.statusCode > 399) toast({ title: response.statusCode, description: response.message, variant: 'destructive', duration: 5000 });
+			if (response instanceof Error) toast({ title: 'Error', description: '500 Internal Server Error | ' + response.message, variant: 'destructive', duration: 5000 });
+			setOpenDialog(false);
 		});
 	}
 
-    function remove(id: number): void {
-        console.log(id);
-    }
+	function remove(id: number): void {
+		UsersServices.remove(id).then((response) => {
+			if (response.statusCode === 200) {
+				navigate(-1);
+				toast({ title: response.statusCode, description: response.message, variant: 'success', duration: 5000 });
+			}
+			if (response.statusCode > 399) toast({ title: response.statusCode, description: response.message, variant: 'destructive', duration: 5000 });
+			if (response instanceof Error) toast({ title: 'Error', description: '500 Internal Server Error | ' + response.message, variant: 'destructive', duration: 5000 });
+			setOpenDialog(false);
+		});
+	}
+
+	async function restore(id: number) {
+		UsersServices.restore(id).then((response) => {
+			if (response.statusCode === 200) {
+				setUpdateUI(Math.random());
+				toast({ title: response.statusCode, description: response.message, variant: 'success', duration: 5000 });
+			}
+			if (response.statusCode > 399) toast({ title: response.statusCode, description: response.message, variant: 'destructive', duration: 5000 });
+			if (response instanceof Error) toast({ title: 'Error', description: '500 Internal Server Error | ' + response.message, variant: 'destructive', duration: 5000 });
+			setOpenDialog(false);
+		});
+	}
+
+	// #region Dialog
+	function handleDialog(user: IUser, action: string) {
+		let message: ReactElement | false = false;
+		let subtitle: string = '';
+
+		if (action === 'removeSoft') {
+			subtitle = 'Esta acción es posible de revertir por el administrador';
+			message = (
+				<>
+					El usuario <span className='text-md font-bold text-slate-900'>{user.name}</span> va a ser eliminado de la base de datos.
+				</>
+			);
+		}
+		if (action === 'remove') {
+			subtitle = 'Esta acción es imposible de revertir.';
+			message = (
+				<>
+					El usuario <span className='text-md font-bold text-slate-900'>{user.name}</span> va a ser eliminado permanentemente de la base de datos.
+				</>
+			);
+		}
+		if (action === 'restore') {
+			subtitle = 'Esta acción es posible de revertir por el administrador';
+			message = (
+				<>
+					El usuario <span className='text-md font-bold text-slate-900'>{user.name}</span> va a ser restaurado de la base de datos.
+				</>
+			);
+		}
+
+		setOpenDialog(true);
+		setUserDialog({
+			id: Number(user.id),
+			name: user.name,
+			title: '¿Estás realmente seguro?',
+			subtitle: subtitle,
+			message: message
+		});
+		setDialogAction(action);
+	}
 
 	return (
 		<main className='flex-1 overflow-y-auto'>
@@ -86,64 +135,79 @@ function ViewUser() {
 							<div className='mt-2 text-sm text-neutral-400'>{user?.role === 'admin' ? 'Administrador' : 'Usuario'}</div>
 							<div className='my-8 flex items-center gap-2 italic'>
 								<Mail className='h-4 w-4' />
-								{user?.email}
+								{user.email}
 							</div>
-							<div className='mb-12 flex items-center gap-2 italic'>
-								<Phone className='h-4 w-4' />
-								{user?.phone}
-							</div>
+							{user.phone && (
+								<div className='mb-12 flex items-center gap-2 italic'>
+									<Phone className='h-4 w-4' />
+									{user.phone}
+								</div>
+							)}
 							<div className='flex text-sm font-extralight text-neutral-500'>
-								{user?.role === 'admin' ? 'Administrador desde el ' : 'Usuario desde el '}
+								{user.role === Roles.ADMIN ? 'Administrador desde el ' : 'Usuario desde el '}
 								{date?.getDate() + ' '}
 								{date?.toLocaleString('default', { month: 'long' })}
 								{' de ' + date?.getFullYear()}
 							</div>
 						</div>
 					</CardContent>
-                    {(store.getState().role === Roles.ADMIN || store.getState().userId === Number(user?.id)) && (
-                        <CardFooter className='justify-end gap-2 bg-slate-200/50 p-2'>
-                            <Button onClick={() => navigate(`${APP_URL}/usuario/modificar/${user.id}`)} variant='ghost' size='miniIcon' className='rounded-full border bg-white text-slate-400/70 shadow-sm hover:bg-white hover:text-emerald-500'>
-                                <Pencil className='h-4 w-4' />
-                            </Button>
-                            <Dialog open={openDialog} onOpenChange={setOpenDialog}>
-                                <Button variant='ghost' size='miniIcon' className='rounded-full border bg-white text-slate-400/70 shadow-sm hover:bg-white hover:text-rose-500' asChild>
-                                    <DialogTrigger>
-                                        <Trash2 className='h-4 w-4' />
-                                    </DialogTrigger>
-                                </Button>
-                                <DialogContent>
-                                    <DialogHeader>
-                                        <DialogTitle>¿Estás realmente seguro?</DialogTitle>
-                                        <DialogDescription>Esta acción es imposible de revertir.</DialogDescription>
-                                    </DialogHeader>
-                                    <div>
-                                        <section className='text-sm font-normal'>
-                                            La cuenta del usuario
-                                            <span className='text-md px-1 font-bold text-slate-900'>{user?.name}</span>
-                                            se eliminará permanentemente de la base de datos.
-                                        </section>
-                                        <DialogFooter>
-                                            <div className='mt-6 flex flex-row gap-4'>
-                                                <Button variant='ghost' onClick={() => setOpenDialog(false)}>
-                                                    Cancelar
-                                                </Button>
-                                                <Button variant='delete' onClick={() => removeSoft(user.id)}>
-                                                    Eliminar
-                                                </Button>
-                                            </div>
-                                        </DialogFooter>
-                                    </div>
-                                </DialogContent>
-                            </Dialog>
-                            {(store.getState().role === Roles.ADMIN && store.getState().userId !== Number(user?.id)) && (
-                            <Button onClick={() => remove(user.id)} variant='ghost' size='miniIcon' className='rounded-full border bg-white text-slate-400/70 shadow-sm hover:bg-white hover:text-emerald-500'>
-                                <BadgeX className='h-5 w-5' strokeWidth='1.5' />
-                            </Button>
-                            )}
-                        </CardFooter>
-                    )}
+					{(store.getState().role === Roles.ADMIN || store.getState().userId === user.id) && (
+						<CardFooter className='justify-end gap-2 bg-slate-200/50 p-2'>
+							{user.deletedAt === null && (
+								<Button onClick={() => navigate(`${APP_URL}/usuario/modificar/${user.id}`)} variant='ghost' size='miniIcon' className='rounded-full border bg-white text-slate-400/70 shadow-sm hover:bg-white hover:text-emerald-500'>
+									<Pencil className='h-4 w-4' />
+								</Button>
+							)}
+							{user.deletedAt === null ? (
+								<Button onClick={() => handleDialog(user, 'removeSoft')} variant='outline' size='miniIcon' className='rounded-full border bg-white text-slate-400/70 shadow-sm hover:bg-white hover:text-rose-400'>
+									<Trash2 className='h-4 w-4' />
+								</Button>
+							) : (
+								<Button onClick={() => handleDialog(user, 'restore')} variant='outline' size='miniIcon' className='rounded-full border bg-white text-slate-400/70 shadow-sm hover:bg-white hover:text-emerald-400'>
+									<CheckCircle className='h-4 w-4' />
+								</Button>
+							)}
+							{store.getState().role === Roles.ADMIN && store.getState().userId !== user.id && (
+								<Button onClick={() => handleDialog(user, 'remove')} variant='outline' size='miniIcon' className='rounded-full border bg-white text-slate-400/70 shadow-sm hover:bg-white hover:text-rose-400'>
+									<BadgeX className='h-5 w-5' strokeWidth='1.5' />
+								</Button>
+							)}
+						</CardFooter>
+					)}
 				</Card>
 			</div>
+			{/* Dialog */}
+			<Dialog open={openDialog} onOpenChange={setOpenDialog}>
+				<DialogContent>
+					<DialogHeader>
+						<DialogTitle>{userDialog.title}</DialogTitle>
+						<DialogDescription>{userDialog.subtitle}</DialogDescription>
+					</DialogHeader>
+					<section className='text-sm font-normal'>{userDialog.message}</section>
+					<DialogFooter>
+						<div className='mt-6 flex flex-row gap-4'>
+							<Button variant='ghost' onClick={() => setOpenDialog(false)}>
+								Cancelar
+							</Button>
+							{dialogAction === 'removeSoft' && (
+								<Button variant='delete' onClick={() => removeSoft(userDialog.id)}>
+									Eliminar
+								</Button>
+							)}
+							{dialogAction === 'restore' && (
+								<Button variant='default' onClick={() => restore(userDialog.id)}>
+									Restaurar
+								</Button>
+							)}
+							{dialogAction === 'remove' && (
+								<Button variant='delete' onClick={() => remove(userDialog.id)}>
+									Eliminar
+								</Button>
+							)}
+						</div>
+					</DialogFooter>
+				</DialogContent>
+			</Dialog>
 		</main>
 	);
 }

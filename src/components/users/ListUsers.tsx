@@ -6,16 +6,17 @@ import { Card } from '@/components/ui/card';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { toast } from '@/components/ui/use-toast';
 // App
-import { useEffect, useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import Dot from '@/components/shared/Dot';
 import { ColumnDef } from '@tanstack/react-table';
 import { DataTable } from '@/components/data-table/DataTable';
-import { UsersConfig } from '@/lib/config';
-import { IUser, IUserDialog } from '@/lib/interfaces/user.interface';
-import { UsersServices } from '@/services/users.services';
-import Dot from '@/components/shared/Dot';
-import { store } from '@/services/store.services';
+import { IDialog } from '@/lib/interfaces/dialog.interface';
+import { IUser } from '@/lib/interfaces/user.interface';
+import { Link, useNavigate } from 'react-router-dom';
 import { Roles } from '@/lib/constants';
+import { UsersConfig } from '@/lib/config';
+import { UsersServices } from '@/services/users.services';
+import { store } from '@/services/store.services';
+import { useEffect, useState } from 'react';
 // .env constants
 const APP_URL: string = import.meta.env.VITE_APP_URL;
 // React component
@@ -23,10 +24,12 @@ function ListUsers() {
 	const navigate = useNavigate();
 	const [users, setUsers] = useState<IUser[]>([]);
 	const [openDialog, setOpenDialog] = useState(false);
-	const [userDialog, setUserDialog] = useState<IUserDialog>({ id: 0, name: '', title: '', subtitle: '', message: <span></span> });
+	const [userDialog, setUserDialog] = useState<IDialog>({ id: 0, name: '', title: '', subtitle: '', message: <span></span> });
 	const [isAdmin, setIsAdmin] = useState<boolean>(false);
 	const [dialogAction, setDialogAction] = useState<string>('');
+    const [updateUI, setUpdateUI] = useState<number>(0);
 
+    // #region Table columns
 	const columns: ColumnDef<IUser>[] = [
 		{
 			accessorKey: 'id',
@@ -91,9 +94,11 @@ function ListUsers() {
 						{(isAdmin || (store.getState().userId === Number(row.original.id) && !isAdmin)) && (
 							<>
 								{/* Edit */}
-								<Button onClick={() => navigate(`${APP_URL}/usuario/modificar/${Number(row.original.id)}`)} variant='outline' size='miniIcon' className='hover:bg-white hover:text-emerald-400'>
-									<Pencil className='h-5 w-5' strokeWidth='1.5' />
-								</Button>
+								{row.original.deletedAt === null && (
+									<Button onClick={() => navigate(`${APP_URL}/usuario/modificar/${Number(row.original.id)}`)} variant='outline' size='miniIcon' className='hover:bg-white hover:text-emerald-400'>
+										<Pencil className='h-5 w-5' strokeWidth='1.5' />
+									</Button>
+								)}
 								{/* Soft Delete or Restore */}
 								{row.original.deletedAt === null ? (
 									<Button
@@ -155,7 +160,7 @@ function ListUsers() {
 													</>
 												)
 											});
-                                            setDialogAction('remove');
+											setDialogAction('remove');
 										}}
 										variant='outline'
 										size='miniIcon'
@@ -186,54 +191,46 @@ function ListUsers() {
 		setIsAdmin(store.getState().role === Roles.ADMIN);
 		getAllUsers();
 		// eslint-disable-next-line react-hooks/exhaustive-deps
-	}, []);
-    // ACTIONS
+	}, [updateUI]);
+	// #region Actions
 	function removeSoft(id: number) {
-		if (!id) return;
-
-        UsersServices
-        .removeSoft(id)
-        .then((response) => {
-            console.log(response);
-            if (response.status === 200) {
-                toast({ title: response.status, description: response.message, variant: 'success', duration: 5000 });
-                getAllUsers();
-            }
+		UsersServices.removeSoft(id).then((response) => {
+			if (response.statusCode === 200) {
+				toast({ title: response.statusCode, description: response.message, variant: 'success', duration: 5000 });
+				getAllUsers();
+                setUpdateUI(Math.random());
+			}
 			if (response.statusCode > 399) toast({ title: response.statusCode, description: response.message, variant: 'destructive', duration: 5000 });
 			if (response instanceof Error) toast({ title: 'Error', description: '500 Internal Server Error | ' + response.message, variant: 'destructive', duration: 5000 });
 			setOpenDialog(false);
 		});
 	}
 
-    function restore(id: number) {
-        UsersServices
-        .restore(id)
-        .then(response => {
-            console.log(response);
-            if (response.status === 200) {
-                toast({ title: response.status, description: response.message, variant: 'success', duration: 5000 });
-                getAllUsers();
-            }
-            if (response.statusCode > 399) toast({ title: response.statusCode, description: response.message, variant: 'destructive', duration: 5000 });
-            if (response instanceof Error) toast({ title: 'Error', description: '500 Internal Server Error | ' + response.message, variant: 'destructive', duration: 5000 });
-            setOpenDialog(false);
-        });
-    }
+	function restore(id: number) {
+		UsersServices.restore(id).then((response) => {
+			if (response.statusCode === 200) {
+				toast({ title: response.statusCode, description: response.message, variant: 'success', duration: 5000 });
+				getAllUsers();
+                setUpdateUI(Math.random());
+			}
+			if (response.statusCode > 399) toast({ title: response.statusCode, description: response.message, variant: 'destructive', duration: 5000 });
+			if (response instanceof Error) toast({ title: 'Error', description: '500 Internal Server Error | ' + response.message, variant: 'destructive', duration: 5000 });
+			setOpenDialog(false);
+		});
+	}
 
-    function remove(id: number) {
-        UsersServices
-        .remove(id)
-        .then(response => {
-            console.log(response);
-            if (response.status === 200) {
-                toast({ title: response.status, description: response.message, variant: 'success', duration: 5000 });
-                getAllUsers();
-            }
-            if (response.statusCode > 399) toast({ title: response.statusCode, description: response.message, variant: 'destructive', duration: 5000 });
-            if (response instanceof Error) toast({ title: 'Error', description: '500 Internal Server Error | ' + response.message, variant: 'destructive', duration: 5000 });
-            setOpenDialog(false);
-        });
-    }
+	function remove(id: number) {
+		UsersServices.remove(id).then((response) => {
+			console.log(response);
+			if (response.statusCode === 200) {
+				toast({ title: response.statusCode, description: response.message, variant: 'success', duration: 5000 });
+				getAllUsers();
+			}
+			if (response.statusCode > 399) toast({ title: response.statusCode, description: response.message, variant: 'destructive', duration: 5000 });
+			if (response instanceof Error) toast({ title: 'Error', description: '500 Internal Server Error | ' + response.message, variant: 'destructive', duration: 5000 });
+			setOpenDialog(false);
+		});
+	}
 
 	return (
 		<main className='flex-1 overflow-y-auto'>

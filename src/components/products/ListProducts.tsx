@@ -19,6 +19,7 @@ import { CategoriesServices } from '@/services/categories.services';
 import { ColumnDef } from '@tanstack/react-table';
 import { DataTable } from '@/components/data-table/DataTable';
 import { IBusiness, ICategory } from '@/lib/interfaces/inputs.interface';
+import { IDialog } from '@/lib/interfaces/dialog.interface';
 import { IProperty } from '@/lib/interfaces/property.interface';
 import { Link, useNavigate } from 'react-router-dom';
 import { ProductsConfig } from '@/lib/config';
@@ -42,9 +43,10 @@ function ListProducts() {
 	const [categorySelected, setCategorySelected] = useState<string>('');
 	const [searchFilter, setSearchFilter] = useState<string>('');
 	const [openDialog, setOpenDialog] = useState(false);
-	const [propertyId, setPropertyId] = useState<number>(0);
 	const [showInfoCard, setShowInfoCard] = useState<boolean>(false);
 	const [showCard, setShowCard] = useState<boolean>(false);
+	const [propertyDialog, setPropertyDialog] = useState<IDialog>({ id: 0, name: '', title: '', subtitle: '', message: <span></span> });
+	const [dialogAction, setDialogAction] = useState<string>('');
 
 	const tabActive: string = store.getState().tabActive;
 	const setTabActive = store.getState().setTabActive;
@@ -52,19 +54,22 @@ function ListProducts() {
 	const navigate = useNavigate();
 	const capitalize = useCapitalize();
 
-	const content: ReactElement = (
-		<div>
-			No hay propiedades creadas por <span className='px-1 font-bold'>{store.getState().username}</span>
-		</div>
-	);
+	const content: ReactElement | false =
+		store.getState().role === Roles.ADMIN ? (
+			<div>Aún no hay propiedades creadas por los usuarios o por vos.</div>
+		) : (
+			<div>
+				No hay propiedades creadas por vos <span className='pl-1 font-bold'>({store.getState().username})</span>.
+			</div>
+		);
 
 	async function getBusiness() {
-		const business = await BusinessServices.getBusiness();
+		const business = await BusinessServices.findAll();
 		setBusiness(business);
 	}
 
 	async function getCategories() {
-		const categories = await CategoriesServices.getCategories();
+		const categories = await CategoriesServices.findAll();
 		setCategories(categories);
 	}
 
@@ -90,7 +95,7 @@ function ListProducts() {
 		getCategories();
 		getProducts();
 	}, []);
-
+	// #region Table columns
 	const columns: ColumnDef<IProperty>[] = [
 		// Id
 		{
@@ -158,17 +163,17 @@ function ListProducts() {
 						)}
 						{/* TODO RESTORE PROPERTY CONTINUE WITH DIALOG LIKE USERS */}
 						{row.original.deletedAt === null ? (
-							<Button onClick={() => handleDeleteDialog(row.original.id)} variant='outline' size='miniIcon' className='hover:bg-white hover:text-rose-400'>
+							<Button onClick={() => handleDialog(row.original, 'removeSoft')} variant='outline' size='miniIcon' className='hover:bg-white hover:text-rose-400'>
 								<Trash2 className='h-5 w-5' strokeWidth='1.5' />
 							</Button>
 						) : (
-							<Button onClick={() => handleRestore(row.original.id)} variant='outline' size='miniIcon' className='hover:bg-white hover:text-emerald-400'>
+							<Button onClick={() => handleDialog(row.original, 'restore')} variant='outline' size='miniIcon' className='hover:bg-white hover:text-emerald-400'>
 								<CheckCircle className='h-5 w-5' strokeWidth='1.5' />
 							</Button>
 						)}
 						{/* TODO HARD REMOVE */}
 						{store.getState().role === Roles.ADMIN && (
-							<Button onClick={() => handleRemove(row.original.id)} variant='outline' size='miniIcon' className='hover:bg-white hover:text-rose-400'>
+							<Button onClick={() => handleDialog(row.original, 'remove')} variant='outline' size='miniIcon' className='hover:bg-white hover:text-rose-400'>
 								<BadgeX className='h-5 w-5' strokeWidth='1.5' />
 							</Button>
 						)}
@@ -180,7 +185,7 @@ function ListProducts() {
 			}
 		}
 	];
-
+	// #region Filters
 	function handleBusinessFilter(event: string) {
 		if (event === 'reset') {
 			setBusinessSelected('');
@@ -231,12 +236,48 @@ function ListProducts() {
 		setPropertiesFiltered(applyFilters(properties, ['business_type', 'type'], [businessSelected, categorySelected], searchFilter));
 	}, [businessSelected, categorySelected, searchFilter]);
 
-	function handleDeleteDialog(id: number) {
-		setOpenDialog(true);
-		setPropertyId(id);
-	}
+	// #region Dialog
+	function handleDialog(property: IProperty, action: string) {
+		let message: ReactElement | false = false;
+		let subtitle: string = '';
 
-	async function handleRestore(id: number) {
+		if (action === 'removeSoft') {
+			subtitle = 'Esta acción es posible de revertir por el administrador';
+			message = (
+				<>
+					La propiedad <span className='text-md font-bold text-slate-900'>{property.id < 10 ? `COD/0${property.id}` : `COD/${property.id}`}</span> va a ser eliminada de la base de datos.
+				</>
+			);
+		}
+		if (action === 'remove') {
+			subtitle = 'Esta acción es imposible de revertir.';
+			message = (
+				<>
+					La propiedad <span className='text-md font-bold text-slate-900'>{property.id < 10 ? `COD/0${property.id}` : `COD/${property.id}`}</span> va a ser eliminada permanentemente de la base de datos.
+				</>
+			);
+		}
+		if (action === 'restore') {
+			subtitle = 'Esta acción es posible de revertir por el administrador';
+			message = (
+				<>
+					La propiedad <span className='text-md font-bold text-slate-900'>{property.id < 10 ? `COD/0${property.id}` : `COD/${property.id}`}</span> va a ser restaurada de la base de datos.
+				</>
+			);
+		}
+
+		setOpenDialog(true);
+		setPropertyDialog({
+			id: Number(property.id),
+			name: property.title,
+			title: '¿Estás realmente seguro?',
+			subtitle: subtitle,
+			message: message
+		});
+		setDialogAction(action);
+	}
+	// #region Button actions
+	async function restore(id: number) {
 		ProductsServices.restore(id).then((response) => {
 			if (response.statusCode === 200) {
 				toast({ title: response.statusCode, description: response.message, variant: 'success', duration: 5000 });
@@ -248,7 +289,7 @@ function ListProducts() {
 		});
 	}
 
-	async function handleDeleteProduct(id: number) {
+	async function removeSoft(id: number) {
 		ProductsServices.removeSoft(id).then((response) => {
 			if (response.statusCode === 200) {
 				toast({ title: response.statusCode, description: response.message, variant: 'success', duration: 5000 });
@@ -260,10 +301,16 @@ function ListProducts() {
 		setOpenDialog(false);
 	}
 
-	async function handleRemove(id: number) {
+	async function remove(id: number) {
 		ProductsServices.remove(id).then((response) => {
-			console.log(response);
+			if (response.statusCode === 200) {
+				toast({ title: response.statusCode, description: response.message, variant: 'success', duration: 5000 });
+				getProducts();
+			}
+			if (response.statusCode > 399) toast({ title: response.statusCode, description: response.message, variant: 'destructive', duration: 5000 });
+			if (response instanceof Error) toast({ title: 'Error', description: '500 Internal Server Error | ' + response.message, variant: 'destructive', duration: 5000 });
 		});
+		setOpenDialog(false);
 	}
 
 	return (
@@ -347,40 +394,50 @@ function ListProducts() {
 						</div>
 					</div>
 					<TabsContent value='card' className='py-6 pb-8'>
-						{showCard && <CardView properties={propertiesFiltered} />}
-						{showInfoCard && (
-							<div className='flex justify-center'>
-								<InfoCard content={content} />
-							</div>
-						)}
+						{showCard && <CardView getProducts={getProducts} properties={propertiesFiltered} />}
 					</TabsContent>
 					<TabsContent value='list' className='py-6 pb-8'>
-						<Card className='p-6'>
-							<DataTable columns={columns} data={propertiesFiltered} searchBy='city' />
-						</Card>
+						{showCard && (
+							<Card className='p-6'>
+								<DataTable columns={columns} data={propertiesFiltered} searchBy='city' />
+							</Card>
+						)}
 					</TabsContent>
 				</Tabs>
+				{showInfoCard && (
+					<div className='flex justify-center'>
+						<InfoCard content={content} />
+					</div>
+				)}
 			</div>
 			{/* Dialog */}
 			<Dialog open={openDialog} onOpenChange={setOpenDialog}>
 				<DialogContent>
 					<DialogHeader>
-						<DialogTitle>¿Estás realmente seguro?</DialogTitle>
-						<DialogDescription>Esta acción es imposible de revertir.</DialogDescription>
+						<DialogTitle>{propertyDialog.title}</DialogTitle>
+						<DialogDescription>{propertyDialog.subtitle}</DialogDescription>
 					</DialogHeader>
-					<section>
-						La propiedad
-						<span className='text-md px-1 font-bold uppercase text-neutral-900'>{propertyId < 10 ? 'Cod/0' + propertyId : 'Cod/' + propertyId}</span>
-						se eliminará permanentemente de la base de datos.
-					</section>
+					<section className='text-sm font-normal'>{propertyDialog.message}</section>
 					<DialogFooter>
-						<div className='flex flex-row gap-4'>
+						<div className='mt-6 flex flex-row gap-4'>
 							<Button variant='ghost' onClick={() => setOpenDialog(false)}>
 								Cancelar
 							</Button>
-							<Button variant='delete' onClick={() => handleDeleteProduct(propertyId)}>
-								Eliminar
-							</Button>
+							{dialogAction === 'removeSoft' && (
+								<Button variant='delete' onClick={() => removeSoft(propertyDialog.id)}>
+									Eliminar
+								</Button>
+							)}
+							{dialogAction === 'restore' && (
+								<Button variant='default' onClick={() => restore(propertyDialog.id)}>
+									Restaurar
+								</Button>
+							)}
+							{dialogAction === 'remove' && (
+								<Button variant='delete' onClick={() => remove(propertyDialog.id)}>
+									Eliminar
+								</Button>
+							)}
 						</div>
 					</DialogFooter>
 				</DialogContent>

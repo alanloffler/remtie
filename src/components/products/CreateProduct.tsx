@@ -29,6 +29,8 @@ import { IBusiness, ICategory } from '@/lib/interfaces/inputs.interface';
 import { propertySchema } from '@/lib/schemas/property.schema';
 import { imageFormSchema } from '@/lib/schemas/image.schema';
 import { useCapitalize } from '@/hooks/useCapitalize';
+// .env constants
+const APP_URL: string = import.meta.env.VITE_APP_URL;
 // React component
 function CreateProduct() {
 	const navigate = useNavigate();
@@ -39,7 +41,7 @@ function CreateProduct() {
 	const [categories, setCategories] = useState<ICategory[]>([]);
 	const [categoriesKey, setCategoriesKey] = useState<number>(0);
 	const [openDialog, setOpenDialog] = useState<boolean>(false);
-	const [imageDialog, setImageDialog] = useState<IImage>({ id: 0, name: '', propertyId: 0 });
+	const [imageDialog, setImageDialog] = useState<IImage>({ id: 0, name: '', propertyId: 0, deletedAt: '' });
 	const [propertyCreated, setPropertyCreated] = useState<boolean>(false);
 	const capitalize = useCapitalize();
 	const [chosenImage, setChosenImage] = useState<string>('');
@@ -140,7 +142,7 @@ function CreateProduct() {
 				</Button>
 			</div>
 			<div className='mt-6 flex flex-col items-center justify-center px-4'>
-				<Card className='mb-10 flex w-full flex-row py-8 md:w-[500px] lg:w-[650px]'>
+				<Card className='flex w-full flex-row py-8 md:w-[500px] lg:w-[650px]'>
 					<CardContent className='mx-0 w-full p-0'>
 						<FormProvider {...propertyForm}>
 							<form onSubmit={propertyForm.handleSubmit(handleSubmitProduct)} className='space-y-8'>
@@ -385,7 +387,7 @@ function CreateProduct() {
 																<Button
 																	onClick={() => {
 																		setOpenDialog(true);
-																		setImageDialog({ id: img.id, name: img.name, propertyId: img.propertyId });
+																		setImageDialog({ id: img.id, name: img.name, propertyId: img.propertyId, deletedAt: img.deletedAt });
 																	}}
 																	variant='ghost'
 																	size='miniIcon'
@@ -467,6 +469,11 @@ function CreateProduct() {
 						)}
 					</CardContent>
 				</Card>
+                <section className='py-6'>
+                    <Button onClick={() => navigate(`${APP_URL}/productos/${propertyId}`)} variant='secondary' size='sm' className='w-auto bg-slate-200 hover:bg-slate-200/70 border'>
+                        Ver la propiedad que creaste
+                    </Button>
+                </section>
 				{/* <div className='my-8 flex w-full flex-col md:w-[500px] lg:w-[650px]'>
 					<h1 className='font-semibold text-slate-800'>Gestión de imágenes</h1>
 					<Separator className='mt-2' />

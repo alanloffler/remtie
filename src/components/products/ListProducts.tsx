@@ -1,6 +1,6 @@
 /* eslint-disable react-hooks/exhaustive-deps */
 // Icons: Lucide (https://lucide.dev/)
-import { ArrowUpDown, BadgeX, CheckCircle, CircleOff, Info, Pencil, Plus, Trash2 } from 'lucide-react';
+import { ArrowUpDown, BadgeX, CheckCircle, CircleOff, Filter, Info, Pencil, Plus, Trash2 } from 'lucide-react';
 // UI: Shadcn-ui (https://ui.shadcn.com/)
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components//ui/card';
@@ -41,12 +41,14 @@ function ListProducts() {
 	const [categories, setCategories] = useState<ICategory[]>([]);
 	const [categoryKey, setCategoryKey] = useState<number>(0);
 	const [categorySelected, setCategorySelected] = useState<string>('');
+	const [createdSelected, setCreatedSelected] = useState<string | number>('');
 	const [searchFilter, setSearchFilter] = useState<string>('');
 	const [openDialog, setOpenDialog] = useState(false);
 	const [showInfoCard, setShowInfoCard] = useState<boolean>(false);
 	const [showCard, setShowCard] = useState<boolean>(false);
 	const [propertyDialog, setPropertyDialog] = useState<IDialog>({ id: 0, name: '', title: '', subtitle: '', message: <span></span> });
 	const [dialogAction, setDialogAction] = useState<string>('');
+	const [creatorFilter, setCreatorFilter] = useState<number>(1);
 
 	const tabActive: string = store.getState().tabActive;
 	const setTabActive = store.getState().setTabActive;
@@ -213,11 +215,12 @@ function ListProducts() {
 	}
 
 	useEffect(() => {
-		function applyFilters(prop: IProperty[], filterAttributes: string[], filterValues: string[], search: string) {
+		function applyFilters(prop: IProperty[], filterAttributes: string[], filterValues: (string | number)[], search: string) {
 			// Selects filters
 			const filteredProperties = prop.filter((property: IProperty) => {
 				return filterAttributes.every((attribute, index) => {
 					if (filterValues[index] !== '') {
+						if (filterValues[index] === 'others') return property[attribute] !== store.getState().userId;
 						return property[attribute] === filterValues[index];
 					} else {
 						return prop;
@@ -233,8 +236,8 @@ function ListProducts() {
 				return filteredProperties;
 			}
 		}
-		setPropertiesFiltered(applyFilters(properties, ['business_type', 'type'], [businessSelected, categorySelected], searchFilter));
-	}, [businessSelected, categorySelected, searchFilter]);
+		setPropertiesFiltered(applyFilters(properties, ['business_type', 'type', 'created_by'], [businessSelected, categorySelected, createdSelected], searchFilter));
+	}, [businessSelected, categorySelected, createdSelected, searchFilter]);
 
 	// #region Dialog
 	function handleDialog(property: IProperty, action: string) {
@@ -393,10 +396,50 @@ function ListProducts() {
 							</div>
 						</div>
 					</div>
-					<TabsContent value='card' className='py-6 pb-8'>
+					{store.getState().role === Roles.ADMIN && (
+						<section className='flex flex-row space-x-4 pt-4'>
+							<div className='flex flex-row items-center space-x-1 text-sm text-slate-600'>
+								<Filter className='h-4 w-4' strokeWidth='2' />
+								<span>Filtrar por creadores</span>
+							</div>
+							<div className='flex flex-row items-center space-x-1 text-sm text-slate-600'>
+								<Button
+									variant='ghost'
+									size='sm'
+									onClick={() => {
+										setCreatorFilter(1);
+										setCreatedSelected('');
+									}}
+									className={creatorFilter === 1 ? 'bg-slate-200' : 'bg-transparent'}>
+									Todos
+								</Button>
+								<Button
+									variant='ghost'
+									size='sm'
+									onClick={() => {
+										setCreatorFilter(2);
+										setCreatedSelected(store.getState().userId);
+									}}
+									className={creatorFilter === 2 ? 'bg-slate-200' : 'bg-transparent'}>
+									Tuyas
+								</Button>
+								<Button
+									variant='ghost'
+									size='sm'
+									onClick={() => {
+										setCreatorFilter(3);
+										setCreatedSelected('others');
+									}}
+									className={creatorFilter === 3 ? 'bg-slate-200' : 'bg-transparent'}>
+									Otros
+								</Button>
+							</div>
+						</section>
+					)}
+					<TabsContent value='card' className={store.getState().role === Roles.ADMIN ? 'pb-8 pt-2' : 'py-6 pb-8'}>
 						{showCard && <CardView getProducts={getProducts} properties={propertiesFiltered} />}
 					</TabsContent>
-					<TabsContent value='list' className='py-6 pb-8'>
+					<TabsContent value='list' className={store.getState().role === Roles.ADMIN ? 'pb-8 pt-2' : 'py-6 pb-8'}>
 						{showCard && (
 							<Card className='p-6'>
 								<DataTable columns={columns} data={propertiesFiltered} searchBy='city' />

@@ -9,7 +9,6 @@ const Login = React.lazy(() => import('./components/login/Login'));
 import Layout from '@/components/layout/Layout';
 import ProtectedRoutes from './components/login/ProtectedRoutes';
 import Loading2 from '@/components/shared/Loading2';
-import { store } from './services/store.services';
 // If Layout is lazyloading
 // const Layout = React.lazy(() => import("./components/layout/Layout"));
 const Dashboard = React.lazy(() => import('./components/dashboard/Dashboard'));
@@ -37,7 +36,7 @@ function App() {
 		{ path: `${APP_URL}/productos/:id`, element: <ViewProduct /> },
 		{ path: `${APP_URL}/productos/crear`, element: <CreateProduct /> },
 		{ path: `${APP_URL}/productos/modificar/:id`, element: <UpdateProduct /> },
-		{ path: `${APP_URL}/config`, element: <Settings role={store.getState().role} />},
+		{ path: `${APP_URL}/config`, element: <Settings />},
 	];
 
 	return (

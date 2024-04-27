@@ -79,7 +79,7 @@ function Sidebar() {
 					<DropdownMenu>
 						<Button variant='ghost' size='miniIcon' className='hover:bg-slate-200 focus-visible:ring-transparent focus-visible:ring-offset-0' asChild>
 							<DropdownMenuTrigger>
-                                <Ellipsis strokeWidth='2' className='h-4 w-4 text-slate-500' />
+                                <Ellipsis  strokeWidth='2' className='h-4 w-4 text-slate-500' />
 							</DropdownMenuTrigger>
 						</Button>
 						<DropdownMenuContent align='end'>

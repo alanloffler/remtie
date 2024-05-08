@@ -4,6 +4,7 @@ export interface IProperty {
 	id: number;
 	type: string;
 	is_active: boolean;
+    isFavorite: boolean;
 	business_type: string;
 	title: string;
 	short_description: string;

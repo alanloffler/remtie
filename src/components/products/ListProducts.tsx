@@ -28,6 +28,8 @@ import { ReactElement, useEffect, useState } from 'react';
 import { Roles } from '@/lib/constants';
 import { store } from '@/services/store.services';
 import { useCapitalize } from '@/hooks/useCapitalize';
+import { FavoritesServices } from '@/services/favorite.services';
+import { IFavorite } from '@/lib/interfaces/favorite.interface';
 // .env constants
 const APP_URL: string = import.meta.env.VITE_APP_URL;
 // React component
@@ -49,7 +51,6 @@ function ListProducts() {
 	const [propertyDialog, setPropertyDialog] = useState<IDialog>({ id: 0, name: '', title: '', subtitle: '', message: <span></span> });
 	const [dialogAction, setDialogAction] = useState<string>('');
 	const [creatorFilter, setCreatorFilter] = useState<number>(1);
-
 	const tabActive: string = store.getState().tabActive;
 	const setTabActive = store.getState().setTabActive;
 
@@ -80,8 +81,7 @@ function ListProducts() {
 			if (Array.isArray(response)) {
 				if (response.length > 0) {
 					setShowSelects(true);
-					setProperties(response);
-					setPropertiesFiltered(response);
+                    setFavorites(response);
 					setShowCard(true);
 				} else {
 					setShowInfoCard(true);
@@ -91,6 +91,24 @@ function ListProducts() {
 			if (response instanceof Error) toast({ title: 'Error', description: '500 Internal Server Error | ' + response.message, variant: 'destructive', duration: 5000 });
 		});
 	}
+
+    async function setFavorites(props: IProperty[]) {
+        FavoritesServices.findAll().then((response) => {
+			if (response.length > 0) {
+				const properties = props.map((property) => ({
+					...property,
+					isFavorite: response.map((favorite: IFavorite) => favorite.propertyId).includes(property.id)
+				}));
+                setPropertiesFiltered(properties);
+                setProperties(properties);
+			} else if (response.length === 0) {
+                setPropertiesFiltered(props);
+                setProperties(props);
+            }
+			if (response.statusCode > 399) toast({ title: response.statusCode, description: response.message, variant: 'destructive', duration: 5000 });
+			if (response instanceof Error) toast({ title: 'Error', description: '500 Internal Server Error | ' + response.message, variant: 'destructive', duration: 5000 });
+		});
+    }
 
 	useEffect(() => {
 		getBusiness();
@@ -106,13 +124,21 @@ function ListProducts() {
 				return <div className='text-center'>{ProductsConfig.headers[0]}</div>;
 			},
 			cell: ({ row }) => {
-				return <div className='text-center'>{row.original.id}</div>;
+				return (
+					<div className='flex flex-row items-center justify-center space-x-4'>
+						<div> {row.original.deletedAt ? <CircleOff className='h-4 w-4' /> : <div className={'flex h-4 w-4 items-center rounded-full border pl-1 ' + (row.original.is_active ? 'border-emerald-400 bg-emerald-300' : 'border-slate-300/50 bg-input')}></div>}</div>
+						<div className='rounded-sm border bg-slate-200/70 p-1 text-xs font-bold uppercase text-slate-500'>{row.original.id < 10 ? `COD/0${row.original.id}` : `COD/${row.original.id}`}</div>
+					</div>
+				);
 			}
 		},
 		// Type
 		{
 			accessorKey: 'business_type',
-			header: ProductsConfig.headers[1]
+			header: ProductsConfig.headers[1],
+			cell: ({ row }) => {
+				return <div className='text-left'>{capitalize(row.original.business_type)}</div>;
+			}
 		},
 		// Category
 		{
@@ -126,6 +152,9 @@ function ListProducts() {
 						</Button>
 					</div>
 				);
+			},
+			cell: ({ row }) => {
+				return <div className='text-left'>{capitalize(row.original.type)}</div>;
 			}
 		},
 		// City
@@ -179,9 +208,9 @@ function ListProducts() {
 								<BadgeX className='h-5 w-5' strokeWidth='1.5' />
 							</Button>
 						)}
-						<div className='flex items-center'>
+						{/* <div className='flex items-center'>
 							{row.original.deletedAt ? <CircleOff className='h-4 w-4' /> : <div className={'flex h-4 w-4 items-center rounded-full border pl-1 ' + (row.original.is_active ? 'border-emerald-400 bg-emerald-300' : 'border-slate-300/50 bg-input')}></div>}
-						</div>
+						</div> */}
 					</div>
 				);
 			}
@@ -411,7 +440,7 @@ function ListProducts() {
 										setCreatedSelected('');
 									}}
 									className={creatorFilter === 1 ? 'bg-slate-200' : 'bg-transparent'}>
-									Todos
+									Todas
 								</Button>
 								<Button
 									variant='ghost'

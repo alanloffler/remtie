@@ -1,5 +1,5 @@
 // Icons: Lucide (https://lucide.dev/)
-import { BadgeX, CalendarPlus, CheckCircle, FileText, MapPin, Pencil, Trash2 } from 'lucide-react';
+import { BadgeX, CalendarPlus, CheckCircle, FileText, Heart, MapPin, Pencil, Trash2 } from 'lucide-react';
 // UI: Shadcn-ui (https://ui.shadcn.com/)
 import { Button } from '@/components/ui/button';
 import { Card, CardHeader, CardContent, CardFooter, CardTitle, CardDescription } from '@/components/ui/card';
@@ -17,6 +17,7 @@ import { store } from '@/services/store.services';
 import { useCapitalize } from '@/hooks/useCapitalize';
 import { useNavigate } from 'react-router-dom';
 import { useLocaleDate } from '@/hooks/useLocaleDate';
+import { FavoritesServices } from '@/services/favorite.services';
 // .env constants
 const APP_URL: string = import.meta.env.VITE_APP_URL;
 // React component
@@ -25,8 +26,8 @@ function CardView({ properties, getProducts }: { properties: IProperty[]; getPro
 	const [openDialog, setOpenDialog] = useState<boolean>(false);
 	const [propertyDialog, setPropertyDialog] = useState<IDialog>({ id: 0, name: '', title: '', subtitle: '', message: <span></span> });
 	const capitalize = useCapitalize();
-    const localeDate = useLocaleDate();
-    const navigate = useNavigate();
+	const localeDate = useLocaleDate();
+	const navigate = useNavigate();
 
 	async function removeSoft(id: number) {
 		ProductsServices.removeSoft(id).then((response) => {
@@ -63,6 +64,21 @@ function CardView({ properties, getProducts }: { properties: IProperty[]; getPro
 			setOpenDialog(false);
 		});
 	}
+
+	function handleFavorite(property: IProperty) {
+		console.log('favorite id', property);
+		FavoritesServices.toggleFavorite(property).then((response) => {
+			console.log(response);
+			if (response.statusCode === 200) {
+				getProducts();
+				property.isFavorite = !property.isFavorite;
+				toast({ title: response.statusCode, description: response.message, variant: 'success', duration: 5000 });
+			}
+			if (response.statusCode > 399) toast({ title: response.statusCode, description: response.message, variant: 'destructive', duration: 5000 });
+			if (response instanceof Error) toast({ title: 'Error', description: '500 Internal Server Error | ' + response.message, variant: 'destructive', duration: 5000 });
+		});
+	}
+
 	// #region Dialog
 	function handleDialog(property: IProperty, action: string) {
 		let message: ReactElement | false = false;
@@ -115,15 +131,20 @@ function CardView({ properties, getProducts }: { properties: IProperty[]; getPro
 									<Trash2 className='h-4 w-4' />
 								</div>
 							)}
-							<div onClick={() => navigate(`${APP_URL}/productos/${property.id}`)} className='hover:cursor-default'>
-								<CardHeader className='space-y-2 rounded-sm p-4'>
-									<div className='flex items-center gap-2 text-slate-500 uppercase font-bold text-xs'>
-										<div className='rounded-sm bg-slate-200/70 px-2 py-1 border'>{property.id < 10 ? 'Cod/0' + property.id : 'Cod/' + property.id}</div>
+							<div className=''>
+								<div className='flex items-center justify-between p-4 pb-0'>
+									<div className='flex flex-row items-center space-x-2 text-xs font-bold uppercase text-slate-500'>
+										<div className='rounded-sm border bg-slate-200/70 px-2 py-1'>{property.id < 10 ? 'Cod/0' + property.id : 'Cod/' + property.id}</div>
 										<div className=''>{property.type}</div>
 									</div>
+									<Button variant='ghost' size='miniIcon' className='hover:bg-transparent'>
+										<Heart onClick={() => handleFavorite(property)} className={`h-5 w-5 transition-all hover:stroke-red-500 ${property.isFavorite ? 'fill-red-500 stroke-red-500' : 'fill-none stroke-slate-500'}`} strokeWidth='2' />
+									</Button>
+								</div>
+								<CardHeader onClick={() => navigate(`${APP_URL}/productos/${property.id}`)} className='space-y-2 rounded-sm p-4 hover:cursor-default'>
 									<CardTitle className='text-md text-slate-800'>{property.title}</CardTitle>
-									<CardDescription className='text-sm pb-1'>{property.short_description}</CardDescription>
-                                    <div className='flex flex-row text-slate-600'>
+									<CardDescription className='pb-1 text-sm'>{property.short_description}</CardDescription>
+									<div className='flex flex-row text-slate-600'>
 										<div className='flex flex-row items-center space-x-2'>
 											<MapPin className='h-4 w-4' strokeWidth='1.5' />
 											<span className='text-sm'>{`${property.street} - ${property.city}`}</span>
@@ -137,7 +158,7 @@ function CardView({ properties, getProducts }: { properties: IProperty[]; getPro
 											</div>
 										</div>
 									)}
-                                    <div className='flex flex-row text-slate-600'>
+									<div className='flex flex-row text-slate-600'>
 										<div className='flex flex-row items-center space-x-2'>
 											<CalendarPlus className='h-4 w-4' strokeWidth='1.5' />
 											<span className='text-sm'>{localeDate(property.created_at)}</span>
@@ -145,7 +166,7 @@ function CardView({ properties, getProducts }: { properties: IProperty[]; getPro
 									</div>
 								</CardHeader>
 								<CardContent className='px-4 py-0 pb-4'>
-									<div className='flex flex-row items-center justify-end space-x-4 font-semibold text-sm text-slate-700'>
+									<div className='flex flex-row items-center justify-end space-x-4 text-sm font-semibold text-slate-700'>
 										<div className='tracking-tight'>{capitalize(property.business_type)}</div>
 										<CurrencyFormat value={property.price} locale='es-AR' digits={0} className='' />
 									</div>

@@ -22,6 +22,23 @@ export class FavoritesServices {
         }
     }
 
+    static async findOne(id: number) {
+        try {
+            const token: string = store.getState().authToken;
+            const sql: string = `${FavoritesServices.API_URL}/favorites/${id}`;
+            const query: Response = await fetch(sql, {
+                method: 'GET',
+                headers: {
+                    'content-type': 'application/json;charset=UTF-8',
+                    Authorization: `Bearer ${token}`
+                }
+            });
+            return await query.json();
+        } catch (error) {
+            return error;
+        }
+    }
+
     static async toggleFavorite(property: IProperty) {
         property.isFavorite = !property.isFavorite;
         if (FavoritesServices.abortController) FavoritesServices.abortController.abort();

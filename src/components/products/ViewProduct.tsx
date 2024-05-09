@@ -22,6 +22,7 @@ import { store } from '@/services/store.services';
 import { useCapitalize } from '@/hooks/useCapitalize';
 import { useLocaleDate } from '@/hooks/useLocaleDate';
 import { useNavigate, useParams } from 'react-router-dom';
+import FavButton from '../shared/FavButton';
 // .env constants
 const APP_URL: string = import.meta.env.VITE_APP_URL;
 // React component
@@ -117,9 +118,9 @@ function ViewProduct() {
 	async function removeSoft(id: number) {
 		ProductsServices.removeSoft(id).then((response) => {
 			if (response.statusCode === 200) {
-                navigate(-1);
-                toast({ title: response.statusCode, description: response.message, variant: 'success', duration: 5000 });
-            }
+				navigate(-1);
+				toast({ title: response.statusCode, description: response.message, variant: 'success', duration: 5000 });
+			}
 			if (response.statusCode > 399) toast({ title: response.statusCode, description: response.message, variant: 'destructive', duration: 5000 });
 			if (response instanceof Error) toast({ title: '2 Error', description: '500 Internal Server Error | ' + response.message, variant: 'destructive', duration: 5000 });
 			setOpenDialog(false);
@@ -159,9 +160,12 @@ function ViewProduct() {
 					<Card className='relative mb-12 min-w-[350px] overflow-hidden border-t-[4px] md:w-[500px]' style={{ borderTopColor: property.color }}>
 						{property.deletedAt !== null && <div className='absolute right-[-35px] top-[32px] w-[170px] rotate-45 transform bg-red-500 py-1 text-center font-semibold text-white'>Eliminado</div>}
 						<CardHeader className='flex-grow rounded-sm p-6'>
-							<div className='flex items-center gap-4 text-sm font-bold uppercase text-slate-500'>
-								<div className='flex w-auto flex-row items-center rounded-sm border bg-slate-200/70 px-2 py-1 leading-tight'>{propertyId < 10 ? 'Cod/0' + propertyId : 'Cod/' + propertyId}</div>
-								<div>{property.type}</div>
+							<div className='flex text-sm font-bold uppercase text-slate-500 justify-between'>
+								<div className='flex items-center gap-4'>
+									<div className='flex w-auto flex-row items-center rounded-sm border bg-slate-200/70 px-2 py-1 leading-tight'>{propertyId < 10 ? 'Cod/0' + propertyId : 'Cod/' + propertyId}</div>
+									<div>{property.type}</div>
+								</div>
+                                <FavButton property={property} height={30} />
 							</div>
 							<CardTitle className='pt-4 text-xl text-slate-800'>{property.title}</CardTitle>
 							<CardDescription className='text-sm'>{property.short_description}</CardDescription>
@@ -191,7 +195,7 @@ function ViewProduct() {
 									<Carousel images={images} />
 								</div>
 							)}
-                            <div className='flex flex-row items-center pt-2 text-sm text-slate-400'>Última actualización realizada el {localeDate(property.updated_at)}</div>
+							<div className='flex flex-row items-center pt-2 text-sm text-slate-400'>Última actualización realizada el {localeDate(property.updated_at)}</div>
 						</CardContent>
 						<CardFooter className='mt-auto justify-between bg-slate-200/50 p-2'>
 							<div className='flex items-center space-x-2'>

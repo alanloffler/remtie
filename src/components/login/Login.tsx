@@ -11,13 +11,15 @@ import { useForm } from 'react-hook-form';
 import { useNavigate } from 'react-router-dom';
 import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
+import { SettingsServices } from '@/services/settings.services';
+import { LoginConfig } from '@/lib/config/login.config';
 // Constants
 const API_URL: string = import.meta.env.VITE_REACT_BACKEND_API;
-const SIGN_IN_URL: string = API_URL + '/auth/login';
+const SIGN_IN_URL: string = `${API_URL}/auth/login`;
 // Form schema
 const formSchema = z.object({
-	email: z.string().email({ message: 'Formato de e-mail inválido' }),
-	password: z.string().min(6, { message: 'La contraseña debe poseer al menos 6 caracteres' })
+	email: z.string().email({ message: LoginConfig.errors.invalidEmail }),
+	password: z.string().min(6, { message: LoginConfig.errors.invalidPassword })
 });
 // React component
 function Login() {
@@ -25,6 +27,8 @@ function Login() {
 	const setAuthToken = store.getState().setAuthToken;
 	const setUserId = store.getState().setUserId;
 	const setRole = store.getState().setRole;
+	const setTabActive = store((state) => state.setTabActive);
+    const setRowsPerPageUsers = store((state) => state.setRowsPerPageUsers);
 	const [statusMessage, setStatusMessage] = useState<string>();
 	const navigate = useNavigate();
 	const form = useForm<z.infer<typeof formSchema>>({
@@ -46,6 +50,12 @@ function Login() {
 				setUserId(Number(response.userId));
 				setAuthorized(true);
 				setRole(response.role);
+				SettingsServices.findOne('defaultView').then((response) => {
+					setTabActive(response.value);
+				});
+                SettingsServices.findOne('rowsPerPageUsers').then((response) => {
+                    setRowsPerPageUsers(Number(response.value));
+                });
 				navigate(import.meta.env.VITE_APP_URL);
 			}
 			if (response.statusCode > 399) setStatusMessage(response.message);
@@ -72,8 +82,8 @@ function Login() {
 		<div className='mt-8'>
 			<Card className='mx-8 md:mx-auto md:w-[400px] lg:mx-auto'>
 				<CardHeader className='space-y-1'>
-					<CardTitle className='text-2xl font-bold'>Room202</CardTitle>
-					<CardDescription>Ingresá tus datos para acceder a la aplicación</CardDescription>
+					<CardTitle className='text-2xl font-bold'>{LoginConfig.title}</CardTitle>
+					<CardDescription>{LoginConfig.subtitle}</CardDescription>
 				</CardHeader>
 				<CardContent>
 					<Form {...form}>
@@ -85,7 +95,7 @@ function Login() {
 										name='email'
 										render={({ field }) => (
 											<FormItem>
-												<FormLabel>E-mail</FormLabel>
+												<FormLabel>{LoginConfig.email}</FormLabel>
 												<FormControl>
 													<Input id='email' {...field} />
 												</FormControl>
@@ -100,7 +110,7 @@ function Login() {
 										name='password'
 										render={({ field }) => (
 											<FormItem className=''>
-												<FormLabel>Contraseña</FormLabel>
+												<FormLabel>{LoginConfig.password}</FormLabel>
 												<FormControl>
 													<Input id='password' type='password' {...field} />
 												</FormControl>
@@ -112,7 +122,7 @@ function Login() {
 							</div>
 							<div className='mt-12'>
 								<Button className='w-full' type='submit'>
-									Ingresar
+									{LoginConfig.login}
 								</Button>
 							</div>
 						</form>

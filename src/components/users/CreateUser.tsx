@@ -8,33 +8,22 @@ import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { toast } from '@/components/ui/use-toast';
 // App
+import { ButtonsConfig } from '@/lib/config/buttons.config';
 import { FormEvent } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
+import { UsersConfig } from '@/lib/config/users.config';
 import { UsersServices } from '@/services/users.services';
 import { useForm } from 'react-hook-form';
+import { userSchema } from '@/lib/schemas/user.schema';
 import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
-// react-hook-form schema
-const formSchema = z.object({
-	name: z.string().min(3, {
-		message: 'El nombre debe poseer al menos 3 caracteres'
-	}),
-	email: z.string().email({ message: 'Formato de e-mail inválido' }),
-	password: z.string().min(6, {
-		message: 'El password debe poseer al menos 6 caracteres'
-	}),
-	phone: z.string().optional(),
-	role: z.string().min(1, {
-		message: 'Debes seleccionar un tipo'
-	})
-});
 // .env constants
 const APP_URL: string = import.meta.env.VITE_APP_URL;
 // React component
-function CreateNewUser() {
+function CreateUser() {
 	const navigate = useNavigate();
-	const form = useForm<z.infer<typeof formSchema>>({
-		resolver: zodResolver(formSchema),
+	const form = useForm<z.infer<typeof userSchema>>({
+		resolver: zodResolver(userSchema),
 		defaultValues: {
 			name: '',
 			email: '',
@@ -44,7 +33,7 @@ function CreateNewUser() {
 		}
 	});
 
-	function onSubmit(values: z.infer<typeof formSchema>) {
+	function onSubmit(values: z.infer<typeof userSchema>) {
 		UsersServices.create(values).then((response) => {
 			if (response.statusCode === 200) {
 				toast({ title: response.statusCode, description: response.message, variant: 'success', duration: 5000 });
@@ -63,11 +52,11 @@ function CreateNewUser() {
 	return (
 		<main className='flex-1 overflow-y-auto'>
 			<div className='flex flex-row items-center justify-between px-8 pt-8'>
-				<h1 className='text-2xl font-normal text-slate-600'>Crear Usuario</h1>
+				<h1 className='text-2xl font-normal text-slate-600'>{UsersConfig.pages.createUserTitle}</h1>
 				<Button variant='ghost' size='sm' asChild>
 					<Link to={`${APP_URL}/usuarios`}>
 						<ArrowLeft strokeWidth='2' className='mr-2 h-4 w-4' />
-						Volver
+						{ButtonsConfig.actions.back}
 					</Link>
 				</Button>
 			</div>
@@ -84,9 +73,9 @@ function CreateNewUser() {
 												name='name'
 												render={({ field }) => (
 													<FormItem className='mb-4'>
-														<FormLabel>Nombre</FormLabel>
+														<FormLabel>{UsersConfig.form.name.title}</FormLabel>
 														<FormControl>
-															<Input placeholder='Mínimo 3 caracteres' {...field} />
+															<Input placeholder={UsersConfig.form.name.placeholder} {...field} />
 														</FormControl>
 														<FormMessage />
 													</FormItem>
@@ -97,9 +86,9 @@ function CreateNewUser() {
 												name='email'
 												render={({ field }) => (
 													<FormItem className='mb-4'>
-														<FormLabel>E-mail</FormLabel>
+														<FormLabel>{UsersConfig.form.email.title}</FormLabel>
 														<FormControl>
-															<Input placeholder='Formato de e-mail' {...field} />
+															<Input placeholder={UsersConfig.form.email.placeholder} {...field} />
 														</FormControl>
 														<FormMessage />
 													</FormItem>
@@ -110,9 +99,9 @@ function CreateNewUser() {
 												name='password'
 												render={({ field }) => (
 													<FormItem className='mb-4'>
-														<FormLabel>Contraseña</FormLabel>
+														<FormLabel>{UsersConfig.form.password.title}</FormLabel>
 														<FormControl>
-															<Input placeholder='Mínimo 6 caracteres' {...field} />
+															<Input placeholder={UsersConfig.form.password.placeholder} {...field} />
 														</FormControl>
 														<FormMessage />
 													</FormItem>
@@ -125,9 +114,9 @@ function CreateNewUser() {
 												name='phone'
 												render={({ field }) => (
 													<FormItem className='mb-4'>
-														<FormLabel>Teléfono</FormLabel>
+														<FormLabel>{UsersConfig.form.phone.title}</FormLabel>
 														<FormControl>
-															<Input placeholder='Mínimo 10 números' {...field} />
+															<Input placeholder={UsersConfig.form.phone.placeholder} {...field} />
 														</FormControl>
 														<FormMessage />
 													</FormItem>
@@ -138,11 +127,11 @@ function CreateNewUser() {
 												name='role'
 												render={({ field }) => (
 													<FormItem>
-														<FormLabel>Tipo</FormLabel>
+														<FormLabel>{UsersConfig.form.role.title}</FormLabel>
 														<Select onValueChange={field.onChange} defaultValue={field.value}>
 															<FormControl>
 																<SelectTrigger>
-																	<SelectValue placeholder='' />
+																	<SelectValue placeholder={<span className='text-muted-foreground'>{UsersConfig.form.role.placeholder}</span>} />
 																</SelectTrigger>
 															</FormControl>
 															<SelectContent>
@@ -160,11 +149,11 @@ function CreateNewUser() {
 								<div className='flex flex-row items-center justify-end pr-6'>
 									<div className='flex'>
 										<Button variant='ghost' className='mr-4' onClick={handleCancel}>
-											Cancelar
+											{ButtonsConfig.actions.cancel}
 										</Button>
 										<Button type='submit' variant='default' size='default'>
 											<Check className='mr-2 h-4 w-4' />
-											Guardar
+											{ButtonsConfig.actions.save}
 										</Button>
 									</div>
 								</div>
@@ -177,4 +166,4 @@ function CreateNewUser() {
 	);
 }
 // Export React component
-export default CreateNewUser;
+export default CreateUser;

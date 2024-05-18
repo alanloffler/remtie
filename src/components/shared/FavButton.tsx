@@ -3,33 +3,27 @@ import { Heart } from 'lucide-react';
 // UI: Shadcn-ui (https://ui.shadcn.com/)
 import { Button } from '@/components/ui/button';
 // App
+import { FavoritesServices } from '@/services/favorite.services';
 import { IProperty } from '@/lib/interfaces/property.interface';
 import { useEffect, useState } from 'react';
-import { FavoritesServices } from '@/services/favorite.services';
 // React component
 function FavButton({ property, height }: { property: IProperty; height: number }) {
     const [isFavorite, setIsFavorite] = useState<boolean>(false);
     
     useEffect(() => {
         FavoritesServices.findOne(property.id).then(response => {
-            console.log(response);
             if (response.propertyId === property.id) setIsFavorite(true);
         });
-    }, [property]);
+    }, [property.id]);
     
     function handleFavorite() {
         FavoritesServices.toggleFavorite(property).then((response) => {
-            console.log(response);
-            if (response.statusCode === 200) {
-                setIsFavorite(!isFavorite);
-            }
-            if (response.statusCode > 399) console.log(response);
-            if (response instanceof Error) console.log(response);
+            if (response.statusCode === 200) setIsFavorite(!isFavorite);
         });
     }
 
 	return (
-		<Button variant='ghost' className='flex items-center p-0 hover:bg-transparent' onClick={handleFavorite}>
+		<Button variant='ghost' className='flex items-center p-0 hover:bg-transparent hover:cursor-pointer' onClick={handleFavorite} asChild>
 			<Heart
 				size={height}
 				className={`transition-all

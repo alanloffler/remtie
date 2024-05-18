@@ -14,6 +14,8 @@ type State = {
 	userId: number;
     username: string;
     role: string;
+    rowsPerPageProducts: number;
+    rowsPerPageUsers: number;
 };
 
 type Actions = {
@@ -26,6 +28,8 @@ type Actions = {
 	setUsername: (username: string) => void;
 	toggleOpen: () => void;
     setRole: (role: string) => void;
+    setRowsPerPageProducts: (rows: number) => void;
+    setRowsPerPageUsers: (rows: number) => void;
 };
 
 const initialState: State = {
@@ -33,10 +37,12 @@ const initialState: State = {
 	authorized: false,
 	clicked: 0,
 	isOpen: false,
-	tabActive: 'card',
+	tabActive: '',
 	userId: 0,
     username: '',
     role: '',
+    rowsPerPageProducts: 0,
+    rowsPerPageUsers: 0
 };
 
 export const store = create<State & Actions>()(
@@ -71,10 +77,18 @@ export const store = create<State & Actions>()(
             setRole: (role) => {
               set(() => ({ role: role }));  
             },
-			tabActive: '',
+            tabActive: '',
 			setTabActive: (tab: string) => {
 				set(() => ({ tabActive: tab }));
 			},
+            rowsPerPageProducts: 0,
+            setRowsPerPageProducts: (rows: number) => {
+                set(() => ({ rowsPerPageProducts: rows }));
+            },
+            rowsPerPageUsers: 0,
+            setRowsPerPageUsers: (rows: number) => {
+                set(() => ({ rowsPerPageUsers: rows }));
+            },
 			reset: () => set(initialState)
 		}),
 		{

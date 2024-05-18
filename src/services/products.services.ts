@@ -5,6 +5,23 @@ export class ProductsServices {
 	static readonly API_URL: string = import.meta.env.VITE_REACT_BACKEND_API;
 	static abortController: AbortController = new AbortController();
 
+	static async findAllClient() {
+		try {
+			const token: string = store.getState().authToken;
+			const sql: string = `${ProductsServices.API_URL}/properties/client`;
+			const query: Response = await fetch(sql, {
+				method: 'GET',
+				headers: {
+					'content-type': 'application/json;charset=UTF-8',
+					Authorization: `Bearer ${token}`
+				}
+			});
+			return await query.json();
+		} catch (error) {
+			return error;
+		}
+	}
+
 	static async findAll() {
 		try {
 			const token: string = store.getState().authToken;

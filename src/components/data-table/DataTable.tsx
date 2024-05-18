@@ -4,24 +4,24 @@ import { ArrowLeftIcon, ArrowRightIcon, ChevronLeftIcon, ChevronRightIcon } from
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { toast } from '@/components/ui/use-toast';
 // Tanstack table
 import { ColumnDef, ColumnFiltersState, flexRender, getCoreRowModel, getFilteredRowModel, getPaginationRowModel, getSortedRowModel, SortingState, useReactTable } from '@tanstack/react-table';
 // App
-import { useState } from 'react';
-import { UsersConfig } from '@/lib/config';
+import { DataTableConfig } from '@/lib/config/data-table.config';
+import { SettingsServices } from '@/services/settings.services';
+import { UsersConfig } from '@/lib/config/users.config';
+import { useEffect, useState } from 'react';
 // Interfaces
 interface DataTableProps<TData, TValue> {
-	searchBy: string;
 	columns: ColumnDef<TData, TValue>[];
 	data: TData[];
+	rowsPerPage: number;
+    tableFor: string;
 }
 // React component
-export function DataTable<TData, TValue>({
-	// searchBy,
-	columns,
-	data
-}: DataTableProps<TData, TValue>) {
-	const itemsPerPage = UsersConfig.pagination.itemsPerPage;
+export function DataTable<TData, TValue>({ columns, data, rowsPerPage, tableFor }: DataTableProps<TData, TValue>) {
+	const [itemsPerPage, setItemsPerPage] = useState<number[]>([]);
 	const [sorting, setSorting] = useState<SortingState>([]);
 	const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
 	const table = useReactTable({
@@ -39,18 +39,28 @@ export function DataTable<TData, TValue>({
 		},
 		initialState: {
 			pagination: {
-				pageSize: 5
+				pageSize: rowsPerPage
 			}
 		}
 	});
 
+	useEffect(() => {
+        let tableType: string = '';
+        if (tableFor === 'users') tableType = 'rowsPerPageOptionsUsers';
+        if (tableFor === 'products') tableType = 'rowsPerPageOptionsProducts';
+		SettingsServices.findOne(tableType).then((response) => {
+			if (response.id) setItemsPerPage(response.value.split(','));
+			if (response.statusCode > 399) toast({ title: response.statusCode, description: response.message, variant: 'destructive', duration: 5000 });
+			if (response instanceof Error) toast({ title: 'Error', description: '500 Internal Server Error | ' + response.message, variant: 'destructive', duration: 5000 });
+		});
+	}, [tableFor]);
+
 	return (
 		<div>
-			<Table className='border border-slate-300 min-w-[590px]'>
+			<Table className='min-w-[590px] border border-slate-300'>
 				<TableHeader className='bg-slate-200'>
 					{table.getHeaderGroups().map((headerGroup) => (
 						<TableRow key={headerGroup.id}>
-							{/* <TableRow key={headerGroup.id} className='bg-gray-200'> */}
 							{headerGroup.headers.map((header) => {
 								return <TableHead key={header.id}>{header.isPlaceholder ? null : flexRender(header.column.columnDef.header, header.getContext())}</TableHead>;
 							})}
@@ -79,45 +89,47 @@ export function DataTable<TData, TValue>({
 			</Table>
 			<div className='flex items-center justify-between space-x-6 pt-6 lg:space-x-8'>
 				<div className='flex items-center space-x-2'>
-					<p className='text-sm font-normal text-slate-400'>{UsersConfig.pagination.rowsPerPage}</p>
+					<p className='text-xs font-normal text-slate-400'>{DataTableConfig.rowsPerPage}</p>
 					<Select
 						value={`${table.getState().pagination.pageSize}`}
 						onValueChange={(value) => {
 							table.setPageSize(Number(value));
 						}}>
-						<SelectTrigger className='h-8 w-[65px] focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring/40 focus-visible:ring-offset-0'>
+						<SelectTrigger className='h-8 w-[65px] text-xs font-medium focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring/40 focus-visible:ring-offset-0'>
 							<SelectValue placeholder={table.getState().pagination.pageSize} />
 						</SelectTrigger>
 						<SelectContent side='top' className='min-w-[4rem]'>
 							{itemsPerPage.map((pageSize) => (
-								<SelectItem key={pageSize} value={`${pageSize}`}>
+								<SelectItem key={pageSize} value={`${pageSize}`} className='text-xs'>
 									{pageSize}
 								</SelectItem>
 							))}
 						</SelectContent>
 					</Select>
 				</div>
-				<div className='flex w-[100px] items-center justify-center text-sm font-normal text-slate-400'>
-					{UsersConfig.pagination.page} {table.getState().pagination.pageIndex + 1} {UsersConfig.pagination.of} {table.getPageCount()}
+				<div className='flex w-[100px] items-center justify-center text-xs font-normal text-slate-400'>
+					{DataTableConfig.pagination.page} {table.getState().pagination.pageIndex + 1} {DataTableConfig.pagination.of} {table.getPageCount()}
 				</div>
-				<div className='flex items-center space-x-2'>
-					<Button variant='outline' className='hidden h-8 w-8 bg-slate-100 p-0 hover:bg-slate-200 dark:bg-neutral-950 dark:hover:bg-neutral-800 lg:flex' onClick={() => table.setPageIndex(0)} disabled={!table.getCanPreviousPage()}>
-						<span className='sr-only'>Go to first page</span>
-						<ArrowLeftIcon className='h-4 w-4' />
-					</Button>
-					<Button variant='outline' className='h-8 w-8 bg-slate-100 p-0 hover:bg-slate-200 dark:bg-neutral-950 dark:hover:bg-neutral-800' onClick={() => table.previousPage()} disabled={!table.getCanPreviousPage()}>
-						<span className='sr-only'>Go to previous page</span>
-						<ChevronLeftIcon className='h-4 w-4' />
-					</Button>
-					<Button variant='outline' className='h-8 w-8 bg-slate-100 p-0 hover:bg-slate-200 dark:bg-neutral-950 dark:hover:bg-neutral-800' onClick={() => table.nextPage()} disabled={!table.getCanNextPage()}>
-						<span className='sr-only'>Go to next page</span>
-						<ChevronRightIcon className='h-4 w-4' />
-					</Button>
-					<Button variant='outline' className='hidden h-8 w-8 bg-slate-100 p-0 hover:bg-slate-200 dark:bg-neutral-950 dark:hover:bg-neutral-800 lg:flex' onClick={() => table.setPageIndex(table.getPageCount() - 1)} disabled={!table.getCanNextPage()}>
-						<span className='sr-only'>Go to last page</span>
-						<ArrowRightIcon className='h-4 w-4' />
-					</Button>
-				</div>
+				{table.getPageCount() > 1 && (
+					<div className='flex items-center space-x-2'>
+						<Button variant='outline' className='hidden h-8 w-8 bg-slate-100 p-0 hover:bg-slate-200 dark:bg-neutral-950 dark:hover:bg-neutral-800 lg:flex' onClick={() => table.setPageIndex(0)} disabled={!table.getCanPreviousPage()}>
+							<span className='sr-only'>Go to first page</span>
+							<ArrowLeftIcon className='h-4 w-4' />
+						</Button>
+						<Button variant='outline' className='h-8 w-8 bg-slate-100 p-0 hover:bg-slate-200 dark:bg-neutral-950 dark:hover:bg-neutral-800' onClick={() => table.previousPage()} disabled={!table.getCanPreviousPage()}>
+							<span className='sr-only'>Go to previous page</span>
+							<ChevronLeftIcon className='h-4 w-4' />
+						</Button>
+						<Button variant='outline' className='h-8 w-8 bg-slate-100 p-0 hover:bg-slate-200 dark:bg-neutral-950 dark:hover:bg-neutral-800' onClick={() => table.nextPage()} disabled={!table.getCanNextPage()}>
+							<span className='sr-only'>Go to next page</span>
+							<ChevronRightIcon className='h-4 w-4' />
+						</Button>
+						<Button variant='outline' className='hidden h-8 w-8 bg-slate-100 p-0 hover:bg-slate-200 dark:bg-neutral-950 dark:hover:bg-neutral-800 lg:flex' onClick={() => table.setPageIndex(table.getPageCount() - 1)} disabled={!table.getCanNextPage()}>
+							<span className='sr-only'>Go to last page</span>
+							<ArrowRightIcon className='h-4 w-4' />
+						</Button>
+					</div>
+				)}
 			</div>
 		</div>
 	);

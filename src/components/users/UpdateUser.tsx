@@ -8,11 +8,16 @@ import { Input } from '@/components/ui/input';
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from '@/components/ui/select';
 import { toast } from '@/components/ui/use-toast';
 // App
+import { ButtonsConfig } from '@/lib/config/buttons.config';
 import { FormEvent, useEffect, useState } from 'react';
+import { IRole } from '@/lib/interfaces/role.interface';
 import { IUser } from '@/lib/interfaces/user.interface';
 import { Link, useNavigate, useParams } from 'react-router-dom';
-import { Roles } from '@/lib/constants';
+import { RolesServices } from '@/services/roles.services';
+import { UsersConfig } from '@/lib/config/users.config';
 import { UsersServices } from '@/services/users.services';
+import { updateUserSchema } from '@/lib/schemas/user.schema';
+import { useCapitalize } from '@/hooks/useCapitalize';
 import { useForm, FormProvider } from 'react-hook-form';
 import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -20,61 +25,64 @@ import { zodResolver } from '@hookform/resolvers/zod';
 const APP_URL: string = import.meta.env.VITE_APP_URL;
 // React component
 function UpdateUser() {
-	const id = Number(useParams().id);
-	const navigate = useNavigate();
 	const [user, setUser] = useState<IUser>({} as IUser);
+	const [roleKey, setRoleKey] = useState<number>(0);
+	const [roles, setRoles] = useState<IRole[]>([] as IRole[]);
+	const { id } = useParams();
+	const navigate = useNavigate();
+	const userId = Number(id);
+	const capitalize = useCapitalize();
 
-	const userFormSchema = z.object({
-		name: z.string().min(3, {
-			message: 'El nombre debe poseer al menos 3 caracteres'
-		}),
-		email: z.string().email({ message: 'Formato de e-mail inválido' }),
-		password: z.string().optional(),
-		phone: z.string().optional(),
-		role: z.string().min(1, {
-			message: 'Debes seleccionar un tipo'
-		})
-	});
-
-	const form = useForm<z.infer<typeof userFormSchema>>({
-		resolver: zodResolver(userFormSchema),
-		defaultValues: {
+	const form = useForm<z.infer<typeof updateUserSchema>>({
+		resolver: zodResolver(updateUserSchema),
+		values: {
 			name: '',
 			email: '',
 			password: '',
-			phone: undefined,
+			phone: '',
 			role: ''
 		}
 	});
-
+	// #region Load data
 	useEffect(() => {
-		UsersServices.findOne(id).then((response) => {
-			if (response.status > 200) {
-				toast({ title: 'Error', description: response.message, variant: 'destructive', duration: 5000 });
-				if (response.status === 401) navigate('/');
-			}
-			if (response instanceof Error) toast({ title: 'Error', description: '500 Internal Server Error | ' + response.message, variant: 'destructive', duration: 5000 });
-			if (!response.status) {
-				setUser(response);
-				form.setValue('name', response.name);
-				form.setValue('email', response.email);
-				form.setValue('phone', response.phone);
-				form.setValue('phone', response.phone);
-				form.setValue('role', response.role);
-			}
-		});
-	}, [form, id, navigate]);
+		function getRoles() {
+			RolesServices.findAll().then((response) => {
+				if (response.length > 0) setRoles(response);
+				if (response.statusCode > 399) toast({ title: response.statusCode, description: response.message, variant: 'destructive', duration: 5000 });
+				if (response instanceof Error) toast({ title: 'Error', description: '500 Internal Server Error | ' + response.message, variant: 'destructive', duration: 5000 });
+			});
+		}
 
-	function onSubmit(values: z.infer<typeof userFormSchema>) {
+		function getUser(userId: number) {
+			UsersServices.findOne(userId).then((response) => {
+				if (response.id > 0) {
+					setUser(response);
+					form.setValue('name', response.name);
+					form.setValue('email', response.email);
+					form.setValue('phone', response.phone);
+					form.setValue('phone', response.phone);
+					form.setValue('role', response.role);
+					setRoleKey(Math.random());
+				}
+				if (response.statusCode > 399) toast({ title: response.statusCode, description: response.message, variant: 'destructive', duration: 5000 });
+				if (response instanceof Error) toast({ title: 'Error', description: '500 Internal Server Error | ' + response.message, variant: 'destructive', duration: 5000 });
+			});
+		}
+
+		getRoles();
+		getUser(userId);
+	}, [form, userId]);
+	// #endregion
+	// #region Form
+	function onSubmit(values: z.infer<typeof updateUserSchema>) {
 		if (values.password === '') values.password = user.password;
-		UsersServices.update(id, values).then((response) => {
-			console.log(response);
-            if (response.statusCode === 200) {
-                toast({ title: response.statusCode, description: response.message, variant: 'success', duration: 5000 });
-                navigate(`${APP_URL}/usuarios`);
-            }
+		UsersServices.update(userId, values).then((response) => {
+			if (response.statusCode === 200) {
+				toast({ title: response.statusCode, description: response.message, variant: 'success', duration: 5000 });
+				navigate(`${APP_URL}/usuarios`);
+			}
 			if (response.statusCode > 399) toast({ title: response.statusCode, description: response.message, variant: 'destructive', duration: 5000 });
-            if (response instanceof Error) toast({ title: 'Error', description: '500 Internal Server Error | ' + response.message, variant: 'destructive', duration: 5000 });
+			if (response instanceof Error) toast({ title: 'Error', description: '500 Internal Server Error | ' + response.message, variant: 'destructive', duration: 5000 });
 		});
 	}
 
@@ -82,15 +90,15 @@ function UpdateUser() {
 		event.preventDefault();
 		navigate(`${APP_URL}/usuarios`);
 	}
-
+	// #endregion
 	return (
 		<main className='flex-1 overflow-y-auto'>
 			<div className='flex flex-row items-center justify-between px-8 pt-8'>
-				<h1 className='text-2xl font-normal text-slate-600'>Modificar Usuario</h1>
+				<h1 className='text-2xl font-normal text-slate-600'>{UsersConfig.pages.updateUserTitle}</h1>
 				<Button variant='ghost' size='sm' asChild>
 					<Link to={`${APP_URL}/usuarios`}>
 						<ArrowLeft className='mr-2 h-4 w-4' />
-						Volver
+						{ButtonsConfig.actions.back}
 					</Link>
 				</Button>
 			</div>
@@ -107,9 +115,9 @@ function UpdateUser() {
 												name='name'
 												render={({ field }) => (
 													<FormItem className='mb-4'>
-														<FormLabel>Nombre</FormLabel>
+														<FormLabel>{UsersConfig.form.name.title}</FormLabel>
 														<FormControl>
-															<Input className='minput' placeholder='Mínimo 3 caracteres' {...field} value={field.value} />
+															<Input placeholder={UsersConfig.form.name.placeholder} {...field} />
 														</FormControl>
 														<FormMessage />
 													</FormItem>
@@ -120,9 +128,9 @@ function UpdateUser() {
 												name='email'
 												render={({ field }) => (
 													<FormItem className='mb-4'>
-														<FormLabel>E-mail</FormLabel>
+														<FormLabel>{UsersConfig.form.email.title}</FormLabel>
 														<FormControl>
-															<Input placeholder='Formato de e-mail' {...field} value={field.value} />
+															<Input placeholder={UsersConfig.form.email.placeholder} {...field} />
 														</FormControl>
 														<FormMessage />
 													</FormItem>
@@ -133,9 +141,9 @@ function UpdateUser() {
 												name='password'
 												render={({ field }) => (
 													<FormItem className='mb-4'>
-														<FormLabel>Password</FormLabel>
+														<FormLabel>{UsersConfig.form.password.title}</FormLabel>
 														<FormControl>
-															<Input placeholder='Mínimo 6 caracteres' {...field} value={field.value} />
+															<Input placeholder={UsersConfig.form.password.placeholder} {...field} />
 														</FormControl>
 														<FormMessage />
 													</FormItem>
@@ -148,9 +156,9 @@ function UpdateUser() {
 												name='phone'
 												render={({ field }) => (
 													<FormItem className='mb-4'>
-														<FormLabel>Teléfono</FormLabel>
+														<FormLabel>{UsersConfig.form.phone.title}</FormLabel>
 														<FormControl>
-															<Input placeholder='Mínimo 10 números' {...field} value={field.value} />
+															<Input placeholder={UsersConfig.form.phone.placeholder} {...field} />
 														</FormControl>
 														<FormMessage />
 													</FormItem>
@@ -161,16 +169,20 @@ function UpdateUser() {
 												name='role'
 												render={({ field }) => (
 													<FormItem>
-														<FormLabel>Tipo</FormLabel>
-														<Select {...field} value={field.value} onValueChange={(event) => field.onChange(event)}>
+														<FormLabel>{UsersConfig.form.role.title}</FormLabel>
+														{}
+														<Select key={roleKey} value={field.value} onValueChange={(event) => field.onChange(event)}>
 															<FormControl>
 																<SelectTrigger>
-																	<SelectValue placeholder='' />
+																	<SelectValue placeholder={<span className='text-muted-foreground'>{UsersConfig.form.role.placeholder}</span>} />
 																</SelectTrigger>
 															</FormControl>
 															<SelectContent>
-																<SelectItem value={Roles.ADMIN}>Administrador</SelectItem>
-																<SelectItem value={Roles.USER}>Usuario</SelectItem>
+																{roles.map((role) => (
+																	<SelectItem key={role.id} value={role.value}>
+																		{capitalize(role.title)}
+																	</SelectItem>
+																))}
 															</SelectContent>
 														</Select>
 														<FormMessage />
@@ -183,11 +195,11 @@ function UpdateUser() {
 								<div className='flex flex-row items-center justify-end pr-6'>
 									<div className='flex'>
 										<Button variant='ghost' className='mr-4' onClick={handleCancel}>
-											Cancelar
+											{ButtonsConfig.actions.cancel}
 										</Button>
 										<Button type='submit' variant='default' size='default'>
 											<Check className='mr-2 h-4 w-4' />
-											Guardar
+											{ButtonsConfig.actions.save}
 										</Button>
 									</div>
 								</div>

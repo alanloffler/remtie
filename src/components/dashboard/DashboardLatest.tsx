@@ -14,22 +14,33 @@ import { useCapitalize } from '@/hooks/useCapitalize';
 import { useEffect, useState } from 'react';
 import { useLocaleDate } from '@/hooks/useLocaleDate';
 import { useTruncateText } from '@/hooks/useTruncateText';
+import { SettingsServices } from '@/services/settings.services';
 // .env constants
 const APP_URL: string = import.meta.env.VITE_APP_URL;
 // React component
-function DashboardLatest({ limit }: { limit: number }) {
+function DashboardLatest() {
+	const [latestLimit, setLatestLimit] = useState<number>(0);
 	const [latestProperties, setLatestProperties] = useState<IProperty[]>([]);
 	const [message, setMessage] = useState<string>(DashboardConfig.noProducts);
 	const [propertiesUrl, setPropertiesUrl] = useState<string>('0');
 	const capitalize = useCapitalize();
 	const localeDate = useLocaleDate();
 	const truncateText = useTruncateText();
-
 	const navigate = useNavigate();
 
 	useEffect(() => {
-		getLatestProperties(5, '0');
-	}, [limit]);
+		function getLatestLimit() {
+			SettingsServices.findOne('dashboardLimit').then((response) => {
+				if (!response.statusCode) {
+					setLatestLimit(response.value);
+					getLatestProperties(response.value, '0');
+				}
+                if (response.statusCode > 399) setMessage(DashboardConfig.noProducts);
+                if (response instanceof Error) setMessage('500 Internal Server Error | ' + response.message);
+			});
+		}
+		getLatestLimit();
+	}, []);
 
 	function getLatestProperties(limit: number, owner: string) {
 		DashboardServices.getLatestProperties(limit, owner).then((response) => {
@@ -43,7 +54,7 @@ function DashboardLatest({ limit }: { limit: number }) {
 	}
 
 	function handleSelectChange(event: string) {
-		getLatestProperties(5, event);
+		getLatestProperties(latestLimit, event);
 	}
 
 	return (

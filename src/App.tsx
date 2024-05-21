@@ -23,6 +23,7 @@ const NotFound = React.lazy(() => import('./components/shared/NotFound'));
 const Settings = React.lazy(() => import('./components/settings/Settings'));
 const SettingsProducts = React.lazy(() => import('./components/settings/SettingsProducts'));
 const SettingsUsers = React.lazy(() => import('./components/settings/SettingsUsers'));
+const SettingsDashboard = React.lazy(() => import('./components/settings/SettingsDashboard'));
 // .env constants
 const APP_URL: string = import.meta.env.VITE_APP_URL;
 // React component
@@ -38,13 +39,14 @@ function App() {
 		{ id: 7, path: `${APP_URL}/productos/crear`, element: <CreateProduct /> },
 		{ id: 8, path: `${APP_URL}/productos/modificar/:id`, element: <UpdateProduct /> },
 		{ id: 9, path: `${APP_URL}/config`, element: <Settings /> },
-        { id: 10, path: `${APP_URL}/tablero`, element: <Dashboard /> }
+		{ id: 10, path: `${APP_URL}/tablero`, element: <Dashboard /> }
 	];
 
 	const settingsRoutes = [
-        { id: 101, path: `${APP_URL}/config/productos`, element: <SettingsProducts /> },
-        { id: 102, path: `${APP_URL}/config/usuarios`, element: <SettingsUsers /> }
-    ];
+		{ id: 101, path: `${APP_URL}/config/productos`, element: <SettingsProducts /> },
+		{ id: 102, path: `${APP_URL}/config/usuarios`, element: <SettingsUsers /> },
+		{ id: 103, path: `${APP_URL}/config/tablero`, element: <SettingsDashboard /> }
+	];
 
 	return (
 		<>

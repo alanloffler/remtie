@@ -14,37 +14,37 @@ import { Switch } from '@/components/ui/switch';
 import { Textarea } from '@/components/ui/textarea';
 import { toast } from '@/components/ui/use-toast';
 // App
-import { useNavigate } from 'react-router-dom';
-import { FormEvent, useEffect, useState } from 'react';
-import { FieldValues, FormProvider, useForm } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
 import z from 'zod';
-import { ProductsServices } from '@/services/products.services';
-import { ImageServices } from '@/services/image.services';
-import { getImageURL } from '@/lib/image-util';
-import { IImage } from '@/lib/interfaces/image.interface';
 import { BusinessServices } from '@/services/business.services';
 import { CategoriesServices } from '@/services/categories.services';
+import { FieldValues, FormProvider, useForm } from 'react-hook-form';
+import { FormEvent, useEffect, useState } from 'react';
 import { IBusiness, ICategory } from '@/lib/interfaces/inputs.interface';
-import { propertySchema } from '@/lib/schemas/property.schema';
+import { IImage } from '@/lib/interfaces/image.interface';
+import { ImageServices } from '@/services/image.services';
+import { ProductsServices } from '@/services/products.services';
+import { getImageURL } from '@/lib/image-util';
 import { imageFormSchema } from '@/lib/schemas/image.schema';
+import { propertySchema } from '@/lib/schemas/property.schema';
 import { useCapitalize } from '@/hooks/useCapitalize';
+import { useNavigate } from 'react-router-dom';
+import { zodResolver } from '@hookform/resolvers/zod';
 // .env constants
 const APP_URL: string = import.meta.env.VITE_APP_URL;
 // React component
 function CreateProduct() {
-	const navigate = useNavigate();
-	const [propertyId, setPropertyId] = useState<number>(0);
-	const [images, setImages] = useState<IImage[]>([]);
 	const [business, setBusiness] = useState<IBusiness[]>([]);
 	const [businessKey, setBusinessKey] = useState<number>(0);
 	const [categories, setCategories] = useState<ICategory[]>([]);
 	const [categoriesKey, setCategoriesKey] = useState<number>(0);
-	const [openDialog, setOpenDialog] = useState<boolean>(false);
-	const [imageDialog, setImageDialog] = useState<IImage>({ id: 0, name: '', propertyId: 0, deletedAt: '' });
-	const [propertyCreated, setPropertyCreated] = useState<boolean>(false);
-	const capitalize = useCapitalize();
 	const [chosenImage, setChosenImage] = useState<string>('');
+	const [imageDialog, setImageDialog] = useState<IImage>({ id: 0, name: '', propertyId: 0, deletedAt: '' });
+	const [images, setImages] = useState<IImage[]>([]);
+	const [openDialog, setOpenDialog] = useState<boolean>(false);
+	const [propertyCreated, setPropertyCreated] = useState<boolean>(false);
+	const [propertyId, setPropertyId] = useState<number>(0);
+	const capitalize = useCapitalize();
+	const navigate = useNavigate();
 
 	const propertyForm = useForm<z.infer<typeof propertySchema>>({
 		resolver: zodResolver(propertySchema),
@@ -71,11 +71,11 @@ function CreateProduct() {
 	});
 
 	useEffect(() => {
-		BusinessServices.findAll().then((response) => {
+		BusinessServices.findAllUI().then((response) => {
 			setBusiness(response);
 			setBusinessKey(Math.random());
 		});
-		CategoriesServices.findAll().then((response) => {
+		CategoriesServices.findAllUI().then((response) => {
 			setCategories(response);
 			setCategoriesKey(Math.random());
 		});
@@ -84,7 +84,6 @@ function CreateProduct() {
 	function handleSubmitProduct(values: z.infer<typeof propertySchema>) {
 		const color = categories.find((cat) => cat.name === values.type)?.color;
 		let isActive: number;
-		// const propertyData = { ...values, color: color ? color : '', created_by: store.getState().userId };
 		values.is_active === true ? (isActive = 1) : (isActive = 0);
 		const propertyData = { ...values, color: color ? color : '', is_active: isActive };
 
@@ -100,20 +99,20 @@ function CreateProduct() {
 	}
 
 	function handleSubmitImage(data: FieldValues) {
-		ImageServices.create(propertyId, data.file[0])
-			.then((response) => {
-				if (response.statusCode === 200) {
-					ImageServices.findByProperty(propertyId).then((response) => {
-						// TODO manage errors when loading images uploaded
-						setImages(response);
-					});
-					toast({ title: response.statusCode, description: response.message, variant: 'success', duration: 5000 });
-					imageForm.reset();
-				}
-				if (response.statusCode > 399) toast({ title: response.statusCode, description: response.message, variant: 'destructive', duration: 5000 });
-				if (response instanceof Error) toast({ title: 'Error', description: '500 Internal Server Error | ' + response.message, variant: 'destructive', duration: 5000 });
-			})
-			.catch((error) => console.log(error)); // TODO toast here
+		ImageServices.create(propertyId, data.file[0]).then((response) => {
+			if (response.statusCode === 200) {
+				ImageServices.findByProperty(propertyId).then((response) => {
+					if (response.statusCode === 200) setImages(response);
+					if (response.statusCode > 399) toast({ title: response.statusCode, description: response.message, variant: 'destructive', duration: 5000 });
+					if (response instanceof Error) toast({ title: 'Error', description: '500 Internal Server Error | ' + response.message, variant: 'destructive', duration: 5000 });
+				});
+				toast({ title: response.statusCode, description: response.message, variant: 'success', duration: 5000 });
+				imageForm.reset();
+				setChosenImage('');
+			}
+			if (response.statusCode > 399) toast({ title: response.statusCode, description: response.message, variant: 'destructive', duration: 5000 });
+			if (response instanceof Error) toast({ title: 'Error', description: '500 Internal Server Error | ' + response.message, variant: 'destructive', duration: 5000 });
+		});
 	}
 
 	function handleDeleteImage(id: number) {
@@ -141,7 +140,7 @@ function CreateProduct() {
 					Volver
 				</Button>
 			</div>
-			<div className='mt-6 flex flex-col items-center justify-center px-4'>
+			<div className='mt-6 flex flex-col items-center justify-center px-8'>
 				<Card className='flex w-full flex-row py-8 md:w-[500px] lg:w-[650px]'>
 					<CardContent className='mx-0 w-full p-0'>
 						<FormProvider {...propertyForm}>
@@ -469,11 +468,11 @@ function CreateProduct() {
 						)}
 					</CardContent>
 				</Card>
-                <section className='py-6'>
-                    <Button onClick={() => navigate(`${APP_URL}/productos/${propertyId}`)} variant='secondary' size='sm' className='w-auto bg-slate-200 hover:bg-slate-200/70 border'>
-                        Ver la propiedad que creaste
-                    </Button>
-                </section>
+				<section className='py-6'>
+					<Button onClick={() => navigate(`${APP_URL}/productos/${propertyId}`)} variant='secondary' size='sm' className='w-auto border bg-slate-200 hover:bg-slate-200/70'>
+						Ver la propiedad que creaste
+					</Button>
+				</section>
 				{/* <div className='my-8 flex w-full flex-col md:w-[500px] lg:w-[650px]'>
 					<h1 className='font-semibold text-slate-800'>Gestión de imágenes</h1>
 					<Separator className='mt-2' />

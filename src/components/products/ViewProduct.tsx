@@ -130,7 +130,7 @@ function ViewProduct() {
 	async function remove(id: number) {
 		ProductsServices.remove(id).then((response) => {
 			if (response.statusCode === 200) {
-				navigate(-1);
+				navigate(`${APP_URL}/productos`);
 				toast({ title: response.statusCode, description: response.message, variant: 'success', duration: 5000 });
 			}
 			if (response.statusCode > 399) toast({ title: response.statusCode, description: response.message, variant: 'destructive', duration: 5000 });
@@ -155,9 +155,9 @@ function ViewProduct() {
 					Volver
 				</Button>
 			</div>
-			<div className='mt-6 flex min-w-80 flex-col items-center'>
+			<div className='mt-6 flex min-w-80 flex-col items-center mx-8'>
 				{showCard && (
-					<Card className='relative mb-12 min-w-[350px] overflow-hidden border-t-[4px] md:w-[500px]' style={{ borderTopColor: property.color }}>
+					<Card className='relative mb-8 min-w-[350px] overflow-hidden border-t-[4px] md:w-[500px]' style={{ borderTopColor: property.color }}>
 						{property.deletedAt !== null && <div className='absolute right-[-35px] top-[32px] w-[170px] rotate-45 transform bg-red-500 py-1 text-center font-semibold text-white'>Eliminado</div>}
 						<CardHeader className='flex-grow rounded-sm p-6'>
 							<div className='flex text-sm font-bold uppercase text-slate-500 justify-between'>

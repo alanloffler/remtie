@@ -1,6 +1,6 @@
 /* eslint-disable react-hooks/exhaustive-deps */
 // Icons: Lucide (https://lucide.dev/)
-import { ArrowUpDown, BadgeX, CheckCircle, CircleOff, Filter, Info, Pencil, Plus, Trash2 } from 'lucide-react';
+import { ArrowUpDown, BadgeX, CheckCircle, CircleOff, Filter, Heart, Info, Pencil, Plus, Trash2 } from 'lucide-react';
 // UI: Shadcn-ui (https://ui.shadcn.com/)
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components//ui/card';
@@ -9,71 +9,88 @@ import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Separator } from '@/components/ui/separator';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Toggle } from '@/components/ui/toggle';
 import { toast } from '@/components/ui/use-toast';
 // App
 import CardView from '@/components/products/CardView';
 import CurrencyFormat from '@/components/shared/CurrencyFormat';
+import FavButton from '@/components/shared/FavButton';
 import InfoCard from '@/components/shared/InfoCard';
 import { BusinessServices } from '@/services/business.services';
+import { ButtonsConfig } from '@/lib/config/buttons.config';
 import { CategoriesServices } from '@/services/categories.services';
 import { ColumnDef } from '@tanstack/react-table';
 import { DataTable } from '@/components/data-table/DataTable';
+import { FavoritesServices } from '@/services/favorite.services';
 import { IBusiness, ICategory } from '@/lib/interfaces/inputs.interface';
 import { IDialog } from '@/lib/interfaces/dialog.interface';
+import { IFavorite } from '@/lib/interfaces/favorite.interface';
 import { IProperty } from '@/lib/interfaces/property.interface';
-import { Link, useNavigate } from 'react-router-dom';
-import { ProductsConfig } from '@/lib/config';
+import { LayoutConfig } from '@/lib/config/layout.config';
+import { Link, useNavigate, useSearchParams } from 'react-router-dom';
+import { ProductsConfig } from '@/lib/config/products.config';
 import { ProductsServices } from '@/services/products.services';
 import { ReactElement, useEffect, useState } from 'react';
 import { Roles } from '@/lib/constants';
+import { SettingsConfig } from '@/lib/config/settings.config';
+import { SettingsServices } from '@/services/settings.services';
 import { store } from '@/services/store.services';
 import { useCapitalize } from '@/hooks/useCapitalize';
-import { FavoritesServices } from '@/services/favorite.services';
-import { IFavorite } from '@/lib/interfaces/favorite.interface';
 // .env constants
 const APP_URL: string = import.meta.env.VITE_APP_URL;
 // React component
 function ListProducts() {
-	const [properties, setProperties] = useState<IProperty[]>([]);
-	const [propertiesFiltered, setPropertiesFiltered] = useState<IProperty[]>([]);
+    const [searchParams, setSearchParams] = useSearchParams();
 	const [business, setBusiness] = useState<IBusiness[]>([]);
 	const [businessKey, setBusinessKey] = useState<number>(0);
-	const [businessSelected, setBusinessSelected] = useState<string>('');
-	const [showSelects, setShowSelects] = useState(false);
+	const [businessSelected, setBusinessSelected] = useState<string>(searchParams.get('t') || '');
 	const [categories, setCategories] = useState<ICategory[]>([]);
 	const [categoryKey, setCategoryKey] = useState<number>(0);
-	const [categorySelected, setCategorySelected] = useState<string>('');
+	const [categorySelected, setCategorySelected] = useState<string>(searchParams.get('c') || '');
 	const [createdSelected, setCreatedSelected] = useState<string | number>('');
-	const [searchFilter, setSearchFilter] = useState<string>('');
-	const [openDialog, setOpenDialog] = useState(false);
-	const [showInfoCard, setShowInfoCard] = useState<boolean>(false);
-	const [showCard, setShowCard] = useState<boolean>(false);
-	const [propertyDialog, setPropertyDialog] = useState<IDialog>({ id: 0, name: '', title: '', subtitle: '', message: <span></span> });
-	const [dialogAction, setDialogAction] = useState<string>('');
 	const [creatorFilter, setCreatorFilter] = useState<number>(1);
-	const tabActive: string = store.getState().tabActive;
+	const [dialogAction, setDialogAction] = useState<string>('');
+	const [isFavsToggled, setIsFavsToggled] = useState(false);
+	const [openDialog, setOpenDialog] = useState(false);
+	const [properties, setProperties] = useState<IProperty[]>([]);
+	const [propertiesFiltered, setPropertiesFiltered] = useState<IProperty[]>([]);
+	const [propertyDialog, setPropertyDialog] = useState<IDialog>({ id: 0, name: '', title: '', subtitle: '', message: <span></span> });
+	const [searchFilter, setSearchFilter] = useState<string>('');
+	const [showCard, setShowCard] = useState<boolean>(false);
+	const [showInfoCard, setShowInfoCard] = useState<boolean>(false);
+	const [showSelects, setShowSelects] = useState(false);
+	const rowsPerPage = store((state) => state.rowsPerPageProducts);
+	const setRowsPerPageProducts = store((state) => state.setRowsPerPageProducts);
 	const setTabActive = store.getState().setTabActive;
-
-	const navigate = useNavigate();
+	const tabActive: string = store.getState().tabActive;
 	const capitalize = useCapitalize();
+	const navigate = useNavigate();
+    const isClicked = store((state) => state.isClicked);
 
 	const content: ReactElement | false =
 		store.getState().role === Roles.ADMIN ? (
-			<div>Aún no hay propiedades creadas por los usuarios o por vos.</div>
+			<div>{ProductsConfig.contentStatus.admin}</div>
 		) : (
 			<div>
-				No hay propiedades creadas por vos <span className='pl-1 font-bold'>({store.getState().username})</span>.
+				{ProductsConfig.contentStatus.user}
+				<span className='pl-1 font-bold'>({store.getState().username})</span>
 			</div>
 		);
-
+	// #region Load data (UI, Favs, Settings and Properties)
 	async function getBusiness() {
-		const business = await BusinessServices.findAll();
-		setBusiness(business);
+		BusinessServices.findAllUI().then((response) => {
+			if (response.length > 0) setBusiness(response);
+			if (response.statusCode > 399) toast({ title: response.statusCode, description: response.message, variant: 'destructive', duration: 5000 });
+			if (response instanceof Error) toast({ title: 'Error', description: '500 Internal Server Error | ' + response.message, variant: 'destructive', duration: 5000 });
+		});
 	}
 
 	async function getCategories() {
-		const categories = await CategoriesServices.findAll();
-		setCategories(categories);
+		CategoriesServices.findAllUI().then((response) => {
+			if (response.length > 0) setCategories(response);
+			if (response.statusCode > 399) toast({ title: response.statusCode, description: response.message, variant: 'destructive', duration: 5000 });
+			if (response instanceof Error) toast({ title: 'Error', description: '500 Internal Server Error | ' + response.message, variant: 'destructive', duration: 5000 });
+		});
 	}
 
 	async function getProducts() {
@@ -81,7 +98,7 @@ function ListProducts() {
 			if (Array.isArray(response)) {
 				if (response.length > 0) {
 					setShowSelects(true);
-                    setFavorites(response);
+					setFavorites(response);
 					setShowCard(true);
 				} else {
 					setShowInfoCard(true);
@@ -92,29 +109,38 @@ function ListProducts() {
 		});
 	}
 
-    async function setFavorites(props: IProperty[]) {
-        FavoritesServices.findAll().then((response) => {
+	async function setFavorites(props: IProperty[]) {
+		FavoritesServices.findAll().then((response) => {
 			if (response.length > 0) {
 				const properties = props.map((property) => ({
 					...property,
 					isFavorite: response.map((favorite: IFavorite) => favorite.propertyId).includes(property.id)
 				}));
-                setPropertiesFiltered(properties);
-                setProperties(properties);
+				setPropertiesFiltered(properties);
+				setProperties(properties);
 			} else if (response.length === 0) {
-                setPropertiesFiltered(props);
-                setProperties(props);
-            }
+				setPropertiesFiltered(props);
+				setProperties(props);
+			}
 			if (response.statusCode > 399) toast({ title: response.statusCode, description: response.message, variant: 'destructive', duration: 5000 });
 			if (response instanceof Error) toast({ title: 'Error', description: '500 Internal Server Error | ' + response.message, variant: 'destructive', duration: 5000 });
 		});
-    }
+	}
+
+	async function getRowsPerPage() {
+		SettingsServices.findOne('rowsPerPageProducts').then((response) => {
+			setRowsPerPageProducts(Number(response.value));
+		});
+	}
 
 	useEffect(() => {
+		getRowsPerPage();
 		getBusiness();
 		getCategories();
 		getProducts();
+        isClicked(2);
 	}, []);
+	// #endregion
 	// #region Table columns
 	const columns: ColumnDef<IProperty>[] = [
 		// Id
@@ -126,6 +152,7 @@ function ListProducts() {
 			cell: ({ row }) => {
 				return (
 					<div className='flex flex-row items-center justify-center space-x-4'>
+						<FavButton property={row.original} height={18} />
 						<div> {row.original.deletedAt ? <CircleOff className='h-4 w-4' /> : <div className={'flex h-4 w-4 items-center rounded-full border pl-1 ' + (row.original.is_active ? 'border-emerald-400 bg-emerald-300' : 'border-slate-300/50 bg-input')}></div>}</div>
 						<div className='rounded-sm border bg-slate-200/70 p-1 text-xs font-bold uppercase text-slate-500'>{row.original.id < 10 ? `COD/0${row.original.id}` : `COD/${row.original.id}`}</div>
 					</div>
@@ -192,7 +219,6 @@ function ListProducts() {
 								</Button>
 							</>
 						)}
-						{/* TODO RESTORE PROPERTY CONTINUE WITH DIALOG LIKE USERS */}
 						{row.original.deletedAt === null ? (
 							<Button onClick={() => handleDialog(row.original, 'removeSoft')} variant='outline' size='miniIcon' className='hover:bg-white hover:text-rose-400'>
 								<Trash2 className='h-5 w-5' strokeWidth='1.5' />
@@ -202,27 +228,27 @@ function ListProducts() {
 								<CheckCircle className='h-5 w-5' strokeWidth='1.5' />
 							</Button>
 						)}
-						{/* TODO HARD REMOVE */}
 						{store.getState().role === Roles.ADMIN && (
 							<Button onClick={() => handleDialog(row.original, 'remove')} variant='outline' size='miniIcon' className='hover:bg-white hover:text-rose-400'>
 								<BadgeX className='h-5 w-5' strokeWidth='1.5' />
 							</Button>
 						)}
-						{/* <div className='flex items-center'>
-							{row.original.deletedAt ? <CircleOff className='h-4 w-4' /> : <div className={'flex h-4 w-4 items-center rounded-full border pl-1 ' + (row.original.is_active ? 'border-emerald-400 bg-emerald-300' : 'border-slate-300/50 bg-input')}></div>}
-						</div> */}
 					</div>
 				);
 			}
 		}
+		// #endregion
 	];
+	// #endregion
 	// #region Filters
 	function handleBusinessFilter(event: string) {
 		if (event === 'reset') {
 			setBusinessSelected('');
 			setBusinessKey(+new Date());
+            setSearchParams(updateDeletedParams(searchParams, 't'));
 		} else {
 			setBusinessSelected(event);
+			categorySelected !== '' ? setSearchParams({ c: categorySelected, t: event }) : setSearchParams({ t: event });
 		}
 	}
 
@@ -230,8 +256,10 @@ function ListProducts() {
 		if (event === 'reset') {
 			setCategorySelected('');
 			setCategoryKey(+new Date());
+			setSearchParams(updateDeletedParams(searchParams, 'c'));
 		} else {
 			setCategorySelected(event);
+			businessSelected !== '' ? setSearchParams({ c: event, t: businessSelected }) : setSearchParams({ c: event });
 		}
 	}
 
@@ -241,7 +269,17 @@ function ListProducts() {
 		setCategorySelected('');
 		setCategoryKey(+new Date());
 		setSearchFilter('');
+        setSearchParams([]);
 	}
+
+    function updateDeletedParams(paramsArray: URLSearchParams, param: string) {
+        const searchParamsArray = [...paramsArray.entries()];
+        const filteredParamsArray = searchParamsArray.filter(([key]) => key !== param);
+        const filteredSearchParams = filteredParamsArray.reduce((obj, [key, value]) => {
+            return { ...obj, [key]: value };
+        }, {});
+        return filteredSearchParams;
+    }
 
 	useEffect(() => {
 		function applyFilters(prop: IProperty[], filterAttributes: string[], filterValues: (string | number)[], search: string) {
@@ -266,35 +304,38 @@ function ListProducts() {
 			}
 		}
 		setPropertiesFiltered(applyFilters(properties, ['business_type', 'type', 'created_by'], [businessSelected, categorySelected, createdSelected], searchFilter));
-	}, [businessSelected, categorySelected, createdSelected, searchFilter]);
-
+	}, [businessSelected, categorySelected, createdSelected, searchFilter, searchParams, properties]);
+	// #endregion
 	// #region Dialog
 	function handleDialog(property: IProperty, action: string) {
 		let message: ReactElement | false = false;
 		let subtitle: string = '';
 
 		if (action === 'removeSoft') {
-			subtitle = 'Esta acción es posible de revertir por el administrador';
+			subtitle = ProductsConfig.dialog.possibleRevertion;
 			message = (
-				<>
-					La propiedad <span className='text-md font-bold text-slate-900'>{property.id < 10 ? `COD/0${property.id}` : `COD/${property.id}`}</span> va a ser eliminada de la base de datos.
-				</>
+				<div className='flex flex-col'>
+					<span>{ProductsConfig.dialog.propertySoftDelete}</span>
+                    <span className='text-md font-bold text-slate-900'>{property.id < 10 ? `COD/0${property.id}` : `COD/${property.id}`}</span>
+				</div>
 			);
 		}
 		if (action === 'remove') {
-			subtitle = 'Esta acción es imposible de revertir.';
+			subtitle = ProductsConfig.dialog.impossibleRevertion;
 			message = (
-				<>
-					La propiedad <span className='text-md font-bold text-slate-900'>{property.id < 10 ? `COD/0${property.id}` : `COD/${property.id}`}</span> va a ser eliminada permanentemente de la base de datos.
-				</>
+				<div className='flex flex-col'>
+					<span>{ProductsConfig.dialog.propertyDelete}</span>
+                    <span className='text-md font-bold text-slate-900'>{property.id < 10 ? `COD/0${property.id}` : `COD/${property.id}`}</span>
+				</div>
 			);
 		}
 		if (action === 'restore') {
-			subtitle = 'Esta acción es posible de revertir por el administrador';
+			subtitle = ProductsConfig.dialog.possibleRevertion;
 			message = (
-				<>
-					La propiedad <span className='text-md font-bold text-slate-900'>{property.id < 10 ? `COD/0${property.id}` : `COD/${property.id}`}</span> va a ser restaurada de la base de datos.
-				</>
+				<div className='flex flex-col'>
+					<span>{ProductsConfig.dialog.propertyRestore}</span>
+                    <span className='text-md font-bold text-slate-900'>{property.id < 10 ? `COD/0${property.id}` : `COD/${property.id}`}</span>
+				</div>
 			);
 		}
 
@@ -302,12 +343,13 @@ function ListProducts() {
 		setPropertyDialog({
 			id: Number(property.id),
 			name: property.title,
-			title: '¿Estás realmente seguro?',
+			title: ProductsConfig.dialog.title,
 			subtitle: subtitle,
 			message: message
 		});
 		setDialogAction(action);
 	}
+	// #endregion
 	// #region Button actions
 	async function restore(id: number) {
 		ProductsServices.restore(id).then((response) => {
@@ -344,30 +386,47 @@ function ListProducts() {
 		});
 		setOpenDialog(false);
 	}
+	// #endregion
+	// #region Favorites
+	async function getFavorites() {
+		const favorites = properties.filter((fav) => fav.isFavorite);
+		setPropertiesFiltered(favorites);
+		setProperties(favorites);
+	}
 
+	function handleFavorites() {
+		setIsFavsToggled(!isFavsToggled);
+		setCreatorFilter(1);
+		setCreatedSelected('');
+		resetFilters();
+		if (!isFavsToggled) getFavorites();
+		if (isFavsToggled) getProducts();
+	}
+	// #endregion
 	return (
-		<main className='flex-1 overflow-y-auto'>
+		<main className='flex-1 overflow-y-auto animate-fadeIn'>
 			<div className='mx-8 mb-8 mt-8 flex flex-row items-center justify-between'>
-				<h1 className='text-2xl font-normal text-slate-600'>Productos</h1>
+				<h1 className='text-2xl font-normal text-slate-600'>{LayoutConfig.sidebar.menu.products}</h1>
 				<div>
 					<Button variant='default' size='default' asChild>
 						<Link to={`${APP_URL}/productos/crear`}>
 							<Plus className='mr-2 h-4 w-4' />
-							Nuevo
+							{ButtonsConfig.actions.create}
 						</Link>
 					</Button>
 				</div>
 			</div>
 			<div className='container'>
-				<Tabs defaultValue={tabActive || 'card'} className='w-full'>
+				<Tabs defaultValue={tabActive} className='w-full'>
+					{/* SECTION: Filters (header) */}
 					<div className='flex flex-col rounded-md border border-slate-300 bg-slate-200 px-3 py-4 shadow-sm md:flex-row md:gap-4 md:p-2 md:pr-4'>
 						<div className='flex flex-row'>
 							<TabsList className='flex bg-inherit p-0 pl-1'>
 								<TabsTrigger value='card' className='font-normal' onClick={() => setTabActive('card')}>
-									Tarjeta
+									{SettingsConfig.common.views.card}
 								</TabsTrigger>
 								<TabsTrigger value='list' className='font-normal' onClick={() => setTabActive('list')}>
-									Lista
+									{SettingsConfig.common.views.list}
 								</TabsTrigger>
 							</TabsList>
 						</div>
@@ -378,7 +437,7 @@ function ListProducts() {
 							<div className='flex h-8 w-[50%] md:w-[100px]'>
 								<Select key={businessKey} onValueChange={(event) => handleBusinessFilter(event)}>
 									<SelectTrigger className='h-full w-full'>
-										<SelectValue placeholder='Tipo' className='text-sm' />
+										<SelectValue placeholder={ButtonsConfig.type} className='text-sm' />
 									</SelectTrigger>
 									<SelectContent>
 										{showSelects &&
@@ -389,7 +448,7 @@ function ListProducts() {
 											))}
 										<Separator orientation='horizontal' className=' bg-slate-200' />
 										<SelectItem key='0' value='reset' className='text-sm focus:text-emerald-600'>
-											Todos
+											{ButtonsConfig.filters.all}
 										</SelectItem>
 									</SelectContent>
 								</Select>
@@ -397,7 +456,7 @@ function ListProducts() {
 							<div className='flex h-8 w-[50%] md:w-[120px] lg:w-[160px]'>
 								<Select key={categoryKey} onValueChange={(event) => handleCategoryFilter(event)}>
 									<SelectTrigger className='h-full w-full'>
-										<SelectValue placeholder='Categoría' className='text-sm' />
+										<SelectValue placeholder={ButtonsConfig.category} className='text-sm' />
 									</SelectTrigger>
 									<SelectContent>
 										{showSelects &&
@@ -408,7 +467,7 @@ function ListProducts() {
 											))}
 										<Separator orientation='horizontal' className=' bg-slate-200' />
 										<SelectItem key='0' value='reset' className='text-sm focus:text-emerald-600'>
-											Todas
+											{ButtonsConfig.filters.all}
 										</SelectItem>
 									</SelectContent>
 								</Select>
@@ -420,17 +479,19 @@ function ListProducts() {
 							</div>
 							<div className='flew-row flex h-8 w-[50%] md:w-[90px]'>
 								<Button onClick={resetFilters} variant='slate' className='h-8 w-full'>
-									Borrar
+									{ButtonsConfig.actions.delete}
 								</Button>
 							</div>
 						</div>
 					</div>
+					{/* SECTION: Filters (by owner, only for admin) */}
 					{store.getState().role === Roles.ADMIN && (
-						<section className='flex flex-row space-x-4 pt-4'>
-							<div className='flex flex-row items-center space-x-1 text-sm text-slate-600'>
+						<section className='flex flex-row space-x-4 pl-2 pt-4'>
+							<div className='flex flex-row items-center space-x-2 text-sm text-slate-600'>
 								<Filter className='h-4 w-4' strokeWidth='2' />
-								<span>Filtrar por creadores</span>
+								<span>{ProductsConfig.filters.byCreator}</span>
 							</div>
+							{/* SECTION: Filter by creator */}
 							<div className='flex flex-row items-center space-x-1 text-sm text-slate-600'>
 								<Button
 									variant='ghost'
@@ -440,7 +501,7 @@ function ListProducts() {
 										setCreatedSelected('');
 									}}
 									className={creatorFilter === 1 ? 'bg-slate-200' : 'bg-transparent'}>
-									Todas
+									{ButtonsConfig.filters.all}
 								</Button>
 								<Button
 									variant='ghost'
@@ -450,7 +511,7 @@ function ListProducts() {
 										setCreatedSelected(store.getState().userId);
 									}}
 									className={creatorFilter === 2 ? 'bg-slate-200' : 'bg-transparent'}>
-									Tuyas
+									{ButtonsConfig.filters.yours}
 								</Button>
 								<Button
 									variant='ghost'
@@ -460,29 +521,40 @@ function ListProducts() {
 										setCreatedSelected('others');
 									}}
 									className={creatorFilter === 3 ? 'bg-slate-200' : 'bg-transparent'}>
-									Otros
+									{ButtonsConfig.filters.others}
 								</Button>
 							</div>
 						</section>
 					)}
+					{/* SECTION: Filter (favorites) */}
+					<div className={`flex flex-row ${store.getState().role === Roles.ADMIN ? 'pb-4 pt-2' : 'pb-0 pt-4'}`}>
+						<div>
+							<Toggle variant='default' size={'sm'} className='gap-2 bg-transparent text-sm font-normal text-slate-600 hover:bg-slate-200 hover:text-slate-600 data-[state=on]:bg-slate-200 data-[state=on]:font-medium data-[state=on]:text-slate-600' onClick={handleFavorites}>
+								<Heart className={`h-4 w-4 ${isFavsToggled ? 'fill-red-500 stroke-red-500' : 'fill-none stroke-current'}`} strokeWidth={2} />
+								<span>{ButtonsConfig.filters.favorites}</span>
+							</Toggle>
+						</div>
+					</div>
+					{/* SECTION: Content (Card or Table) */}
 					<TabsContent value='card' className={store.getState().role === Roles.ADMIN ? 'pb-8 pt-2' : 'py-6 pb-8'}>
 						{showCard && <CardView getProducts={getProducts} properties={propertiesFiltered} />}
 					</TabsContent>
 					<TabsContent value='list' className={store.getState().role === Roles.ADMIN ? 'pb-8 pt-2' : 'py-6 pb-8'}>
 						{showCard && (
 							<Card className='p-6'>
-								<DataTable columns={columns} data={propertiesFiltered} searchBy='city' />
+								<DataTable tableFor={'products'} columns={columns} data={propertiesFiltered} rowsPerPage={rowsPerPage} />
 							</Card>
 						)}
 					</TabsContent>
 				</Tabs>
+				{/* SECTION: Info Card (content is empty) */}
 				{showInfoCard && (
 					<div className='flex justify-center'>
 						<InfoCard content={content} />
 					</div>
 				)}
 			</div>
-			{/* Dialog */}
+			{/* SECTION: Dialog */}
 			<Dialog open={openDialog} onOpenChange={setOpenDialog}>
 				<DialogContent>
 					<DialogHeader>
@@ -493,21 +565,21 @@ function ListProducts() {
 					<DialogFooter>
 						<div className='mt-6 flex flex-row gap-4'>
 							<Button variant='ghost' onClick={() => setOpenDialog(false)}>
-								Cancelar
+								{ButtonsConfig.actions.cancel}
 							</Button>
 							{dialogAction === 'removeSoft' && (
 								<Button variant='delete' onClick={() => removeSoft(propertyDialog.id)}>
-									Eliminar
+									{ButtonsConfig.actions.delete}
 								</Button>
 							)}
 							{dialogAction === 'restore' && (
 								<Button variant='default' onClick={() => restore(propertyDialog.id)}>
-									Restaurar
+									{ButtonsConfig.actions.restore}
 								</Button>
 							)}
 							{dialogAction === 'remove' && (
 								<Button variant='delete' onClick={() => remove(propertyDialog.id)}>
-									Eliminar
+									{ButtonsConfig.actions.delete}
 								</Button>
 							)}
 						</div>

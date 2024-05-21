@@ -72,7 +72,7 @@ function Dashboard() {
 								</CardContent>
 							</Card>
 						</div>
-                        <DashboardLatest limit={5} />
+                        <DashboardLatest />
 					</div>
 				</div>
 			)}

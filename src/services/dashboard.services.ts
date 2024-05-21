@@ -20,10 +20,12 @@ export class DashboardServices {
 		}
 	}
 
-	static async getLatestProperties(id: number) {
+	static async getLatestProperties(id: number, owner: string) {
+		let url: string = '';
+		owner === '0' ? (url = 'latest') : (url = 'latestActiveUser');
 		try {
 			const token: string = store.getState().authToken;
-			const request: Response = await fetch(`${DashboardServices.API_URL}/properties/${id}/latest`, {
+			const request: Response = await fetch(`${DashboardServices.API_URL}/properties/${id}/${url}`, {
 				method: 'GET',
 				headers: {
 					'content-type': 'application/json;charset=UTF-8',
@@ -35,22 +37,6 @@ export class DashboardServices {
 			return error;
 		}
 	}
-
-	// static async countByCreator() {
-	// 	try {
-	// 		const token: string = store.getState().authToken;
-	// 		const request: Response = await fetch(`${DashboardServices.API_URL}/properties/dashboard/countByCreator`, {
-	// 			method: 'GET',
-	// 			headers: {
-	// 				'content-type': 'application/json;charset=UTF-8',
-	// 				Authorization: 'Bearer ' + token
-	// 			}
-	// 		});
-	// 		return await request.json();
-	// 	} catch (error) {
-	// 		return error;
-	// 	}
-	// }
 
 	static async getHeaderData() {
 		try {

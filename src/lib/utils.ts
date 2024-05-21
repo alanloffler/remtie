@@ -7,9 +7,9 @@ export function cn(...inputs: ClassValue[]) {
 }
 
 export const emptyUser: IUser = {
-    id: "",
+    id: 0,
     name: "",
     phone: "",
     email: "",
-    type: "",
+    role: "",
 };

@@ -5,7 +5,7 @@ import { useState } from 'react';
 // .env constants
 const APP_URL: string = import.meta.env.VITE_APP_URL;
 // React component
-function StickyMenu() {
+function StickyMenu({ className }: { className?: string }) {
 	const [selectedItem, setSelectedItem] = useState<number>();
 
 	const handleClick = (item: number) => {
@@ -14,7 +14,7 @@ function StickyMenu() {
 	};
 
 	return (
-		<div className='relative flex items-center rounded-md bg-slate-200/50'>
+		<div className={`relative mx-auto flex items-center rounded-md bg-slate-200/50 ${className}` }>
 			<Link to={`${APP_URL}/config/productos`} className='flex-1 py-2 text-center text-slate-500'>
 				<button onClick={() => handleClick(1)} className={`flex-1 py-2 text-center ${selectedItem === 1 ? 'text-slate-900' : 'text-slate-500'}`}>
 					{LayoutConfig.sidebar.menu.products}
@@ -25,7 +25,7 @@ function StickyMenu() {
 					{LayoutConfig.sidebar.menu.users}
 				</button>
 			</Link>
-			<Link to={`#`} className='flex-1 py-2 text-center text-slate-500'>
+			<Link to={`${APP_URL}/config/tablero`} className='flex-1 py-2 text-center text-slate-500'>
 				<button onClick={() => handleClick(3)} className={`flex-1 py-2 text-center ${selectedItem === 3 ? 'text-slate-900' : 'text-slate-500'}`}>
 					{LayoutConfig.sidebar.menu.dashboard}
 				</button>

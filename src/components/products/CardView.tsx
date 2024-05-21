@@ -111,7 +111,7 @@ function CardView({ type, properties, getProducts }: { type?: string; properties
 		<>
 			<div className='grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4'>
 				{properties.map((property: IProperty) => (
-					<div className='' key={property.id}>
+					<div className='animate-fadeIn' key={property.id}>
 						<Card className='relative overflow-hidden rounded-md border-t-[4px]' style={{ borderTopColor: property.color }}>
 							{property.deletedAt !== null && (
 								<div className='absolute right-[-35px] top-[8px] flex w-[110px] rotate-45 transform justify-center bg-red-500 py-1 text-xs font-semibold text-white'>

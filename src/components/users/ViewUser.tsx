@@ -7,40 +7,38 @@ import { Dialog, DialogHeader, DialogFooter, DialogContent, DialogTitle, DialogD
 import { toast } from '@/components/ui/use-toast';
 // App
 import Dot from '@/components/shared/Dot';
+import { ButtonsConfig } from '@/lib/config/buttons.config';
 import { IDialog } from '@/lib/interfaces/dialog.interface';
 import { IUser } from '@/lib/interfaces/user.interface';
 import { ReactElement, useEffect, useState } from 'react';
 import { Roles } from '@/lib/constants';
+import { UsersConfig } from '@/lib/config/users.config';
 import { UsersServices } from '@/services/users.services';
 import { emptyUser } from '@/lib/utils';
 import { store } from '@/services/store.services';
 import { useNavigate, useParams } from 'react-router-dom';
+import { useUserSince } from '@/hooks/useUserSince';
 // .env constants
 const APP_URL: string = import.meta.env.VITE_APP_URL;
 // React component
 function ViewUser() {
 	const id = Number(useParams().id);
-	const [date, setDate] = useState<Date>();
 	const [dialogAction, setDialogAction] = useState<string>('');
 	const [openDialog, setOpenDialog] = useState<boolean>(false);
+	const [updateUI, setUpdateUI] = useState<number>(0);
 	const [user, setUser] = useState<IUser>(emptyUser);
 	const [userDialog, setUserDialog] = useState<IDialog>({ id: 0, name: '', title: '', subtitle: '', message: <span></span> });
 	const navigate = useNavigate();
-	const [updateUI, setUpdateUI] = useState<number>(0);
-
-	// #region Load User
+	// #region Load data
 	useEffect(() => {
 		UsersServices.findOne(id).then((response) => {
-			if (response.id) {
-				setUser(response);
-				const _date = new Date(response.createdAt);
-				setDate(_date);
-			}
+			if (response.id) setUser(response);
 			if (response.statusCode > 399) toast({ title: response.statusCode, description: response.message, variant: 'destructive', duration: 5000 });
 			if (response instanceof Error) toast({ title: 'Error', description: '500 Internal Server Error | ' + response.message, variant: 'destructive', duration: 5000 });
 		});
 	}, [id, navigate, updateUI]);
-	// #region Actions
+	// #endregion
+	// #region Button actions
 	async function removeSoft(id: number) {
 		UsersServices.removeSoft(id).then((response) => {
 			if (response.statusCode === 200) {
@@ -76,34 +74,37 @@ function ViewUser() {
 			setOpenDialog(false);
 		});
 	}
-
+	// #endregion
 	// #region Dialog
 	function handleDialog(user: IUser, action: string) {
 		let message: ReactElement | false = false;
 		let subtitle: string = '';
 
 		if (action === 'removeSoft') {
-			subtitle = 'Esta acción es posible de revertir por el administrador';
+			subtitle = UsersConfig.dialog.possibleRevertion;
 			message = (
-				<>
-					El usuario <span className='text-md font-bold text-slate-900'>{user.name}</span> va a ser eliminado de la base de datos.
-				</>
+				<div className='flex flex-col'>
+					{UsersConfig.dialog.userSoftDelete}
+					<span className='text-md font-bold text-slate-900'>{user.name}</span>
+				</div>
 			);
 		}
 		if (action === 'remove') {
-			subtitle = 'Esta acción es imposible de revertir.';
+			subtitle = UsersConfig.dialog.impossibleRevertion;
 			message = (
-				<>
-					El usuario <span className='text-md font-bold text-slate-900'>{user.name}</span> va a ser eliminado permanentemente de la base de datos.
-				</>
+				<div className='flex flex-col'>
+					{UsersConfig.dialog.userDelete}
+					<span className='text-md font-bold text-slate-900'>{user.name}</span>
+				</div>
 			);
 		}
 		if (action === 'restore') {
-			subtitle = 'Esta acción es posible de revertir por el administrador';
+			subtitle = UsersConfig.dialog.possibleRevertion;
 			message = (
-				<>
-					El usuario <span className='text-md font-bold text-slate-900'>{user.name}</span> va a ser restaurado de la base de datos.
-				</>
+				<div className='flex flex-col'>
+					{UsersConfig.dialog.userRestore}
+					<span className='text-md font-bold text-slate-900'>{user.name}</span>
+				</div>
 			);
 		}
 
@@ -111,19 +112,19 @@ function ViewUser() {
 		setUserDialog({
 			id: Number(user.id),
 			name: user.name,
-			title: '¿Estás realmente seguro?',
+			title: UsersConfig.dialog.title,
 			subtitle: subtitle,
 			message: message
 		});
 		setDialogAction(action);
 	}
-
+	// #endregion
 	return (
 		<main className='flex-1 overflow-y-auto'>
 			<div className='mx-6 mb-4 mt-6 flex flex-row items-center justify-end'>
 				<Button onClick={() => navigate(-1)} variant='ghost' size='sm'>
 					<ArrowLeft className='mr-2 h-4 w-4' />
-					Volver
+					{ButtonsConfig.actions.back}
 				</Button>
 			</div>
 			<div className='mt-8 flex min-w-80 flex-col items-center px-6'>
@@ -131,7 +132,7 @@ function ViewUser() {
 					<CardContent className='mx-0 px-0'>
 						<div className='flex flex-col items-center'>
 							<Dot role={user.role} text={user.role?.charAt(0).toUpperCase()} width='90px' fontSize='60px' margin='-20px' />
-							<div className='mt-12 text-3xl font-bold'>{user?.name}</div>
+							<div className='mt-12 text-3xl font-bold'>{user.name}</div>
 							<div className='mt-2 text-sm text-neutral-400'>{user?.role === 'admin' ? 'Administrador' : 'Usuario'}</div>
 							<div className='my-8 flex items-center gap-2 italic'>
 								<Mail className='h-4 w-4' />
@@ -144,10 +145,8 @@ function ViewUser() {
 								</div>
 							)}
 							<div className='flex text-sm font-extralight text-neutral-500'>
-								{user.role === Roles.ADMIN ? 'Administrador desde el ' : 'Usuario desde el '}
-								{date?.getDate() + ' '}
-								{date?.toLocaleString('default', { month: 'long' })}
-								{' de ' + date?.getFullYear()}
+								{/* TODO?: use navigator.language, maybe another implementation? */}
+								{useUserSince(user.role, user.createdAt)}
 							</div>
 						</div>
 					</CardContent>
@@ -176,7 +175,7 @@ function ViewUser() {
 					)}
 				</Card>
 			</div>
-			{/* Dialog */}
+			{/* SECTION: Dialog */}
 			<Dialog open={openDialog} onOpenChange={setOpenDialog}>
 				<DialogContent>
 					<DialogHeader>
@@ -187,21 +186,21 @@ function ViewUser() {
 					<DialogFooter>
 						<div className='mt-6 flex flex-row gap-4'>
 							<Button variant='ghost' onClick={() => setOpenDialog(false)}>
-								Cancelar
+								{ButtonsConfig.actions.cancel}
 							</Button>
 							{dialogAction === 'removeSoft' && (
 								<Button variant='delete' onClick={() => removeSoft(userDialog.id)}>
-									Eliminar
+									{ButtonsConfig.actions.delete}
 								</Button>
 							)}
 							{dialogAction === 'restore' && (
 								<Button variant='default' onClick={() => restore(userDialog.id)}>
-									Restaurar
+									{ButtonsConfig.actions.restore}
 								</Button>
 							)}
 							{dialogAction === 'remove' && (
 								<Button variant='delete' onClick={() => remove(userDialog.id)}>
-									Eliminar
+									{ButtonsConfig.actions.delete}
 								</Button>
 							)}
 						</div>

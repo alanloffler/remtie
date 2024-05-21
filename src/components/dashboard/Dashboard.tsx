@@ -1,34 +1,32 @@
-// Icons: Lucide (https://lucide.dev/)
-import { Hourglass } from 'lucide-react';
+
 // UI: Shadcn-ui (https://ui.shadcn.com/)
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Separator } from '@/components/ui/separator';
+
 import { toast } from '@/components/ui/use-toast';
 // App
 import DashboardHeader from '@/components/dashboard/DashboardHeader';
-import LatestProperties from '@/components/dashboard/LatestProperties';
+import InfoCard from '@/components/shared/InfoCard';
+
 import PieChart from '@/components/dashboard/PieChart';
+import { DashboardConfig } from '@/lib/config/dashboard.config';
 import { DashboardServices } from '@/services/dashboard.services';
 import { IDashboardData } from '@/lib/interfaces/dashboard.interface';
-import { useCapitalize } from '@/hooks/useCapitalize';
 import { ReactElement, useEffect, useState } from 'react';
-import InfoCard from '@/components/shared/InfoCard';
-// .env constants
-const APP_URL: string = import.meta.env.VITE_APP_URL;
+import { useCapitalize } from '@/hooks/useCapitalize';
+import DashboardLatest from './DashboardLatest';
+
 // React component
 function Dashboard() {
 	const [data, setData] = useState<IDashboardData[]>([]);
 	const [showDashboardHeader, setShowDashboardHeader] = useState<boolean>(false);
 	const capitalize = useCapitalize();
-    const content: ReactElement = <p>Aún no hay propiedades para mostrar.</p>;
+	const content: ReactElement = <p>{DashboardConfig.noProducts}</p>;
 
 	useEffect(() => {
 		DashboardServices.getHeaderData().then((response) => {
-			if (Array.isArray(response)) {
-				if (response.length > 0) {
-					setData(response as IDashboardData[]);
-					setShowDashboardHeader(true);
-                }
+			if (!response.statusCode) {
+				setData(response as IDashboardData[]);
+				setShowDashboardHeader(true);
 			}
 			if (response.statusCode > 399) toast({ title: String(response.statusCode), description: response.message, variant: 'destructive', duration: 5000 });
 			if (response instanceof Error) toast({ title: 'Error', description: '500 Internal Server Error | ' + response.message, variant: 'destructive', duration: 5000 });
@@ -36,9 +34,9 @@ function Dashboard() {
 	}, []);
 
 	return (
-		<main className='flex-1 overflow-y-auto'>
+		<main className='animate-fadeIn flex-1 overflow-y-auto'>
 			{data.length < 1 ? (
-				<div className='flex justify-center mt-12'>
+				<div className='mt-12 flex justify-center'>
 					<InfoCard content={content} />
 				</div>
 			) : (
@@ -74,20 +72,7 @@ function Dashboard() {
 								</CardContent>
 							</Card>
 						</div>
-						<div className='md:w-full'>
-							<Card className=''>
-								<CardHeader className='gap-2 p-4 pb-0'>
-									<CardTitle className='flex items-center gap-2 text-base text-slate-700'>
-										<Hourglass className='h-4 w-4' />
-										Propiedades recientes
-									</CardTitle>
-									<Separator orientation='horizontal' />
-								</CardHeader>
-								<CardContent className='flex flex-row p-4'>
-									<LatestProperties limit={5} baseUrl={`${APP_URL}/productos`} />
-								</CardContent>
-							</Card>
-						</div>
+                        <DashboardLatest limit={5} />
 					</div>
 				</div>
 			)}

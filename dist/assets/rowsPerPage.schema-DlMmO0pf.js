@@ -1,1 +1,0 @@
-import{z as e}from"./zod-D9tdBR2H.js";const r=e.object({value:e.coerce.number({invalid_type_error:"La cantidad debe ser un número"}).positive({message:"La cantidad debe ser mayor a cero"})}),o=e.object({value:e.coerce.number({invalid_type_error:"La cantidad debe ser un número"}).positive({message:"La cantidad debe ser mayor a cero"})});export{r as a,o as r};

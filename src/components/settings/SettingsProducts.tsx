@@ -1,11 +1,12 @@
+// App
 import ProductBusinessSettings from '@/components/settings/products/ProductBusinessSettings';
 import ProductCategoriesSettings from '@/components/settings/products/ProductCategoriesSettings';
 import ProductRowsPerPage from '@/components/settings/products/ProductRowsPerPage';
 import ProductViewSettings from '@/components/settings/products/ProductViewSettings';
-
+// React component
 function SettingsProducts() {
 	return (
-		<div className='mb-8 flex flex-col md:gap-6 md:flex-row'>
+		<div className='mb-8 flex animate-fadeIn flex-col md:flex-row md:gap-6'>
 			<div className='w-full p-2 md:w-1/2'>
 				<div className='space-y-4'>
 					<ProductBusinessSettings />
@@ -21,5 +22,5 @@ function SettingsProducts() {
 		</div>
 	);
 }
-
+// Export React component
 export default SettingsProducts;

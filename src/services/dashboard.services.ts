@@ -1,4 +1,3 @@
-// import { IDashboardData } from '@/lib/interfaces/dashboard.interface';
 import { store } from './store.services';
 
 export class DashboardServices {

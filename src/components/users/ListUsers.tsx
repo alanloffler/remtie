@@ -251,7 +251,7 @@ function ListUsers() {
 	}
 	// #endregion
 	return (
-		<main className='flex-1 overflow-y-auto'>
+		<main className='flex-1 overflow-y-auto animate-fadeIn'>
 			<div className='flex flex-row items-center justify-between px-8 pt-8'>
 				<h1 className='text-2xl font-normal text-slate-600'>{LayoutConfig.sidebar.menu.users}</h1>
 				{isAdmin && (

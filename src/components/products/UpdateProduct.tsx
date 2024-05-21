@@ -92,12 +92,12 @@ function UpdateProduct() {
 			if (response instanceof Error) toast({ title: 'Error', description: '500 Internal Server Error | ' + response.message, variant: 'destructive', duration: 5000 });
 		});
 
-		BusinessServices.findAll().then((response) => {
+		BusinessServices.findAllUI().then((response) => {
 			setBusiness(response);
 			setBusinessKey(Math.random());
 		});
 
-		CategoriesServices.findAll().then((response) => {
+		CategoriesServices.findAllUI().then((response) => {
 			setCategories(response);
 			setCategoriesKey(Math.random());
 		});
@@ -194,7 +194,7 @@ function UpdateProduct() {
 					Volver
 				</Button>
 			</div>
-			<div className='mt-6 flex flex-col items-center justify-center px-4'>
+			<div className='mt-6 flex flex-col items-center justify-center px-8'>
 				<Card className='flex w-full flex-row py-8 md:w-[500px] lg:w-[650px]'>
 					<CardContent className='mx-0 w-full p-0'>
 						<FormProvider {...propertyForm}>

@@ -56,7 +56,7 @@ export function DataTable<TData, TValue>({ columns, data, rowsPerPage, tableFor 
 	}, [tableFor]);
 
 	return (
-		<div>
+		<div className='animate-fadeIn'>
 			<Table className='min-w-[590px] border border-slate-300'>
 				<TableHeader className='bg-slate-200'>
 					{table.getHeaderGroups().map((headerGroup) => (

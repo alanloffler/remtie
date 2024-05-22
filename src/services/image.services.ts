@@ -58,6 +58,7 @@ export class ImageServices {
 			return error;
 		}
 	}
+
 	static async remove(id: number) {
 		try {
 			const token: string = store.getState().authToken;
@@ -74,4 +75,21 @@ export class ImageServices {
 			return error;
 		}
 	}
+
+    static async restore(id: number) {
+        try {
+            const token: string = store.getState().authToken;
+            const sql: string = `${ImageServices.API_URL}/images/${id}/restore`;
+            const query: Response = await fetch(sql, {
+                method: 'PATCH',
+                headers: {
+                    'content-type': 'application/json;charset=UTF-8',
+                    Authorization: `Bearer ${token}`
+                }
+            });
+            return await query.json();
+        } catch (error) {
+            return error;
+        }
+    }
 }

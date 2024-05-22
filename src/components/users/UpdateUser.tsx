@@ -39,7 +39,7 @@ function UpdateUser() {
 			name: '',
 			email: '',
 			password: '',
-			phone: '',
+			phone: 'asd',
 			role: ''
 		}
 	});
@@ -47,7 +47,7 @@ function UpdateUser() {
 	useEffect(() => {
 		function getRoles() {
 			RolesServices.findAll().then((response) => {
-				if (response.length > 0) setRoles(response);
+				if (!response.statusCode) setRoles(response);
 				if (response.statusCode > 399) toast({ title: response.statusCode, description: response.message, variant: 'destructive', duration: 5000 });
 				if (response instanceof Error) toast({ title: 'Error', description: '500 Internal Server Error | ' + response.message, variant: 'destructive', duration: 5000 });
 			});
@@ -55,14 +55,13 @@ function UpdateUser() {
 
 		function getUser(userId: number) {
 			UsersServices.findOne(userId).then((response) => {
-				if (response.id > 0) {
+				if (!response.statusCode) {
 					setUser(response);
+                    setRoleKey(Math.random());
 					form.setValue('name', response.name);
 					form.setValue('email', response.email);
-					form.setValue('phone', response.phone);
-					form.setValue('phone', response.phone);
+					form.setValue('phone', response.phone || '');
 					form.setValue('role', response.role);
-					setRoleKey(Math.random());
 				}
 				if (response.statusCode > 399) toast({ title: response.statusCode, description: response.message, variant: 'destructive', duration: 5000 });
 				if (response instanceof Error) toast({ title: 'Error', description: '500 Internal Server Error | ' + response.message, variant: 'destructive', duration: 5000 });
@@ -92,7 +91,7 @@ function UpdateUser() {
 	}
 	// #endregion
 	return (
-		<main className='flex-1 overflow-y-auto'>
+		<main className='flex-1 animate-fadeIn overflow-y-auto'>
 			<div className='flex flex-row items-center justify-between px-8 pt-8'>
 				<h1 className='text-2xl font-normal text-slate-600'>{UsersConfig.pages.updateUserTitle}</h1>
 				<Button variant='ghost' size='sm' asChild>
@@ -170,11 +169,10 @@ function UpdateUser() {
 												render={({ field }) => (
 													<FormItem>
 														<FormLabel>{UsersConfig.form.role.title}</FormLabel>
-														{}
 														<Select key={roleKey} value={field.value} onValueChange={(event) => field.onChange(event)}>
 															<FormControl>
 																<SelectTrigger>
-																	<SelectValue placeholder={<span className='text-muted-foreground'>{UsersConfig.form.role.placeholder}</span>} />
+																	<SelectValue />
 																</SelectTrigger>
 															</FormControl>
 															<SelectContent>

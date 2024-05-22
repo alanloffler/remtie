@@ -50,7 +50,7 @@ function CreateUser() {
 	}
 
 	return (
-		<main className='flex-1 overflow-y-auto'>
+		<main className='flex-1 animate-fadeIn overflow-y-auto'>
 			<div className='flex flex-row items-center justify-between px-8 pt-8'>
 				<h1 className='text-2xl font-normal text-slate-600'>{UsersConfig.pages.createUserTitle}</h1>
 				<Button variant='ghost' size='sm' asChild>

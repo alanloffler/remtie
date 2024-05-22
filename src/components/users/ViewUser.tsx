@@ -120,7 +120,7 @@ function ViewUser() {
 	}
 	// #endregion
 	return (
-		<main className='flex-1 overflow-y-auto'>
+		<main className='flex-1 animate-fadeIn overflow-y-auto'>
 			<div className='mx-6 mb-4 mt-6 flex flex-row items-center justify-end'>
 				<Button onClick={() => navigate(-1)} variant='ghost' size='sm'>
 					<ArrowLeft className='mr-2 h-4 w-4' />

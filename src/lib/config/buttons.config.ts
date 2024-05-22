@@ -5,6 +5,7 @@ export const ButtonsConfig = {
         create: 'Nuevo',
         edit: 'Editar',
         delete: 'Eliminar',
+        deletePermanent: 'Eliminar permanente',
         restore: 'Restaurar',
         save: 'Guardar'
     },

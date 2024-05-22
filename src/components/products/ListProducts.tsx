@@ -359,8 +359,8 @@ function ListProducts() {
 			}
 			if (response.statusCode > 399) toast({ title: response.statusCode, description: response.message, variant: 'destructive', duration: 5000 });
 			if (response instanceof Error) toast({ title: 'Error', description: '500 Internal Server Error | ' + response.message, variant: 'destructive', duration: 5000 });
-			setOpenDialog(false);
 		});
+        setOpenDialog(false);
 	}
 
 	async function removeSoft(id: number) {

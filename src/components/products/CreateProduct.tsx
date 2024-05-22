@@ -374,28 +374,30 @@ function CreateProduct() {
 							<div className='px-8'>
 								<Accordion type='single' collapsible>
 									<AccordionItem value='item-1' className='border-none'>
-										<AccordionTrigger className='justify-start pb-0 pt-4'>{ProductsConfig.form.addImages}</AccordionTrigger>
+										<AccordionTrigger className='justify-start gap-2 pb-0 pt-4'>{ProductsConfig.form.addImages}</AccordionTrigger>
 										<AccordionContent className='py-0'>
 											<div className='grid gap-4 pt-6'>
 												{images.map((img, i) => {
 													return (
-														<Card key={img.id} className='bg-slate-100/50 px-1 py-1'>
+														<Card key={img.id} className='bg-slate-100/50 px-2 py-2'>
 															<div className='flex flex-row place-items-center justify-between'>
-																<div className='flex h-5 flex-row'>
+																<div className='flex h-6 flex-row space-x-2'>
 																	<img src={getImageURL(img.name)} />
-																	<h2 className='flex flex-row place-items-center pl-3 text-xs font-medium text-slate-900'># {i + 1}</h2>
+																	<h2 className='flex flex-row place-items-center text-xs font-medium text-slate-900'># {i + 1}</h2>
 																</div>
 																<div className='hidden flex-row text-xs font-light text-slate-400 xs:block md:block lg:block'>{img.name}</div>
-																<Button
-																	onClick={() => {
-																		setOpenDialog(true);
-																		setImageDialog({ id: img.id, name: img.name, propertyId: img.propertyId, deletedAt: img.deletedAt });
-																	}}
-																	variant='ghost'
-																	size='miniIcon'
-																	className='rounded-full border bg-white text-slate-400/70 shadow-sm hover:bg-white hover:text-rose-500'>
-																	<Trash2 className='h-4 w-4' />
-																</Button>
+																<div className='flex flex-row items-center gap-2'>
+																	<Button
+																		onClick={() => {
+																			setOpenDialog(true);
+																			setImageDialog({ id: img.id, name: img.name, propertyId: img.propertyId, deletedAt: img.deletedAt });
+																		}}
+																		variant='ghost'
+																		size='miniIcon'
+																		className='h-7 w-7 rounded-full border bg-white text-slate-400/70 shadow-sm hover:bg-white hover:text-rose-500'>
+																		<Trash2 className='h-4 w-4' />
+																	</Button>
+																</div>
 															</div>
 														</Card>
 													);
@@ -470,7 +472,7 @@ function CreateProduct() {
 						)}
 					</CardContent>
 				</Card>
-				<section className='py-4'>
+				<section className='py-6'>
 					{propertyCreated && (
 						<Button onClick={() => navigate(`${APP_URL}/productos/${propertyId}`)} variant='secondary' size='sm' className='w-auto border bg-slate-200 hover:bg-slate-200/70'>
 							{ProductsConfig.form.goToProperty}

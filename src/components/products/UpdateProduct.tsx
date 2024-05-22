@@ -4,7 +4,7 @@ import { ArrowLeft, Trash2, BadgeX, CheckCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -28,9 +28,14 @@ import { imageFormSchema } from '@/lib/schemas/image.schema';
 import { propertySchema } from '@/lib/schemas/property.schema';
 import { store } from '@/services/store.services';
 import { useCapitalize } from '@/hooks/useCapitalize';
-import { useEffect, useState } from 'react';
+import { ReactElement, useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { zodResolver } from '@hookform/resolvers/zod';
+import { ProductsConfig } from '@/lib/config/products.config';
+import { ButtonsConfig } from '@/lib/config/buttons.config';
+import { IDialog } from '@/lib/interfaces/dialog.interface';
+// .env constants
+const APP_URL: string = import.meta.env.VITE_APP_URL;
 // React component
 function UpdateProduct() {
 	const { id } = useParams();
@@ -41,12 +46,12 @@ function UpdateProduct() {
 	const [businessKey, setBusinessKey] = useState<number>(0);
 	const [categories, setCategories] = useState<ICategory[]>([]);
 	const [categoriesKey, setCategoriesKey] = useState<number>(0);
-	const [action, setAction] = useState<string>('');
-	const [imageDialog, setImageDialog] = useState<IImage>({ id: 0, name: '', propertyId: 0, deletedAt: '' });
+	const [dialogAction, setDialogAction] = useState<string>('');
 	const [images, setImages] = useState<IImage[]>([]);
+	const [imageDialog, setImageDialog] = useState<IDialog>({ id: 0, name: '', title: '', subtitle: '', message: <span></span> });
 	const [openDialog, setOpenDialog] = useState<boolean>(false);
 	const [property, setProperty] = useState<IProperty>({} as IProperty);
-    const [updateUI, setUpdateUI] = useState<number>(0);
+	const [updateUI, setUpdateUI] = useState<number>(0);
 
 	const propertyForm = useForm<z.infer<typeof propertySchema>>({
 		resolver: zodResolver(propertySchema),
@@ -71,10 +76,10 @@ function UpdateProduct() {
 			file: undefined
 		}
 	});
-	// #region Find property
+	// #region Load data
 	useEffect(() => {
 		ProductsServices.findOne(propertyId).then((response) => {
-			if (response.id > 0) {
+			if (!response.statusCode) {
 				setProperty(response);
 				propertyForm.setValue('type', response.type);
 				propertyForm.setValue('business_type', response.business_type);
@@ -93,23 +98,33 @@ function UpdateProduct() {
 		});
 
 		BusinessServices.findAllUI().then((response) => {
-			setBusiness(response);
-			setBusinessKey(Math.random());
+			if (!response.statusCode) {
+				setBusiness(response);
+				setBusinessKey(Math.random());
+			}
+			if (response.statusCode > 399) toast({ title: response.statusCode, description: response.message, variant: 'destructive', duration: 5000 });
+			if (response instanceof Error) toast({ title: 'Error', description: '500 Internal Server Error | ' + response.message, variant: 'destructive', duration: 5000 });
 		});
 
 		CategoriesServices.findAllUI().then((response) => {
-			setCategories(response);
-			setCategoriesKey(Math.random());
+			if (!response.statusCode) {
+				setCategories(response);
+				setCategoriesKey(Math.random());
+			}
+			if (response.statusCode > 399) toast({ title: response.statusCode, description: response.message, variant: 'destructive', duration: 5000 });
+			if (response instanceof Error) toast({ title: 'Error', description: '500 Internal Server Error | ' + response.message, variant: 'destructive', duration: 5000 });
 		});
 	}, [propertyId, propertyForm]);
 
-    useEffect(() => {
+	useEffect(() => {
 		ImageServices.findByProperty(propertyId).then((response) => {
-			setImages(response);
+			if (!response.statusCode) setImages(response);
+			if (response.statusCode > 399) toast({ title: response.statusCode, description: response.message, variant: 'destructive', duration: 5000 });
+			if (response instanceof Error) toast({ title: 'Error', description: '500 Internal Server Error | ' + response.message, variant: 'destructive', duration: 5000 });
 		});
-    }, [propertyId, updateUI]);
+	}, [propertyId, updateUI]);
 	// #endregion
-	// #region Submit actions
+	// #region Forms actions
 	function handleSubmitProduct(values: z.infer<typeof propertySchema>) {
 		const color: string | undefined = categories.find((cat) => cat.name === values.type)?.color;
 		const isActive: number = values.is_active === true ? 1 : 0;
@@ -122,59 +137,95 @@ function UpdateProduct() {
 	}
 
 	function handleSubmitImage(data: FieldValues) {
-		ImageServices.create(propertyId, data.file[0])
-			.then((response) => {
-				if (response instanceof Error) toast({ title: 'Error', description: '500 Internal Server Error | ' + response.message, variant: 'destructive', duration: 5000 });
-				console.log(response);
-				if (response.status < 400) {
-					ImageServices.findByProperty(propertyId).then((response) => {
-						setImages(response);
-					});
-					toast({ title: response.status, description: response.message, variant: 'success', duration: 5000 });
-					imageForm.reset();
-				}
-				if (response.status > 399) toast({ title: response.status, description: response.message, variant: 'destructive', duration: 5000 });
-				// if (response.status === 401) navigate('/');
-				// if (response.status > 200) {
-				// 	toast({ title: 'Error', description: response.message, variant: 'destructive', duration: 5000 });
-				// 	if (response.status === 401) navigate('/');
-				// }
-				// if (response.status === 200) {
-				// 	ImageServices.getByProperty(propertyId).then((response) => {
-				// 		setImages(response);
-				// 	});
-				// 	toast({ title: 'Imágen guardada', description: response.message, variant: 'success', duration: 5000 });
-				// 	imageForm.reset();
-				// }
-			})
-			.catch((error) => console.log(error)); // toast here
+		ImageServices.create(propertyId, data.file[0]).then((response) => {
+			if (!response.statusCode) {
+				ImageServices.findByProperty(propertyId).then((response) => {
+					if (!response.statusCode) setImages(response);
+					if (response.statusCode > 399) toast({ title: response.statusCode, description: response.message, variant: 'destructive', duration: 5000 });
+					if (response instanceof Error) toast({ title: 'Error', description: '500 Internal Server Error | ' + response.message, variant: 'destructive', duration: 5000 });
+				});
+				toast({ title: response.statusCode, description: response.message, variant: 'success', duration: 5000 });
+				imageForm.reset();
+			}
+			if (response.statusCode > 399) toast({ title: response.statusCode, description: response.message, variant: 'destructive', duration: 5000 });
+			if (response instanceof Error) toast({ title: 'Error', description: '500 Internal Server Error | ' + response.message, variant: 'destructive', duration: 5000 });
+		});
+	}
+	// #endregion
+	// #region Dialog
+	function handleDialog(image: IImage, action: string) {
+		let message: ReactElement | false = false;
+		let subtitle: string = '';
+
+		if (action === 'removeSoft') {
+			subtitle = ProductsConfig.dialog.possibleRevertion;
+			message = (
+				<div className='flex flex-col'>
+					<span>{ProductsConfig.imageDialog.imageSoftDelete}</span>
+					<span className='text-md font-bold text-slate-900'>{image.id < 10 ? `COD/0${image.id}` : `COD/${image.id}`}</span>
+				</div>
+			);
+		}
+		if (action === 'remove') {
+			subtitle = ProductsConfig.dialog.impossibleRevertion;
+			message = (
+				<div className='flex flex-col'>
+					<span>{ProductsConfig.imageDialog.imageDelete}</span>
+					<span className='text-md font-bold text-slate-900'>{image.id < 10 ? `COD/0${image.id}` : `COD/${image.id}`}</span>
+				</div>
+			);
+		}
+		if (action === 'restore') {
+			subtitle = ProductsConfig.dialog.possibleRevertion;
+			message = (
+				<div className='flex flex-col'>
+					<span>{ProductsConfig.imageDialog.imageRestore}</span>
+					<span className='text-md font-bold text-slate-900'>{image.id < 10 ? `COD/0${image.id}` : `COD/${image.id}`}</span>
+				</div>
+			);
+		}
+
+		setOpenDialog(true);
+		setImageDialog({
+			id: Number(image.id),
+			name: '',
+			title: ProductsConfig.dialog.title,
+			subtitle: subtitle,
+			message: message
+		});
+		setDialogAction(action);
+	}
+	// #endregion
+	// #region Buttons actions (Images)
+	async function removeSoft(id: number) {
+		ImageServices.removeSoft(id).then((response) => {
+			if (response.statusCode === 200) setUpdateUI(Math.random());
+			if (response.statusCode > 399) toast({ title: response.statusCode, description: response.message, variant: 'destructive', duration: 5000 });
+			if (response instanceof Error) toast({ title: 'Error', description: '500 Internal Server Error | ' + response.message, variant: 'destructive', duration: 5000 });
+		});
+        setOpenDialog(false);
 	}
 
-	function handleDeleteImage(id: number, action: string) {
-		if (action === 'removeSoft') {
-			ImageServices.removeSoft(id).then((response) => {
-				if (response.statusCode === 200) {
-					setImages(images.filter((img) => img.id !== id));
-                    setUpdateUI(Math.random());
-				}
-			});
-		}
-        if (action === 'restore') {
-            console.log('restore');
-            // ImageServices.restore(id).then((response) => {
-            //     if (response.status === 200) {
-            //         setImages(images.filter((img) => img.id !== id));
-            //     }
-            // });
-        }
-		if (action === 'remove') {
-			ImageServices.remove(id).then((response) => {
-				if (response.statusCode === 200) {
-					setUpdateUI(Math.random());
-				}
-			});
-		}
-		setOpenDialog(false);
+	async function remove(id: number) {
+		ImageServices.remove(id).then((response) => {
+			if (response.statusCode === 200) {
+				setUpdateUI(Math.random());
+			}
+			if (response.statusCode > 399) toast({ title: response.statusCode, description: response.message, variant: 'destructive', duration: 5000 });
+			if (response instanceof Error) toast({ title: 'Error', description: '500 Internal Server Error | ' + response.message, variant: 'destructive', duration: 5000 });
+		});
+        setOpenDialog(false);
+	}
+
+	async function restore(id: number) {
+		ImageServices.restore(id).then((response) => {
+			if (response.statusCode === 200) {
+				setUpdateUI(Math.random());
+			}
+			if (response.statusCode > 399) toast({ title: response.statusCode, description: response.message, variant: 'destructive', duration: 5000 });
+			if (response instanceof Error) toast({ title: 'Error', description: '500 Internal Server Error | ' + response.message, variant: 'destructive', duration: 5000 });
+		});
+        setOpenDialog(false);
 	}
 
 	function switchActive(check: boolean) {
@@ -184,24 +235,25 @@ function UpdateProduct() {
 			if (response instanceof Error) toast({ title: 'Error', description: '500 Internal Server Error | ' + response.message, variant: 'destructive', duration: 5000 });
 		});
 	}
-
+	// #endregion
 	return (
 		<main className='flex-1 overflow-y-auto'>
 			<div className='flex flex-row items-center justify-between px-8 pt-8'>
-				<h1 className='text-2xl font-normal text-slate-600'>Editar Propiedad</h1>
+				<h1 className='text-2xl font-normal text-slate-600'>{ProductsConfig.pages.update.title}</h1>
 				<Button variant='ghost' size='sm' onClick={() => navigate(-1)}>
 					<ArrowLeft className='mr-2 h-4 w-4' />
-					Volver
+					{ButtonsConfig.actions.back}
 				</Button>
 			</div>
 			<div className='mt-6 flex flex-col items-center justify-center px-8'>
 				<Card className='flex w-full flex-row py-8 md:w-[500px] lg:w-[650px]'>
 					<CardContent className='mx-0 w-full p-0'>
-						<FormProvider {...propertyForm}>
+                        {/* SECTION: Property form */}
+						<Form {...propertyForm}>
 							<form onSubmit={propertyForm.handleSubmit(handleSubmitProduct)} className='space-y-8'>
 								<div className='container mx-auto space-y-4'>
 									<div className='flex w-full flex-col font-semibold text-slate-800'>
-										Descripción
+										{ProductsConfig.pages.create.subtitle}
 										<Separator className='mt-2' />
 									</div>
 									<div className='flex py-4 text-xs font-bold uppercase text-slate-500'>
@@ -213,11 +265,11 @@ function UpdateProduct() {
 											name='business_type'
 											render={({ field }) => (
 												<FormItem className='w-full space-y-1'>
-													<FormLabel className='font-semibold text-slate-500'>Tipo</FormLabel>
+													<FormLabel className='font-semibold text-slate-500'>{ProductsConfig.form.type}</FormLabel>
 													<Select key={businessKey} value={field.value} onValueChange={(event) => field.onChange(event)}>
 														<FormControl>
 															<SelectTrigger>
-																<SelectValue placeholder='' />
+																<SelectValue />
 															</SelectTrigger>
 														</FormControl>
 														<SelectContent>
@@ -237,11 +289,11 @@ function UpdateProduct() {
 											name='type'
 											render={({ field }) => (
 												<FormItem className='w-full space-y-1'>
-													<FormLabel className='font-semibold text-slate-500'>Categoría</FormLabel>
+													<FormLabel className='font-semibold text-slate-500'>{ProductsConfig.form.category}</FormLabel>
 													<Select key={categoriesKey} value={field.value} onValueChange={(event) => field.onChange(event)}>
 														<FormControl>
 															<SelectTrigger>
-																<SelectValue placeholder='' />
+																<SelectValue />
 															</SelectTrigger>
 														</FormControl>
 														<SelectContent>
@@ -264,9 +316,9 @@ function UpdateProduct() {
 												name='title'
 												render={({ field }) => (
 													<FormItem className='w-full space-y-1'>
-														<FormLabel className='font-semibold text-slate-500'>Título</FormLabel>
+														<FormLabel className='font-semibold text-slate-500'>{ProductsConfig.form.title}</FormLabel>
 														<FormControl>
-															<Input placeholder='' {...field} value={field.value} />
+															<Input {...field} value={field.value} />
 														</FormControl>
 														<FormMessage />
 													</FormItem>
@@ -279,9 +331,9 @@ function UpdateProduct() {
 												name='short_description'
 												render={({ field }) => (
 													<FormItem className='w-full space-y-1'>
-														<FormLabel className='font-semibold text-slate-500'>Descripción breve</FormLabel>
+														<FormLabel className='font-semibold text-slate-500'>{ProductsConfig.form.shortDescription}</FormLabel>
 														<FormControl>
-															<Input placeholder='' {...field} />
+															<Input {...field} />
 														</FormControl>
 														<FormMessage />
 													</FormItem>
@@ -295,7 +347,7 @@ function UpdateProduct() {
 											name='long_description'
 											render={({ field }) => (
 												<FormItem className='w-full space-y-1'>
-													<FormLabel className='font-semibold text-slate-500'>Descripción extendida</FormLabel>
+													<FormLabel className='font-semibold text-slate-500'>{ProductsConfig.form.longDescription}</FormLabel>
 													<FormControl>
 														<Textarea {...field} className='h-28'></Textarea>
 													</FormControl>
@@ -305,7 +357,7 @@ function UpdateProduct() {
 										/>
 									</div>
 									<div className='flex w-full flex-col pt-4 font-semibold text-slate-800'>
-										Dirección
+										{ProductsConfig.form.address}
 										<Separator className='mt-2' />
 									</div>
 									<div className='flex flex-row gap-6 md:flex-row md:gap-6'>
@@ -315,9 +367,9 @@ function UpdateProduct() {
 												name='street'
 												render={({ field }) => (
 													<FormItem className='w-full space-y-1'>
-														<FormLabel className='font-semibold text-slate-500'>Calle</FormLabel>
+														<FormLabel className='font-semibold text-slate-500'>{ProductsConfig.form.street}</FormLabel>
 														<FormControl>
-															<Input placeholder='' {...field} value={field.value} />
+															<Input {...field} value={field.value} />
 														</FormControl>
 														<FormMessage />
 													</FormItem>
@@ -330,9 +382,9 @@ function UpdateProduct() {
 												name='city'
 												render={({ field }) => (
 													<FormItem className='w-full space-y-1'>
-														<FormLabel className='font-semibold text-slate-500'>Ciudad</FormLabel>
+														<FormLabel className='font-semibold text-slate-500'>{ProductsConfig.form.city}</FormLabel>
 														<FormControl>
-															<Input placeholder='' {...field} value={field.value} />
+															<Input {...field} value={field.value} />
 														</FormControl>
 														<FormMessage />
 													</FormItem>
@@ -347,9 +399,9 @@ function UpdateProduct() {
 												name='state'
 												render={({ field }) => (
 													<FormItem className='w-full space-y-1'>
-														<FormLabel className='font-semibold text-slate-500'>Provincia</FormLabel>
+														<FormLabel className='font-semibold text-slate-500'>{ProductsConfig.form.state}</FormLabel>
 														<FormControl>
-															<Input placeholder='' {...field} value={field.value} />
+															<Input {...field} value={field.value} />
 														</FormControl>
 														<FormMessage />
 													</FormItem>
@@ -362,7 +414,7 @@ function UpdateProduct() {
 												name='zip'
 												render={({ field }) => (
 													<FormItem className='w-full space-y-1'>
-														<FormLabel className='font-semibold text-slate-500'>Código Postal</FormLabel>
+														<FormLabel className='font-semibold text-slate-500'>{ProductsConfig.form.zip}</FormLabel>
 														<FormControl>
 															<Input type='text' {...field} value={field.value} />
 														</FormControl>
@@ -379,7 +431,7 @@ function UpdateProduct() {
 												name='price'
 												render={({ field }) => (
 													<FormItem className='w-full space-y-1'>
-														<FormLabel className='font-semibold text-slate-500'>Precio</FormLabel>
+														<FormLabel className='font-semibold text-slate-500'>{ProductsConfig.form.price}</FormLabel>
 														<FormControl>
 															<Input type='text' inputMode='numeric' {...field} value={field.value} />
 														</FormControl>
@@ -397,7 +449,7 @@ function UpdateProduct() {
 														<FormControl>
 															<div className='flex items-center space-x-2'>
 																<Switch key={+new Date()} id='is_active' defaultChecked={field.value} onCheckedChange={(check: boolean) => switchActive(check)} className='data-[state=checked]:bg-emerald-500 data-[state=unchecked]:bg-input' />
-																<Label htmlFor='is_active'>Activo</Label>
+																<Label htmlFor='is_active'>{ProductsConfig.form.active}</Label>
 															</div>
 														</FormControl>
 														<FormMessage />
@@ -413,20 +465,21 @@ function UpdateProduct() {
 												e.preventDefault();
 												navigate(-1);
 											}}>
-											Cancelar
+											{ButtonsConfig.actions.cancel}
 										</Button>
 										<Button type='submit' variant='default'>
-											Guardar
+											{ButtonsConfig.actions.save}
 										</Button>
 									</div>
 								</div>
 							</form>
-						</FormProvider>
+						</Form>
 					</CardContent>
 				</Card>
 				<div className='my-8 flex w-full flex-col md:w-[500px] lg:w-[650px]'>
-					<h1 className='font-semibold text-slate-800'>Gestión de imágenes</h1>
+					<h1 className='font-semibold text-slate-800'>{ProductsConfig.form.addImages}</h1>
 					<Separator className='mt-2' />
+                    {/* SECTION: Images list */}
 					<div className='mt-6 grid gap-4'>
 						{images.map((img, i) => {
 							return (
@@ -441,9 +494,7 @@ function UpdateProduct() {
 											{img.deletedAt === null ? (
 												<Button
 													onClick={() => {
-														setOpenDialog(true);
-														setImageDialog({ id: img.id, name: img.name, propertyId: img.propertyId, deletedAt: img.deletedAt });
-														setAction('removeSoft');
+														handleDialog(img, 'removeSoft');
 													}}
 													variant='ghost'
 													size='miniIcon'
@@ -453,9 +504,7 @@ function UpdateProduct() {
 											) : (
 												<Button
 													onClick={() => {
-														setOpenDialog(true);
-														setImageDialog({ id: img.id, name: img.name, propertyId: img.propertyId, deletedAt: img.deletedAt });
-														setAction('restore');
+														handleDialog(img, 'restore');
 													}}
 													variant='ghost'
 													size='miniIcon'
@@ -466,9 +515,7 @@ function UpdateProduct() {
 											{store.getState().role === Roles.ADMIN && (
 												<Button
 													onClick={() => {
-														setOpenDialog(true);
-														setImageDialog({ id: img.id, name: img.name, propertyId: img.propertyId, deletedAt: img.deletedAt });
-														setAction('remove');
+                                                        handleDialog(img, 'remove');
 													}}
 													variant='ghost'
 													size='miniIcon'
@@ -484,31 +531,36 @@ function UpdateProduct() {
 						<Dialog open={openDialog} onOpenChange={setOpenDialog}>
 							<DialogContent>
 								<DialogHeader>
-									<DialogTitle>¿Estás realmente seguro?</DialogTitle>
-									<DialogDescription>Esta acción es imposible de revertir.</DialogDescription>
+									<DialogTitle>{imageDialog.title}</DialogTitle>
+									<DialogDescription>{imageDialog.subtitle}</DialogDescription>
 								</DialogHeader>
-								<div>
-									<section className='text-sm font-normal'>
-										La imágen
-										<span className='text-md px-1 font-bold text-slate-900'>{imageDialog.name}</span>
-										de la propiedad
-										<span className='text-md px-1 font-bold uppercase text-slate-900'>{property.id < 10 ? 'Cod/0' + property.id : 'Cod/' + property.id}</span>
-										se eliminará permanentemente de la base de datos.
-									</section>
-									<DialogFooter>
-										<div className='mt-6 flex flex-row gap-4'>
-											<Button variant='ghost' onClick={() => setOpenDialog(false)}>
-												Cancelar
+								<section className='text-sm font-normal'>{imageDialog.message}</section>
+								<DialogFooter>
+									<div className='mt-6 flex flex-row gap-4'>
+										<Button variant='ghost' onClick={() => setOpenDialog(false)}>
+											{ButtonsConfig.actions.cancel}
+										</Button>
+										{dialogAction === 'removeSoft' && (
+											<Button variant='delete' onClick={() => removeSoft(imageDialog.id)}>
+												{ButtonsConfig.actions.delete}
 											</Button>
-											<Button variant='delete' onClick={() => handleDeleteImage(imageDialog.id, action)}>
-												Eliminar
+										)}
+										{dialogAction === 'restore' && (
+											<Button variant='default' onClick={() => restore(imageDialog.id)}>
+												{ButtonsConfig.actions.restore}
 											</Button>
-										</div>
-									</DialogFooter>
-								</div>
+										)}
+										{dialogAction === 'remove' && (
+											<Button variant='delete' onClick={() => remove(imageDialog.id)}>
+												{ButtonsConfig.actions.delete}
+											</Button>
+										)}
+									</div>
+								</DialogFooter>
 							</DialogContent>
 						</Dialog>
 					</div>
+                    {/* SECTION: Image form */}
 					{store.getState().userId === property.created_by && (
 						<FormProvider {...imageForm}>
 							<form onSubmit={imageForm.handleSubmit(handleSubmitImage)}>
@@ -534,16 +586,21 @@ function UpdateProduct() {
 											e.preventDefault();
 											imageForm.reset();
 										}}>
-										Cancelar
+										{ButtonsConfig.actions.cancel}
 									</Button>
 									<Button variant='default' size='default' className='w-auto' type='submit'>
-										Guardar
+										{ButtonsConfig.actions.save}
 									</Button>
 								</div>
 							</form>
 						</FormProvider>
 					)}
 				</div>
+				<section className='py-6'>
+					<Button onClick={() => navigate(`${APP_URL}/productos/${propertyId}`)} variant='secondary' size='sm' className='w-auto border bg-slate-200 hover:bg-slate-200/70'>
+						{ProductsConfig.pages.view.sentence.goToProperty}
+					</Button>
+				</section>
 			</div>
 		</main>
 	);

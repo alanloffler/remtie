@@ -11,10 +11,13 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/comp
 // App
 import Carousel from '@/components/shared/Carousel';
 import CurrencyFormat from '@/components/shared/CurrencyFormat';
+import FavButton from '@/components/shared/FavButton';
+import { ButtonsConfig } from '@/lib/config/buttons.config';
 import { IDialog } from '@/lib/interfaces/dialog.interface';
 import { IImage } from '@/lib/interfaces/image.interface';
 import { IProperty } from '@/lib/interfaces/property.interface';
 import { ImageServices } from '@/services/image.services';
+import { ProductsConfig } from '@/lib/config/products.config';
 import { ProductsServices } from '@/services/products.services';
 import { ReactElement, useEffect, useState } from 'react';
 import { Roles } from '@/lib/constants';
@@ -22,7 +25,6 @@ import { store } from '@/services/store.services';
 import { useCapitalize } from '@/hooks/useCapitalize';
 import { useLocaleDate } from '@/hooks/useLocaleDate';
 import { useNavigate, useParams } from 'react-router-dom';
-import FavButton from '../shared/FavButton';
 // .env constants
 const APP_URL: string = import.meta.env.VITE_APP_URL;
 // React component
@@ -39,7 +41,7 @@ function ViewProduct() {
 	const capitalize = useCapitalize();
 	const localeDate = useLocaleDate();
 	const navigate = useNavigate();
-
+	// #region Load data
 	useEffect(() => {
 		async function getProperty(id: number) {
 			ProductsServices.findOne(id).then((response) => {
@@ -64,46 +66,51 @@ function ViewProduct() {
 		getProperty(propertyId);
 		getImages(propertyId);
 	}, [propertyId, updateUI]);
-
+	// #endregion
 	// #region Dialog
 	function handleDialog(property: IProperty, action: string) {
 		let message: ReactElement | false = false;
 		let subtitle: string = '';
 
 		if (action === 'removeSoft') {
-			subtitle = 'Esta acción es posible de revertir por el administrador';
+			subtitle = ProductsConfig.dialog.possibleRevertion;
 			message = (
-				<>
-					La propiedad <span className='text-md font-bold text-slate-900'>{property.id < 10 ? `COD/0${property.id}` : `COD/${property.id}`}</span> va a ser eliminada de la base de datos.
-				</>
+				<div className='flex flex-col'>
+					<span>{ProductsConfig.dialog.propertySoftDelete}</span>
+					<span className='text-md font-bold text-slate-900'>{property.id < 10 ? `COD/0${property.id}` : `COD/${property.id}`}</span>
+				</div>
 			);
 		}
 		if (action === 'remove') {
-			subtitle = 'Esta acción es imposible de revertir.';
+			subtitle = ProductsConfig.dialog.impossibleRevertion;
 			message = (
-				<>
-					La propiedad <span className='text-md font-bold text-slate-900'>{property.id < 10 ? `COD/0${property.id}` : `COD/${property.id}`}</span> va a ser eliminada permanentemente de la base de datos.
-				</>
+				<div className='flex flex-col'>
+					<span>{ProductsConfig.dialog.propertyDelete}</span>
+					<span className='text-md font-bold text-slate-900'>{property.id < 10 ? `COD/0${property.id}` : `COD/${property.id}`}</span>
+				</div>
 			);
 		}
 		if (action === 'restore') {
-			subtitle = 'Esta acción es posible de revertir por el administrador';
+			subtitle = ProductsConfig.dialog.possibleRevertion;
 			message = (
-				<>
-					La propiedad <span className='text-md font-bold text-slate-900'>{property.id < 10 ? `COD/0${property.id}` : `COD/${property.id}`}</span> va a ser restaurada de la base de datos.
-				</>
+				<div className='flex flex-col'>
+					<span>{ProductsConfig.dialog.propertyRestore}</span>
+					<span className='text-md font-bold text-slate-900'>{property.id < 10 ? `COD/0${property.id}` : `COD/${property.id}`}</span>
+				</div>
 			);
 		}
+
 		setOpenDialog(true);
 		setPropertyDialog({
 			id: Number(property.id),
 			name: property.title,
-			title: '¿Estás realmente seguro?',
+			title: ProductsConfig.dialog.title,
 			subtitle: subtitle,
 			message: message
 		});
 		setDialogAction(action);
 	}
+	// #endregion
 	// #region Button actions
 	async function restore(id: number) {
 		ProductsServices.restore(id).then((response) => {
@@ -118,7 +125,7 @@ function ViewProduct() {
 	async function removeSoft(id: number) {
 		ProductsServices.removeSoft(id).then((response) => {
 			if (response.statusCode === 200) {
-				navigate(-1);
+				setUpdateUI(Math.random());
 				toast({ title: response.statusCode, description: response.message, variant: 'success', duration: 5000 });
 			}
 			if (response.statusCode > 399) toast({ title: response.statusCode, description: response.message, variant: 'destructive', duration: 5000 });
@@ -146,26 +153,26 @@ function ViewProduct() {
 			if (response instanceof Error) toast({ title: 'Error', description: '500 Internal Server Error | ' + response.message, variant: 'destructive', duration: 5000 });
 		});
 	}
-
+	// #endregion
 	return (
-		<main className='flex-1 overflow-y-auto'>
+		<main className='flex-1 animate-fadeIn overflow-y-auto'>
 			<div className='mx-6 mb-4 mt-6 flex flex-row items-center justify-end'>
 				<Button variant='ghost' size='sm' onClick={() => navigate(-1)}>
 					<ArrowLeft className='mr-2 h-4 w-4' />
-					Volver
+					{ButtonsConfig.actions.back}
 				</Button>
 			</div>
-			<div className='mt-6 flex min-w-80 flex-col items-center mx-8'>
+			<div className='mx-8 mt-6 flex min-w-80 flex-col items-center'>
 				{showCard && (
 					<Card className='relative mb-8 min-w-[350px] overflow-hidden border-t-[4px] md:w-[500px]' style={{ borderTopColor: property.color }}>
-						{property.deletedAt !== null && <div className='absolute right-[-35px] top-[32px] w-[170px] rotate-45 transform bg-red-500 py-1 text-center font-semibold text-white'>Eliminado</div>}
+						{property.deletedAt !== null && <div className='absolute right-[-35px] top-[32px] w-[170px] rotate-45 transform bg-red-500 py-1 text-center font-semibold text-white'>{ProductsConfig.pages.view.deleted}</div>}
 						<CardHeader className='flex-grow rounded-sm p-6'>
-							<div className='flex text-sm font-bold uppercase text-slate-500 justify-between'>
+							<div className='flex justify-between text-sm font-bold uppercase text-slate-500'>
 								<div className='flex items-center gap-4'>
 									<div className='flex w-auto flex-row items-center rounded-sm border bg-slate-200/70 px-2 py-1 leading-tight'>{propertyId < 10 ? 'Cod/0' + propertyId : 'Cod/' + propertyId}</div>
 									<div>{property.type}</div>
 								</div>
-                                <FavButton property={property} height={30} />
+								<FavButton property={property} height={30} />
 							</div>
 							<CardTitle className='pt-4 text-xl text-slate-800'>{property.title}</CardTitle>
 							<CardDescription className='text-sm'>{property.short_description}</CardDescription>
@@ -175,11 +182,11 @@ function ViewProduct() {
 							<div className='pt-4'>
 								<div className='flex items-center space-x-2 py-1 text-sm'>
 									<MapPin className='h-4 w-4' />
-									<span>{`Ubicado en ${property.street}, ${property.city}, ${property.state}`}</span>
+									<span>{`${ProductsConfig.pages.view.sentence.location[0]}${property.street}${ProductsConfig.pages.view.sentence.location[1]}${property.city}${ProductsConfig.pages.view.sentence.location[1]}${property.state}`}</span>
 								</div>
 								<div className='flex items-center space-x-2 py-1 text-sm'>
 									<CalendarPlus className='h-4 w-4' />
-									<span>{`Creado por ${property.user?.name}, el ${localeDate(property.created_at)}`}</span>
+									<span>{`${ProductsConfig.pages.view.sentence.creation[0]}${property.user?.name}${ProductsConfig.pages.view.sentence.creation[1]}${localeDate(property.created_at)}`}</span>
 								</div>
 								<div className='flex items-center space-x-2 py-1 text-sm'>
 									<Mailbox className='h-4 w-4' />
@@ -195,7 +202,7 @@ function ViewProduct() {
 									<Carousel images={images} />
 								</div>
 							)}
-							<div className='flex flex-row items-center pt-2 text-sm text-slate-400'>Última actualización realizada el {localeDate(property.updated_at)}</div>
+							<div className='flex flex-row items-center pt-2 text-sm text-slate-400'>{`${ProductsConfig.pages.view.lastUpdate} ${localeDate(property.updated_at)}`}</div>
 						</CardContent>
 						<CardFooter className='mt-auto justify-between bg-slate-200/50 p-2'>
 							<div className='flex items-center space-x-2'>
@@ -217,7 +224,7 @@ function ViewProduct() {
 											</Button>
 										</TooltipTrigger>
 										<TooltipContent>
-											<p>Editar</p>
+											<p>{ButtonsConfig.actions.edit}</p>
 										</TooltipContent>
 									</Tooltip>
 								</TooltipProvider>
@@ -230,7 +237,7 @@ function ViewProduct() {
 												</Button>
 											</TooltipTrigger>
 											<TooltipContent>
-												<p>Eliminar</p>
+												<p>{ButtonsConfig.actions.delete}</p>
 											</TooltipContent>
 										</Tooltip>
 									</TooltipProvider>
@@ -243,7 +250,7 @@ function ViewProduct() {
 												</Button>
 											</TooltipTrigger>
 											<TooltipContent>
-												<p>Restaurar</p>
+												<p>{ButtonsConfig.actions.restore}</p>
 											</TooltipContent>
 										</Tooltip>
 									</TooltipProvider>
@@ -257,7 +264,7 @@ function ViewProduct() {
 												</Button>
 											</TooltipTrigger>
 											<TooltipContent>
-												<p>Eliminar permanente</p>
+												<p>{ButtonsConfig.actions.deletePermanent}</p>
 											</TooltipContent>
 										</Tooltip>
 									</TooltipProvider>
@@ -267,7 +274,7 @@ function ViewProduct() {
 					</Card>
 				)}
 			</div>
-			{/* Dialog */}
+			{/* SECTION: Dialog */}
 			<Dialog open={openDialog} onOpenChange={setOpenDialog}>
 				<DialogContent>
 					<DialogHeader>
@@ -278,21 +285,21 @@ function ViewProduct() {
 					<DialogFooter>
 						<div className='mt-6 flex flex-row gap-4'>
 							<Button variant='ghost' onClick={() => setOpenDialog(false)}>
-								Cancelar
+								{ButtonsConfig.actions.cancel}
 							</Button>
 							{dialogAction === 'removeSoft' && (
 								<Button variant='delete' onClick={() => removeSoft(propertyDialog.id)}>
-									Eliminar
+									{ButtonsConfig.actions.delete}
 								</Button>
 							)}
 							{dialogAction === 'restore' && (
 								<Button variant='default' onClick={() => restore(propertyDialog.id)}>
-									Restaurar
+									{ButtonsConfig.actions.restore}
 								</Button>
 							)}
 							{dialogAction === 'remove' && (
 								<Button variant='delete' onClick={() => remove(propertyDialog.id)}>
-									Eliminar
+									{ButtonsConfig.actions.delete}
 								</Button>
 							)}
 						</div>

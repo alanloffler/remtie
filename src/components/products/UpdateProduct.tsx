@@ -15,25 +15,25 @@ import { toast } from '@/components/ui/use-toast';
 // App
 import z from 'zod';
 import { BusinessServices } from '@/services/business.services';
+import { ButtonsConfig } from '@/lib/config/buttons.config';
 import { CategoriesServices } from '@/services/categories.services';
 import { FieldValues, FormProvider, useForm } from 'react-hook-form';
 import { IBusiness, ICategory } from '@/lib/interfaces/inputs.interface';
+import { IDialog } from '@/lib/interfaces/dialog.interface';
 import { IImage } from '@/lib/interfaces/image.interface';
 import { IProperty } from '@/lib/interfaces/property.interface';
 import { ImageServices } from '@/services/image.services';
+import { ProductsConfig } from '@/lib/config/products.config';
 import { ProductsServices } from '@/services/products.services';
+import { ReactElement, useEffect, useState } from 'react';
 import { Roles } from '@/lib/constants';
 import { getImageURL } from '@/lib/image-util';
 import { imageFormSchema } from '@/lib/schemas/image.schema';
 import { propertySchema } from '@/lib/schemas/property.schema';
 import { store } from '@/services/store.services';
 import { useCapitalize } from '@/hooks/useCapitalize';
-import { ReactElement, useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { ProductsConfig } from '@/lib/config/products.config';
-import { ButtonsConfig } from '@/lib/config/buttons.config';
-import { IDialog } from '@/lib/interfaces/dialog.interface';
 // .env constants
 const APP_URL: string = import.meta.env.VITE_APP_URL;
 // React component

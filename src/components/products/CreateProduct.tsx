@@ -16,12 +16,14 @@ import { toast } from '@/components/ui/use-toast';
 // App
 import z from 'zod';
 import { BusinessServices } from '@/services/business.services';
+import { ButtonsConfig } from '@/lib/config/buttons.config';
 import { CategoriesServices } from '@/services/categories.services';
 import { FieldValues, FormProvider, useForm } from 'react-hook-form';
 import { FormEvent, useEffect, useState } from 'react';
 import { IBusiness, ICategory } from '@/lib/interfaces/inputs.interface';
 import { IImage } from '@/lib/interfaces/image.interface';
 import { ImageServices } from '@/services/image.services';
+import { ProductsConfig } from '@/lib/config/products.config';
 import { ProductsServices } from '@/services/products.services';
 import { getImageURL } from '@/lib/image-util';
 import { imageFormSchema } from '@/lib/schemas/image.schema';
@@ -39,10 +41,10 @@ function CreateProduct() {
 	const [categoriesKey, setCategoriesKey] = useState<number>(0);
 	const [chosenImage, setChosenImage] = useState<string>('');
 	const [imageDialog, setImageDialog] = useState<IImage>({ id: 0, name: '', propertyId: 0, deletedAt: '' });
-	const [images, setImages] = useState<IImage[]>([]);
 	const [openDialog, setOpenDialog] = useState<boolean>(false);
 	const [propertyCreated, setPropertyCreated] = useState<boolean>(false);
 	const [propertyId, setPropertyId] = useState<number>(0);
+	const [images, setImages] = useState<IImage[]>([]);
 	const capitalize = useCapitalize();
 	const navigate = useNavigate();
 
@@ -69,7 +71,7 @@ function CreateProduct() {
 			file: undefined
 		}
 	});
-
+	// #region Load data
 	useEffect(() => {
 		BusinessServices.findAllUI().then((response) => {
 			setBusiness(response);
@@ -80,7 +82,8 @@ function CreateProduct() {
 			setCategoriesKey(Math.random());
 		});
 	}, [propertyId, propertyForm]);
-
+	// #endregion
+	// #region Form actions
 	function handleSubmitProduct(values: z.infer<typeof propertySchema>) {
 		const color = categories.find((cat) => cat.name === values.type)?.color;
 		let isActive: number;
@@ -102,7 +105,7 @@ function CreateProduct() {
 		ImageServices.create(propertyId, data.file[0]).then((response) => {
 			if (response.statusCode === 200) {
 				ImageServices.findByProperty(propertyId).then((response) => {
-					if (response.statusCode === 200) setImages(response);
+					if (!response.statusCode) setImages(response);
 					if (response.statusCode > 399) toast({ title: response.statusCode, description: response.message, variant: 'destructive', duration: 5000 });
 					if (response instanceof Error) toast({ title: 'Error', description: '500 Internal Server Error | ' + response.message, variant: 'destructive', duration: 5000 });
 				});
@@ -130,14 +133,14 @@ function CreateProduct() {
 	function handleInputChange(event: FormEvent<HTMLInputElement>) {
 		setChosenImage(event.currentTarget.value.split('\\')[2]);
 	}
-
+	// #endregion
 	return (
-		<main className='flex-1 overflow-y-auto'>
+		<main className='flex-1 animate-fadeIn overflow-y-auto'>
 			<div className='flex flex-row items-center justify-between px-8 pt-8'>
-				<h1 className='text-2xl font-normal text-slate-600'>Crear Propiedad</h1>
+				<h1 className='text-2xl font-normal text-slate-600'>{ProductsConfig.pages.create.title}</h1>
 				<Button variant='ghost' size='sm' onClick={() => navigate(-1)}>
 					<ArrowLeft className='mr-2 h-4 w-4' />
-					Volver
+					{ButtonsConfig.actions.back}
 				</Button>
 			</div>
 			<div className='mt-6 flex flex-col items-center justify-center px-8'>
@@ -147,7 +150,7 @@ function CreateProduct() {
 							<form onSubmit={propertyForm.handleSubmit(handleSubmitProduct)} className='space-y-8'>
 								<div className='container mx-auto space-y-4'>
 									<div className='flex w-full flex-col font-semibold text-slate-800'>
-										Descripción
+										{ProductsConfig.pages.create.subtitle}
 										<Separator className='mt-2' />
 									</div>
 									<div className='flex w-1/2 flex-col gap-4 py-4 md:w-2/3 md:flex-row md:gap-6'>
@@ -156,7 +159,7 @@ function CreateProduct() {
 											name='business_type'
 											render={({ field }) => (
 												<FormItem className='w-full space-y-1'>
-													<FormLabel className='font-semibold text-slate-500'>Tipo</FormLabel>
+													<FormLabel className='font-semibold text-slate-500'>{ProductsConfig.form.type}</FormLabel>
 													<Select key={businessKey} onValueChange={(event) => field.onChange(event)}>
 														<FormControl>
 															<SelectTrigger>
@@ -180,7 +183,7 @@ function CreateProduct() {
 											name='type'
 											render={({ field }) => (
 												<FormItem className='w-full space-y-1'>
-													<FormLabel className='font-semibold text-slate-500'>Categoría</FormLabel>
+													<FormLabel className='font-semibold text-slate-500'>{ProductsConfig.form.category}</FormLabel>
 													<Select key={categoriesKey} onValueChange={(event) => field.onChange(event)}>
 														<FormControl>
 															<SelectTrigger>
@@ -207,7 +210,7 @@ function CreateProduct() {
 												name='title'
 												render={({ field }) => (
 													<FormItem className='w-full space-y-1'>
-														<FormLabel className='font-semibold text-slate-500'>Título</FormLabel>
+														<FormLabel className='font-semibold text-slate-500'>{ProductsConfig.form.title}</FormLabel>
 														<FormControl>
 															<Input placeholder='' {...field} />
 														</FormControl>
@@ -222,7 +225,7 @@ function CreateProduct() {
 												name='short_description'
 												render={({ field }) => (
 													<FormItem className='w-full space-y-1'>
-														<FormLabel className='font-semibold text-slate-500'>Descripción breve</FormLabel>
+														<FormLabel className='font-semibold text-slate-500'>{ProductsConfig.form.shortDescription}</FormLabel>
 														<FormControl>
 															<Input placeholder='' {...field} />
 														</FormControl>
@@ -238,7 +241,7 @@ function CreateProduct() {
 											name='long_description'
 											render={({ field }) => (
 												<FormItem className='w-full space-y-1'>
-													<FormLabel className='font-semibold text-slate-500'>Descripción extendida</FormLabel>
+													<FormLabel className='font-semibold text-slate-500'>{ProductsConfig.form.longDescription}</FormLabel>
 													<FormControl>
 														<Textarea {...field} className='h-28'></Textarea>
 													</FormControl>
@@ -248,7 +251,7 @@ function CreateProduct() {
 										/>
 									</div>
 									<div className='flex w-full flex-col pt-4 font-semibold text-slate-800'>
-										Dirección
+										{ProductsConfig.form.address}
 										<Separator className='mt-2' />
 									</div>
 									<div className='flex flex-row gap-6 md:flex-row md:gap-6'>
@@ -258,7 +261,7 @@ function CreateProduct() {
 												name='street'
 												render={({ field }) => (
 													<FormItem className='w-full space-y-1'>
-														<FormLabel className='font-semibold text-slate-500'>Calle</FormLabel>
+														<FormLabel className='font-semibold text-slate-500'>{ProductsConfig.form.street}</FormLabel>
 														<FormControl>
 															<Input placeholder='' {...field} />
 														</FormControl>
@@ -273,7 +276,7 @@ function CreateProduct() {
 												name='city'
 												render={({ field }) => (
 													<FormItem className='w-full space-y-1'>
-														<FormLabel className='font-semibold text-slate-500'>Ciudad</FormLabel>
+														<FormLabel className='font-semibold text-slate-500'>{ProductsConfig.form.city}</FormLabel>
 														<FormControl>
 															<Input placeholder='' {...field} />
 														</FormControl>
@@ -290,7 +293,7 @@ function CreateProduct() {
 												name='state'
 												render={({ field }) => (
 													<FormItem className='w-full space-y-1'>
-														<FormLabel className='font-semibold text-slate-500'>Provincia</FormLabel>
+														<FormLabel className='font-semibold text-slate-500'>{ProductsConfig.form.state}</FormLabel>
 														<FormControl>
 															<Input placeholder='' {...field} />
 														</FormControl>
@@ -305,7 +308,7 @@ function CreateProduct() {
 												name='zip'
 												render={({ field }) => (
 													<FormItem className='w-full space-y-1'>
-														<FormLabel className='font-semibold text-slate-500'>Código Postal</FormLabel>
+														<FormLabel className='font-semibold text-slate-500'>{ProductsConfig.form.zip}</FormLabel>
 														<FormControl>
 															<Input type='text' {...field} />
 														</FormControl>
@@ -322,7 +325,7 @@ function CreateProduct() {
 												name='price'
 												render={({ field }) => (
 													<FormItem className='w-full space-y-1'>
-														<FormLabel className='font-semibold text-slate-500'>Precio</FormLabel>
+														<FormLabel className='font-semibold text-slate-500'>{ProductsConfig.form.price}</FormLabel>
 														<FormControl>
 															<Input type='text' inputMode='numeric' {...field} />
 														</FormControl>
@@ -340,7 +343,7 @@ function CreateProduct() {
 														<FormControl>
 															<div className='flex items-center space-x-2'>
 																<Switch id='is_active' onCheckedChange={field.onChange} className='data-[state=checked]:bg-emerald-500 data-[state=unchecked]:bg-input' />
-																<Label htmlFor='is_active'>Activo</Label>
+																<Label htmlFor='is_active'>{ProductsConfig.form.active}</Label>
 															</div>
 														</FormControl>
 														<FormMessage />
@@ -357,21 +360,21 @@ function CreateProduct() {
 												imageForm.reset();
 												navigate(-1);
 											}}>
-											Cancelar
+											{ButtonsConfig.actions.cancel}
 										</Button>
 										<Button type='submit' variant='default'>
-											Guardar
+											{ButtonsConfig.actions.save}
 										</Button>
 									</div>
 								</div>
 							</form>
 						</FormProvider>
-						{/* {true && ( */}
+						{/* SECTION: Images */}
 						{propertyCreated && (
 							<div className='px-8'>
 								<Accordion type='single' collapsible>
 									<AccordionItem value='item-1' className='border-none'>
-										<AccordionTrigger className='justify-start pb-0 pt-4'>Agregar imágenes</AccordionTrigger>
+										<AccordionTrigger className='justify-start pb-0 pt-4'>{ProductsConfig.form.addImages}</AccordionTrigger>
 										<AccordionContent className='py-0'>
 											<div className='grid gap-4 pt-6'>
 												{images.map((img, i) => {
@@ -400,22 +403,21 @@ function CreateProduct() {
 												<Dialog open={openDialog} onOpenChange={setOpenDialog}>
 													<DialogContent>
 														<DialogHeader>
-															<DialogTitle>¿Estás realmente seguro?</DialogTitle>
-															<DialogDescription>Esta acción es imposible de revertir.</DialogDescription>
+															<DialogTitle>{ProductsConfig.pages.create.dialog.title}</DialogTitle>
+															<DialogDescription>{ProductsConfig.pages.create.dialog.subtitle}</DialogDescription>
 														</DialogHeader>
 														<div>
 															<section className='text-sm font-normal'>
-																La imágen
+																<span className='flex flex-row'>{ProductsConfig.pages.create.dialog.message}</span>
 																<span className='text-md px-1 font-bold text-slate-900'>{imageDialog.name}</span>
-																de la propiedad se eliminará permanentemente de la base de datos.
 															</section>
 															<DialogFooter>
 																<div className='mt-6 flex flex-row gap-4'>
 																	<Button variant='ghost' onClick={() => setOpenDialog(false)}>
-																		Cancelar
+																		{ButtonsConfig.actions.cancel}
 																	</Button>
 																	<Button variant='delete' onClick={() => handleDeleteImage(imageDialog.id)}>
-																		Eliminar
+																		{ButtonsConfig.actions.delete}
 																	</Button>
 																</div>
 															</DialogFooter>
@@ -432,7 +434,7 @@ function CreateProduct() {
 															render={() => (
 																<FormItem className='grid grid-cols-1 items-center justify-between space-y-4 md:grid-cols-3 md:space-y-0'>
 																	<div className='flex flex-row items-center gap-2 md:col-span-2'>
-																		<FormLabel className='h-fit rounded-md border bg-slate-100/70 p-2 font-semibold text-slate-500 hover:cursor-pointer hover:bg-slate-100'>Seleccionar imágen</FormLabel>
+																		<FormLabel className='h-fit rounded-md border bg-slate-100/70 p-2 font-semibold text-slate-500 hover:cursor-pointer hover:bg-slate-100'>{ProductsConfig.form.chooseImage}</FormLabel>
 																		<span className='text-md flex flex-row font-light text-slate-600'>{chosenImage}</span>
 																		<FormControl>
 																			<Input {...imageForm.register('file')} name='file' type='file' accept='image/*' className='m-0 h-0 w-0 p-0 opacity-0 hover:cursor-pointer' onChange={(e) => handleInputChange(e)} />
@@ -448,10 +450,10 @@ function CreateProduct() {
 																				setChosenImage('');
 																			}}
 																			className='w-auto px-2 text-xs'>
-																			Cancelar
+																			{ButtonsConfig.actions.cancel}
 																		</Button>
 																		<Button variant='default' size='sm' className='w-auto border-slate-400 bg-slate-400 px-2 text-xs hover:border-slate-500 hover:bg-slate-500' type='submit'>
-																			Guardar
+																			{ButtonsConfig.actions.save}
 																		</Button>
 																	</div>
 																	<FormMessage />
@@ -468,99 +470,13 @@ function CreateProduct() {
 						)}
 					</CardContent>
 				</Card>
-				<section className='py-6'>
-					<Button onClick={() => navigate(`${APP_URL}/productos/${propertyId}`)} variant='secondary' size='sm' className='w-auto border bg-slate-200 hover:bg-slate-200/70'>
-						Ver la propiedad que creaste
-					</Button>
+				<section className='py-4'>
+					{propertyCreated && (
+						<Button onClick={() => navigate(`${APP_URL}/productos/${propertyId}`)} variant='secondary' size='sm' className='w-auto border bg-slate-200 hover:bg-slate-200/70'>
+							{ProductsConfig.form.goToProperty}
+						</Button>
+					)}
 				</section>
-				{/* <div className='my-8 flex w-full flex-col md:w-[500px] lg:w-[650px]'>
-					<h1 className='font-semibold text-slate-800'>Gestión de imágenes</h1>
-					<Separator className='mt-2' />
-					<div className='mt-6 grid gap-4'>
-						{images.map((img, i) => {
-							return (
-								<Card key={img.id} className='px-2 py-2'>
-									<div className='flex flex-row place-items-center justify-between'>
-										<div className='flex h-5 flex-row'>
-											<img src={getImageURL(img.name)} />
-											<h2 className='flex flex-row place-items-center pl-3 text-xs font-medium text-slate-900'># {i + 1}</h2>
-										</div>
-										<div className='hidden flex-row text-xs font-light text-slate-400 xs:block md:block lg:block'>{img.name}</div>
-										<Button
-											onClick={() => {
-												setOpenDialog(true);
-												setImageDialog({ id: img.id, name: img.name, propertyId: img.propertyId });
-											}}
-											variant='ghost'
-											size='miniIcon'
-											className='rounded-full border bg-white text-slate-400/70 shadow-sm hover:bg-white hover:text-rose-500'>
-											<Trash2 className='h-4 w-4' />
-										</Button>
-									</div>
-								</Card>
-							);
-						})}
-						<Dialog open={openDialog} onOpenChange={setOpenDialog}>
-							<DialogContent>
-								<DialogHeader>
-									<DialogTitle>¿Estás realmente seguro?</DialogTitle>
-									<DialogDescription>Esta acción es imposible de revertir.</DialogDescription>
-								</DialogHeader>
-								<div>
-									<section className='text-sm font-normal'>
-										La imágen
-										<span className='text-md px-1 font-bold text-slate-900'>{imageDialog.name}</span>
-										de la propiedad
-										<span className='text-md px-1 font-bold uppercase text-slate-900'>{property.id < 10 ? 'Cod/0' + property.id : 'Cod/' + property.id}</span>
-										se eliminará permanentemente de la base de datos.
-									</section>
-									<DialogFooter>
-										<div className='mt-6 flex flex-row gap-4'>
-											<Button variant='ghost' onClick={() => setOpenDialog(false)}>
-												Cancelar
-											</Button>
-											<Button variant='delete' onClick={() => handleDeleteImage(imageDialog.id)}>
-												Eliminar
-											</Button>
-										</div>
-									</DialogFooter>
-								</div>
-							</DialogContent>
-						</Dialog>
-					</div>
-					<FormProvider {...imageForm}>
-						<form onSubmit={imageForm.handleSubmit(handleSubmitImage)}>
-							<div className='mt-8 grid w-full max-w-sm items-center gap-1.5'>
-								<FormField
-									control={imageForm.control}
-									name='file'
-									render={() => (
-										<FormItem className='w-full space-y-1'>
-											<FormLabel className='font-semibold text-slate-500'>Agregar imágen</FormLabel>
-											<FormControl>
-												<Input {...imageForm.register('file')} name='file' type='file' accept='image/*' className='w-full hover:cursor-pointer' />
-											</FormControl>
-											<FormMessage />
-										</FormItem>
-									)}
-								/>
-							</div>
-							<div className='mt-8 flex flex-row justify-end space-x-4'>
-								<Button
-									variant='ghost'
-									onClick={(e) => {
-										e.preventDefault();
-										imageForm.reset();
-									}}>
-									Cancelar
-								</Button>
-								<Button variant='default' size='default' className='w-auto' type='submit'>
-									Guardar
-								</Button>
-							</div>
-						</form>
-					</FormProvider>
-				</div> */}
 			</div>
 		</main>
 	);

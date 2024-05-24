@@ -1,20 +1,16 @@
-
 // UI: Shadcn-ui (https://ui.shadcn.com/)
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-
 import { toast } from '@/components/ui/use-toast';
 // App
 import DashboardHeader from '@/components/dashboard/DashboardHeader';
+import DashboardLatest from './DashboardLatest';
 import InfoCard from '@/components/shared/InfoCard';
-
 import PieChart from '@/components/dashboard/PieChart';
 import { DashboardConfig } from '@/lib/config/dashboard.config';
 import { DashboardServices } from '@/services/dashboard.services';
 import { IDashboardData } from '@/lib/interfaces/dashboard.interface';
 import { ReactElement, useEffect, useState } from 'react';
 import { useCapitalize } from '@/hooks/useCapitalize';
-import DashboardLatest from './DashboardLatest';
-
 // React component
 function Dashboard() {
 	const [data, setData] = useState<IDashboardData[]>([]);
@@ -34,7 +30,7 @@ function Dashboard() {
 	}, []);
 
 	return (
-		<main className='animate-fadeIn flex-1 overflow-y-auto'>
+		<main className='flex-1 animate-fadeIn overflow-y-auto'>
 			{data.length < 1 ? (
 				<div className='mt-12 flex justify-center'>
 					<InfoCard content={content} />
@@ -72,7 +68,7 @@ function Dashboard() {
 								</CardContent>
 							</Card>
 						</div>
-                        <DashboardLatest />
+						<DashboardLatest />
 					</div>
 				</div>
 			)}

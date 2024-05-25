@@ -6,5 +6,5 @@ export interface IState extends IStateForm {
     id: number;
     createdAt: Date;
     updatedAt: Date;
-    deletedAt?: Date | null;
+    deletedAt?: Date;
 }

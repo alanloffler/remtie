@@ -41,6 +41,7 @@ export const SettingsConfig = {
 				cityPlaceholder: 'Nombre',
 				editCityTitle: 'Editar ciudad',
 				stateTitle: 'Crear provincia',
+                editStateTitle: 'Editar provincia',
 				statePlaceholder: 'Seleccione provincia',
 				zipPlaceholder: 'Código Postal'
 			},

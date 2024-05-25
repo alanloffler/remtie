@@ -3,18 +3,20 @@ export const ButtonsConfig = {
         back: 'Volver',
         cancel: 'Cancelar',
         create: 'Nuevo',
-        edit: 'Editar',
         delete: 'Eliminar',
         deletePermanent: 'Eliminar permanente',
+        details: 'Ver detalles',
+        edit: 'Editar',
         restore: 'Restaurar',
         save: 'Guardar'
     },
+    category: 'Categoría',
     filters: {
         all: 'Todas',
         yours: 'Tuyas',
         others: 'Otros',
         favorites: 'Tus favoritos',
     },
-    category: 'Categoría',
+    search: 'Buscar',
     type: 'Tipo',
 }

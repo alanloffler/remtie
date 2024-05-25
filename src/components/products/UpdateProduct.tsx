@@ -18,16 +18,20 @@ import z from 'zod';
 import { BusinessServices } from '@/services/business.services';
 import { ButtonsConfig } from '@/lib/config/buttons.config';
 import { CategoriesServices } from '@/services/categories.services';
+import { CitiesServices } from '@/services/cities.services';
 import { FieldValues, FormProvider, useForm } from 'react-hook-form';
+import { FormEvent, ReactElement, useEffect, useState } from 'react';
 import { IBusiness, ICategory } from '@/lib/interfaces/inputs.interface';
+import { ICity } from '@/lib/interfaces/city.interface';
 import { IDialog } from '@/lib/interfaces/dialog.interface';
 import { IImage } from '@/lib/interfaces/image.interface';
 import { IProperty } from '@/lib/interfaces/property.interface';
+import { IState } from '@/lib/interfaces/state.interface';
 import { ImageServices } from '@/services/image.services';
 import { ProductsConfig } from '@/lib/config/products.config';
 import { ProductsServices } from '@/services/products.services';
-import { FormEvent, ReactElement, useEffect, useState } from 'react';
 import { Roles } from '@/lib/constants';
+import { StatesServices } from '@/services/states.services';
 import { getImageURL } from '@/lib/image-util';
 import { imageFormSchema } from '@/lib/schemas/image.schema';
 import { propertySchema } from '@/lib/schemas/property.schema';
@@ -48,11 +52,17 @@ function UpdateProduct() {
 	const [categories, setCategories] = useState<ICategory[]>([]);
 	const [categoriesKey, setCategoriesKey] = useState<number>(0);
 	const [chosenImage, setChosenImage] = useState<string>('');
+    const [cities, setCities] = useState<ICity[]>([]);
+	const [citiesSelect, setCitiesSelect] = useState<ICity[]>([]);
+    const [citySelectDisabled, setCitySelectDisabled] = useState<boolean>(true);
+	const [citiesSelectKey, setCitiesSelectKey] = useState<number>(0);
 	const [dialogAction, setDialogAction] = useState<string>('');
-	const [images, setImages] = useState<IImage[]>([]);
 	const [imageDialog, setImageDialog] = useState<IDialog>({ id: 0, name: '', title: '', subtitle: '', message: <span></span> });
+	const [images, setImages] = useState<IImage[]>([]);
 	const [openDialog, setOpenDialog] = useState<boolean>(false);
 	const [property, setProperty] = useState<IProperty>({} as IProperty);
+	const [statesSelect, setStatesSelect] = useState<IState[]>([]);
+	const [statesSelectKey, setStatesSelectKey] = useState<number>(0);
 	const [updateUI, setUpdateUI] = useState<number>(0);
 
 	const propertyForm = useForm<z.infer<typeof propertySchema>>({
@@ -112,6 +122,25 @@ function UpdateProduct() {
 			if (!response.statusCode) {
 				setCategories(response);
 				setCategoriesKey(Math.random());
+			}
+			if (response.statusCode > 399) toast({ title: response.statusCode, description: response.message, variant: 'destructive', duration: 5000 });
+			if (response instanceof Error) toast({ title: 'Error', description: '500 Internal Server Error | ' + response.message, variant: 'destructive', duration: 5000 });
+		});
+
+		CitiesServices.findAll().then((response) => {
+			if (!response.statusCode) {
+				setCitiesSelect(response);
+                setCities(response);
+				setCitiesSelectKey(Math.random());
+			}
+			if (response.statusCode > 399) toast({ title: response.statusCode, description: response.message, variant: 'destructive', duration: 5000 });
+			if (response instanceof Error) toast({ title: 'Error', description: '500 Internal Server Error | ' + response.message, variant: 'destructive', duration: 5000 });
+		});
+
+		StatesServices.findAll().then((response) => {
+			if (!response.statusCode) {
+				setStatesSelect(response);
+				setStatesSelectKey(Math.random());
 			}
 			if (response.statusCode > 399) toast({ title: response.statusCode, description: response.message, variant: 'destructive', duration: 5000 });
 			if (response instanceof Error) toast({ title: 'Error', description: '500 Internal Server Error | ' + response.message, variant: 'destructive', duration: 5000 });
@@ -241,6 +270,18 @@ function UpdateProduct() {
 			if (response instanceof Error) toast({ title: 'Error', description: '500 Internal Server Error | ' + response.message, variant: 'destructive', duration: 5000 });
 		});
 	}
+
+	function fillZipCode(event: string) {
+		propertyForm.setValue('zip', citiesSelect.find((city) => city.city === event)?.zip || '');
+	}
+
+    function filterCitiesByState(state: string) {
+        setCitySelectDisabled(false);
+        setCitiesSelectKey(Math.random());
+        setCitiesSelect(cities.filter((city) => city.state === state));
+        propertyForm.setValue('city', '');
+        propertyForm.setValue('zip', '');
+    }
 	// #endregion
 	return (
 		<main className='flex-1 animate-fadeIn overflow-y-auto'>
@@ -324,7 +365,7 @@ function UpdateProduct() {
 													<FormItem className='w-full space-y-1'>
 														<FormLabel className='font-semibold text-slate-500'>{ProductsConfig.form.title}</FormLabel>
 														<FormControl>
-															<Input {...field} value={field.value} />
+															<Input {...field} />
 														</FormControl>
 														<FormMessage />
 													</FormItem>
@@ -367,31 +408,66 @@ function UpdateProduct() {
 										<Separator className='mt-2' />
 									</div>
 									<div className='flex flex-row gap-6 md:flex-row md:gap-6'>
-										<div className='flex w-2/3 flex-row md:w-2/3 md:flex-col'>
+										<div className='flex w-full flex-row md:w-1/2 md:flex-col'>
 											<FormField
 												control={propertyForm.control}
-												name='street'
+												name='state'
 												render={({ field }) => (
 													<FormItem className='w-full space-y-1'>
-														<FormLabel className='font-semibold text-slate-500'>{ProductsConfig.form.street}</FormLabel>
-														<FormControl>
-															<Input {...field} value={field.value} />
-														</FormControl>
+														<FormLabel className='font-semibold text-slate-500'>{ProductsConfig.form.state}</FormLabel>
+														<Select
+															key={statesSelectKey}
+															onValueChange={(event) => {
+																field.onChange(event);
+																filterCitiesByState(event);
+															}}
+															value={field.value}>
+															<FormControl>
+																<SelectTrigger>
+																	<SelectValue placeholder='' />
+																</SelectTrigger>
+															</FormControl>
+															<SelectContent>
+																{statesSelect.map((el) => (
+																	<SelectItem key={el.id} value={el.state} className='text-sm'>
+																		{capitalize(el.state)}
+																	</SelectItem>
+																))}
+															</SelectContent>
+														</Select>
 														<FormMessage />
 													</FormItem>
 												)}
 											/>
 										</div>
-										<div className='flex w-auto flex-row md:w-1/3 md:flex-col'>
+										<div className='flex w-full flex-row md:w-1/2 md:flex-col'>
 											<FormField
 												control={propertyForm.control}
 												name='city'
 												render={({ field }) => (
 													<FormItem className='w-full space-y-1'>
 														<FormLabel className='font-semibold text-slate-500'>{ProductsConfig.form.city}</FormLabel>
-														<FormControl>
-															<Input {...field} value={field.value} />
-														</FormControl>
+														<Select
+                                                            disabled={citySelectDisabled}
+															key={citiesSelectKey}
+															onValueChange={(event) => {
+																field.onChange(event);
+																fillZipCode(event);
+															}}
+															value={field.value}>
+															<FormControl>
+																<SelectTrigger>
+																	<SelectValue placeholder='' />
+																</SelectTrigger>
+															</FormControl>
+															<SelectContent>
+																{citiesSelect.map((el) => (
+																	<SelectItem key={el.id} value={el.city} className='text-sm'>
+																		{capitalize(el.city)}
+																	</SelectItem>
+																))}
+															</SelectContent>
+														</Select>
 														<FormMessage />
 													</FormItem>
 												)}
@@ -399,22 +475,22 @@ function UpdateProduct() {
 										</div>
 									</div>
 									<div className='flex flex-row gap-6 md:flex-row md:gap-6'>
-										<div className='flex w-2/3 flex-row md:w-2/3 md:flex-col'>
+										<div className='flex w-full flex-row md:w-1/2 md:flex-col'>
 											<FormField
 												control={propertyForm.control}
-												name='state'
+												name='street'
 												render={({ field }) => (
 													<FormItem className='w-full space-y-1'>
-														<FormLabel className='font-semibold text-slate-500'>{ProductsConfig.form.state}</FormLabel>
+														<FormLabel className='font-semibold text-slate-500'>{ProductsConfig.form.street}</FormLabel>
 														<FormControl>
-															<Input {...field} value={field.value} />
+															<Input {...field} />
 														</FormControl>
 														<FormMessage />
 													</FormItem>
 												)}
 											/>
 										</div>
-										<div className='flex w-auto flex-row md:w-1/3 md:flex-col'>
+										<div className='flex w-full flex-row md:w-1/2 md:flex-col'>
 											<FormField
 												control={propertyForm.control}
 												name='zip'
@@ -422,7 +498,7 @@ function UpdateProduct() {
 													<FormItem className='w-full space-y-1'>
 														<FormLabel className='font-semibold text-slate-500'>{ProductsConfig.form.zip}</FormLabel>
 														<FormControl>
-															<Input type='text' {...field} value={field.value} />
+															<Input disabled type='text' {...field} />
 														</FormControl>
 														<FormMessage />
 													</FormItem>
@@ -439,7 +515,7 @@ function UpdateProduct() {
 													<FormItem className='w-full space-y-1'>
 														<FormLabel className='font-semibold text-slate-500'>{ProductsConfig.form.price}</FormLabel>
 														<FormControl>
-															<Input type='text' inputMode='numeric' {...field} value={field.value} />
+															<Input type='text' inputMode='numeric' {...field} />
 														</FormControl>
 														<FormMessage />
 													</FormItem>

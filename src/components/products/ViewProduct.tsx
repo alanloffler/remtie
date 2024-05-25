@@ -182,7 +182,7 @@ function ViewProduct() {
 							<div className='pt-4'>
 								<div className='flex items-center space-x-2 py-1 text-sm'>
 									<MapPin className='h-4 w-4' />
-									<span>{`${ProductsConfig.pages.view.sentence.location[0]}${property.street}${ProductsConfig.pages.view.sentence.location[1]}${property.city}${ProductsConfig.pages.view.sentence.location[1]}${property.state}`}</span>
+									<span>{`${ProductsConfig.pages.view.sentence.location[0]}${property.street}${ProductsConfig.pages.view.sentence.location[1]}${capitalize(property.city)}${ProductsConfig.pages.view.sentence.location[1]}${capitalize(property.state)}`}</span>
 								</div>
 								<div className='flex items-center space-x-2 py-1 text-sm'>
 									<CalendarPlus className='h-4 w-4' />

@@ -1,5 +1,6 @@
 export interface ICityForm {
     city: string;
+    state: string;
     zip: string;
 }
 

@@ -7,6 +7,7 @@ import { DataTable } from '@/components/data-table/DataTable';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Form, FormControl, FormField, FormItem, FormMessage } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Separator } from '@/components/ui/separator';
 import { toast } from '@/components/ui/use-toast';
 // App
@@ -33,13 +34,15 @@ function ProductCities() {
 	const [openDialog, setOpenDialog] = useState<boolean>(false);
 	const [showCityEditForm, setShowCityEditForm] = useState<boolean>(false);
 	const [states, setStates] = useState<IState[]>([]);
+	const [statesSelectKey, setStatesSelectKey] = useState<number>(0);
 	const [updateCities, setUpdateCities] = useState<number>(0);
+	// const [statesSelect, setStatesSelect] = useState<IState[]>([]);
 	const capitalize = useCapitalize();
 
 	// #region Load data
+
 	useEffect(() => {
 		function getCities() {
-			console.log('rendering cities');
 			CitiesServices.findAllAdmin().then((response) => {
 				if (!response.statusCode) {
 					setCities(response);
@@ -56,6 +59,7 @@ function ProductCities() {
 			StatesServices.findAllAdmin().then((response) => {
 				if (!response.statusCode) {
 					setStates(response);
+					setStatesSelectKey(Math.random());
 					// TODO MANAGE ERROR
 				}
 			});
@@ -115,6 +119,22 @@ function ProductCities() {
 			}
 		},
 		{
+			accessorKey: 'state',
+			header: ({ column }) => {
+				return (
+					<div className='w-20 text-center'>
+						<Button variant='ghost' onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}>
+							{SettingsConfig.sections.cities.tableHeaders[2]}
+							<ArrowUpDown className='ml-2 h-3 w-3' />
+						</Button>
+					</div>
+				);
+			},
+			cell: ({ row }) => {
+				return <div className='w-20'>{capitalize(row.original.state)}</div>;
+			}
+		},
+		{
 			accessorKey: 'zip',
 			header: ({ column }) => {
 				return (
@@ -131,11 +151,11 @@ function ProductCities() {
 			}
 		},
 		{
-			header: SettingsConfig.sections.cities.tableHeaders[4],
+			header: SettingsConfig.sections.cities.tableHeaders[5],
 			id: 'actions',
 			cell: ({ row }) => {
 				return (
-					<div className='space-x-2'>
+					<div className='w-36 space-x-2'>
 						{/* Update button */}
 						<Button onClick={() => handleCityFormEdit(row.original)} variant='outline' size='miniIcon' className='hover:bg-white hover:text-emerald-400'>
 							<Pencil className='h-5 w-5' strokeWidth='1.5' />
@@ -145,18 +165,18 @@ function ProductCities() {
 							<Button
 								onClick={() => {
 									setOpenDialog(true);
-                                    setCityDialog({
-                                        id: Number(row.original.id),
-                                        name: row.original.city,
-                                        title: SettingsConfig.dialog.title,
-                                        subtitle: SettingsConfig.dialog.possibleRevertion,
-                                        message: (
-                                            <div className='flex flex-col space-y-2'>
-                                                <div className='text-md flex flex-row font-bold text-slate-900'>{row.original.city}</div>
-                                                <div className='flex flex-row'>{SettingsConfig.dialog.city.citySoftDelete}</div>
-                                            </div>
-                                        )
-                                    });
+									setCityDialog({
+										id: Number(row.original.id),
+										name: row.original.city,
+										title: SettingsConfig.dialog.title,
+										subtitle: SettingsConfig.dialog.possibleRevertion,
+										message: (
+											<div className='flex flex-col space-y-2'>
+												<div className='text-md flex flex-row font-bold text-slate-900'>{row.original.city}</div>
+												<div className='flex flex-row'>{SettingsConfig.dialog.city.citySoftDelete}</div>
+											</div>
+										)
+									});
 									setDialogAction('removeSoft');
 								}}
 								variant='outline'
@@ -168,18 +188,18 @@ function ProductCities() {
 							<Button
 								onClick={() => {
 									setOpenDialog(true);
-                                    setCityDialog({
-                                        id: Number(row.original.id),
-                                        name: row.original.city,
-                                        title: SettingsConfig.dialog.title,
-                                        subtitle: SettingsConfig.dialog.possibleRevertion,
-                                        message: (
-                                            <div className='flex flex-col space-y-2'>
-                                                <div className='text-md flex flex-row font-bold text-slate-900'>{row.original.city}</div>
-                                                <div className='flex flex-row'>{SettingsConfig.dialog.city.cityRestore}</div>
-                                            </div>
-                                        )
-                                    });
+									setCityDialog({
+										id: Number(row.original.id),
+										name: row.original.city,
+										title: SettingsConfig.dialog.title,
+										subtitle: SettingsConfig.dialog.possibleRevertion,
+										message: (
+											<div className='flex flex-col space-y-2'>
+												<div className='text-md flex flex-row font-bold text-slate-900'>{row.original.city}</div>
+												<div className='flex flex-row'>{SettingsConfig.dialog.city.cityRestore}</div>
+											</div>
+										)
+									});
 									setDialogAction('restore');
 								}}
 								variant='outline'
@@ -270,20 +290,91 @@ function ProductCities() {
 				return <>{capitalize(row.original.state)}</>;
 			}
 		},
-		{
-			header: SettingsConfig.sections.cities.tableHeaders[4],
-			id: 'actions',
+        {
+			header: SettingsConfig.sections.cities.tableHeaders[5],
+			accessorKey: 'actions',
 			cell: ({ row }) => {
 				return (
-					<div>
+					<div className='w-36 space-x-2'>
 						{/* Update button */}
-						<Button onClick={() => handleCityFormEdit(row.original)} variant='outline' size='miniIcon' className='hover:bg-white hover:text-emerald-400'>
+						<Button onClick={() => handleStateFormEdit(row.original)} variant='outline' size='miniIcon' className='hover:bg-white hover:text-emerald-400'>
 							<Pencil className='h-5 w-5' strokeWidth='1.5' />
+						</Button>
+						{/* Remove soft and restore */}
+						{row.original.deletedAt === null ? (
+							<Button
+								onClick={() => {
+									setOpenDialog(true);
+									setCityDialog({
+										id: Number(row.original.id),
+										name: row.original.state,
+										title: SettingsConfig.dialog.title,
+										subtitle: SettingsConfig.dialog.possibleRevertion,
+										message: (
+											<div className='flex flex-col space-y-2'>
+												<div className='text-md flex flex-row font-bold text-slate-900'>{row.original.state}</div>
+												<div className='flex flex-row'>{SettingsConfig.dialog.state.stateDelete}</div>
+											</div>
+										)
+									});
+									setDialogAction('removeSoft');
+								}}
+								variant='outline'
+								size='miniIcon'
+								className='hover:bg-white hover:text-rose-400'>
+								<Trash2 className='h-5 w-5' strokeWidth='1.5' />
+							</Button>
+						) : (
+							<Button
+								onClick={() => {
+									setOpenDialog(true);
+									setCityDialog({
+										id: Number(row.original.id),
+										name: row.original.state,
+										title: SettingsConfig.dialog.title,
+										subtitle: SettingsConfig.dialog.possibleRevertion,
+										message: (
+											<div className='flex flex-col space-y-2'>
+												<div className='text-md flex flex-row font-bold text-slate-900'>{row.original.state}</div>
+												<div className='flex flex-row'>{SettingsConfig.dialog.state.stateRestore}</div>
+											</div>
+										)
+									});
+									setDialogAction('restore');
+								}}
+								variant='outline'
+								size='miniIcon'
+								className='hover:bg-white hover:text-emerald-400'>
+								<CheckCircle className='h-5 w-5' strokeWidth='1.5' />
+							</Button>
+						)}
+						{/* Remove button */}
+						<Button
+							onClick={() => {
+								setOpenDialog(true);
+								setCityDialog({
+									id: Number(row.original.id),
+									name: row.original.state,
+									title: SettingsConfig.dialog.title,
+									subtitle: SettingsConfig.dialog.impossibleRevertion,
+									message: (
+										<div className='flex flex-col space-y-2'>
+											<div className='text-md flex flex-row font-bold text-slate-900'>{row.original.state}</div>
+											<div className='flex flex-row'>{SettingsConfig.dialog.state.stateDelete}</div>
+										</div>
+									)
+								});
+								setDialogAction('remove');
+							}}
+							variant='outline'
+							size='miniIcon'
+							className='hover:bg-white hover:text-rose-400'>
+							<BadgeX className='h-5 w-5' strokeWidth='1.5' />
 						</Button>
 					</div>
 				);
 			}
-		}
+        }
 	];
 	// #endregion
 	// #region Forms
@@ -291,6 +382,7 @@ function ProductCities() {
 		resolver: zodResolver(citiesSchema),
 		defaultValues: {
 			city: '',
+			state: '',
 			zip: ''
 		}
 	});
@@ -299,16 +391,17 @@ function ProductCities() {
 		resolver: zodResolver(citiesSchema),
 		defaultValues: {
 			city: '',
+			state: '',
 			zip: ''
 		}
 	});
 
 	function handleCityCreate(values: z.infer<typeof citiesSchema>) {
-		console.log(values);
 		CitiesServices.create(values).then((response) => {
 			if (response.statusCode === 200) {
 				setUpdateCities(Math.random());
 				cityForm.reset();
+				setStatesSelectKey(Math.random());
 				toast({ title: response.statusCode, description: response.message, variant: 'success', duration: 5000 });
 			}
 			if (response.statusCode > 399) toast({ title: response.statusCode, description: response.message, variant: 'destructive', duration: 5000 });
@@ -332,6 +425,7 @@ function ProductCities() {
 	function handleCityFormEdit(city: ICity) {
 		setCitySelected(city);
 		cityEditForm.reset();
+		cityEditForm.setValue('state', city.state);
 		cityEditForm.setValue('city', city.city);
 		cityEditForm.setValue('zip', city.zip);
 		setShowCityEditForm(true);
@@ -339,7 +433,10 @@ function ProductCities() {
 
 	function handleCityCancel(event: FormEvent<HTMLButtonElement>, task: 'create' | 'update') {
 		event.preventDefault();
-		if (task === 'create') cityForm.reset();
+		if (task === 'create') {
+			cityForm.reset();
+			cityForm.setValue('state', '');
+		}
 		if (task === 'update') {
 			cityEditForm.reset();
 			setShowCityEditForm(false);
@@ -371,17 +468,17 @@ function ProductCities() {
 		});
 	}
 
-    function restore(id: number) {
-        CitiesServices.restore(id).then((response) => {
-            if (response.statusCode === 200) {
-                toast({ title: response.statusCode, description: response.message, variant: 'success', duration: 5000 });
-                setUpdateCities(Math.random());
-                setOpenDialog(false);
-            }
-            if (response.statusCode > 399) toast({ title: response.statusCode, description: response.message, variant: 'destructive', duration: 5000 });
-            if (response instanceof Error) toast({ title: 'Error', description: '500 Internal Server Error | ' + response.message, variant: 'destructive', duration: 5000 });
-        });
-    }
+	function restore(id: number) {
+		CitiesServices.restore(id).then((response) => {
+			if (response.statusCode === 200) {
+				toast({ title: response.statusCode, description: response.message, variant: 'success', duration: 5000 });
+				setUpdateCities(Math.random());
+				setOpenDialog(false);
+			}
+			if (response.statusCode > 399) toast({ title: response.statusCode, description: response.message, variant: 'destructive', duration: 5000 });
+			if (response instanceof Error) toast({ title: 'Error', description: '500 Internal Server Error | ' + response.message, variant: 'destructive', duration: 5000 });
+		});
+	}
 	// #endregion
 	return (
 		<div className='space-y-2'>
@@ -406,6 +503,31 @@ function ProductCities() {
 									<form onSubmit={cityForm.handleSubmit(handleCityCreate)} className='flex w-full flex-col space-y-6'>
 										<FormField
 											control={cityForm.control}
+											name='state'
+											render={({ field }) => (
+												<div className='flex flex-col'>
+													<FormItem className='w-2/3 space-y-1'>
+														<Select key={statesSelectKey} value={field.value} onValueChange={(event) => field.onChange(event)}>
+															<FormControl>
+																<SelectTrigger className='h-8'>
+																	<SelectValue placeholder={<span className='text-muted-foreground'>{SettingsConfig.sections.cities.form.statePlaceholder}</span>} />
+																</SelectTrigger>
+															</FormControl>
+															<SelectContent>
+																{states.map((el) => (
+																	<SelectItem key={el.id} value={el.state} className='text-sm'>
+																		{capitalize(el.state)}
+																	</SelectItem>
+																))}
+															</SelectContent>
+														</Select>
+													</FormItem>
+													<FormMessage className='pt-2 text-xs font-light' />
+												</div>
+											)}
+										/>
+										<FormField
+											control={cityForm.control}
 											name='city'
 											render={({ field }) => (
 												<div className='flex flex-col'>
@@ -423,7 +545,7 @@ function ProductCities() {
 											name='zip'
 											render={({ field }) => (
 												<div className='flex flex-col'>
-													<FormItem className='w-1/3'>
+													<FormItem className='w-2/3'>
 														<FormControl>
 															<Input {...field} type='text' placeholder={SettingsConfig.sections.cities.form.zipPlaceholder} className='h-8' />
 														</FormControl>
@@ -453,6 +575,31 @@ function ProductCities() {
 									<div className='flex flex-row'>
 										<Form {...cityEditForm}>
 											<form onSubmit={cityEditForm.handleSubmit(handleCityUpdate)} className='flex w-full flex-col space-y-6'>
+												<FormField
+													control={cityEditForm.control}
+													name='state'
+													render={({ field }) => (
+														<div className='flex flex-col'>
+															<FormItem className='w-2/3 space-y-1'>
+																<Select key={statesSelectKey} value={field.value} onValueChange={(event) => field.onChange(event)}>
+																	<FormControl>
+																		<SelectTrigger className='h-8'>
+																			<SelectValue placeholder={<span className='text-muted-foreground'>{SettingsConfig.sections.cities.form.statePlaceholder}</span>} />
+																		</SelectTrigger>
+																	</FormControl>
+																	<SelectContent>
+																		{states.map((el) => (
+																			<SelectItem key={el.id} value={el.state} className='text-sm'>
+																				{capitalize(el.state)}
+																			</SelectItem>
+																		))}
+																	</SelectContent>
+																</Select>
+															</FormItem>
+															<FormMessage className='pt-2 text-xs font-light' />
+														</div>
+													)}
+												/>
 												<FormField
 													control={cityEditForm.control}
 													name='city'
@@ -497,11 +644,20 @@ function ProductCities() {
 						)}
 					</div>
 				</div>
-				<div className='flex flex-col'>
+				<div className='flex flex-row gap-8'>
+					{/* SECTION: States list */}
 					<Card className='space-y-2 overflow-x-auto px-4 py-4 lg:w-2/3'>
 						<span className='text-base font-medium text-slate-700'>{SettingsConfig.sections.cities.list.states}</span>
 						<DataTable columns={stateColumns} data={states} rowsPerPage={10} tableFor='users' />
 					</Card>
+                    {/* SECTION: City form */}
+					<div className='flex w-1/3 flex-col space-y-6'>
+                        {/* SECTION: Create State */}
+                        <div className='flex flex-col space-y-4 pb-2'>
+                            <div className='flex flex-row text-base font-medium text-slate-500'>{SettingsConfig.sections.cities.form.stateTitle}</div>
+                            <div className='flex flex-row'></div>
+                        </div>
+                    </div>
 				</div>
 			</div>
 			{/* SECTION: Dialog */}

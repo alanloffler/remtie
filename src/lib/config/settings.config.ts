@@ -17,33 +17,39 @@ export const SettingsConfig = {
 			list: 'Lista'
 		}
 	},
-    dialog: {
-        city: {
-            cityDelete: 'La ciudad va a ser eliminada permanentemente de la base de datos.',
-            citySoftDelete: 'La ciudad va a ser eliminada de la base de datos.',
-            cityRestore: 'La ciudad va a ser restaurada de la base de datos.',
-        },
-        impossibleRevertion: 'Esta acción es posible de revertir por el administrador',
-        possibleRevertion: 'Esta acción es posible de revertir por el administrador',
-        title: '¿Estás realmente seguro?',
-    },
+	dialog: {
+		city: {
+			cityDelete: 'La ciudad va a ser eliminada permanentemente de la base de datos.',
+			citySoftDelete: 'La ciudad va a ser eliminada de la base de datos.',
+			cityRestore: 'La ciudad va a ser restaurada de la base de datos.'
+		},
+		state: {
+			stateDelete: 'La provincia va a ser eliminada permanentemente de la base de datos.',
+			stateSoftDelete: 'La provincia va a ser eliminada de la base de datos.',
+			stateRestore: 'La provincia va a ser restaurada de la base de datos.'
+		},
+		impossibleRevertion: 'Esta acción es posible de revertir por el administrador',
+		possibleRevertion: 'Esta acción es posible de revertir por el administrador',
+		title: '¿Estás realmente seguro?'
+	},
 	sections: {
 		businessType: 'Tipo de negocio',
 		categoriesType: 'Tipo de categoría',
 		cities: {
 			form: {
 				cityTitle: 'Crear ciudad',
-                cityPlaceholder: 'Nombre',
-                editCityTitle: 'Editar ciudad',
+				cityPlaceholder: 'Nombre',
+				editCityTitle: 'Editar ciudad',
 				stateTitle: 'Crear provincia',
-                zipPlaceholder: 'Código Postal',
+				statePlaceholder: 'Seleccione provincia',
+				zipPlaceholder: 'Código Postal'
 			},
 			list: {
 				cities: 'Ciudades',
 				states: 'Provincias'
 			},
-			tableHeaders: ['#', 'Ciudad', 'Provincia', 'CP', 'Estado'],
-			title: 'Gestión de ciudades'
+			tableHeaders: ['#', 'Ciudad', 'Provincia', 'CP', 'Estado', 'Acciones'],
+			title: 'Gestión de ciudades y provincias'
 		},
 		dashboardLimit: {
 			title: 'Límite de propiedades'

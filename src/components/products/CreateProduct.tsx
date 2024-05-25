@@ -18,13 +18,17 @@ import z from 'zod';
 import { BusinessServices } from '@/services/business.services';
 import { ButtonsConfig } from '@/lib/config/buttons.config';
 import { CategoriesServices } from '@/services/categories.services';
+import { CitiesServices } from '@/services/cities.services';
 import { FieldValues, FormProvider, useForm } from 'react-hook-form';
 import { FormEvent, useEffect, useState } from 'react';
 import { IBusiness, ICategory } from '@/lib/interfaces/inputs.interface';
+import { ICity } from '@/lib/interfaces/city.interface';
 import { IImage } from '@/lib/interfaces/image.interface';
+import { IState } from '@/lib/interfaces/state.interface';
 import { ImageServices } from '@/services/image.services';
 import { ProductsConfig } from '@/lib/config/products.config';
 import { ProductsServices } from '@/services/products.services';
+import { StatesServices } from '@/services/states.services';
 import { getImageURL } from '@/lib/image-util';
 import { imageFormSchema } from '@/lib/schemas/image.schema';
 import { propertySchema } from '@/lib/schemas/property.schema';
@@ -40,11 +44,17 @@ function CreateProduct() {
 	const [categories, setCategories] = useState<ICategory[]>([]);
 	const [categoriesKey, setCategoriesKey] = useState<number>(0);
 	const [chosenImage, setChosenImage] = useState<string>('');
+	const [cities, setCities] = useState<ICity[]>([]);
+	const [citiesSelect, setCitiesSelect] = useState<ICity[]>([]);
+    const [citySelectDisabled, setCitySelectDisabled] = useState<boolean>(true);
+	const [citiesSelectKey, setCitiesSelectKey] = useState<number>(0);
 	const [imageDialog, setImageDialog] = useState<IImage>({ id: 0, name: '', propertyId: 0, deletedAt: '' });
+	const [images, setImages] = useState<IImage[]>([]);
 	const [openDialog, setOpenDialog] = useState<boolean>(false);
 	const [propertyCreated, setPropertyCreated] = useState<boolean>(false);
 	const [propertyId, setPropertyId] = useState<number>(0);
-	const [images, setImages] = useState<IImage[]>([]);
+	const [statesSelectKey, setStatesSelectKey] = useState<number>(0);
+	const [statesSelect, setStatesSelect] = useState<IState[]>([]);
 	const capitalize = useCapitalize();
 	const navigate = useNavigate();
 
@@ -74,14 +84,39 @@ function CreateProduct() {
 	// #region Load data
 	useEffect(() => {
 		BusinessServices.findAllUI().then((response) => {
-			setBusiness(response);
-			setBusinessKey(Math.random());
+			if (!response.statusCode) {
+				setBusiness(response);
+				setBusinessKey(Math.random());
+			}
+			if (response.statusCode > 399) toast({ title: response.statusCode, description: response.message, variant: 'destructive', duration: 5000 });
+			if (response instanceof Error) toast({ title: 'Error', description: '500 Internal Server Error | ' + response.message, variant: 'destructive', duration: 5000 });
 		});
 		CategoriesServices.findAllUI().then((response) => {
-			setCategories(response);
-			setCategoriesKey(Math.random());
+			if (!response.statusCode) {
+				setCategories(response);
+				setCategoriesKey(Math.random());
+			}
+			if (response.statusCode > 399) toast({ title: response.statusCode, description: response.message, variant: 'destructive', duration: 5000 });
+			if (response instanceof Error) toast({ title: 'Error', description: '500 Internal Server Error | ' + response.message, variant: 'destructive', duration: 5000 });
 		});
-	}, [propertyId, propertyForm]);
+		CitiesServices.findAll().then((response) => {
+			if (!response.statusCode) {
+				setCitiesSelect(response);
+				setCities(response);
+				setCitiesSelectKey(Math.random());
+			}
+			if (response.statusCode > 399) toast({ title: response.statusCode, description: response.message, variant: 'destructive', duration: 5000 });
+			if (response instanceof Error) toast({ title: 'Error', description: '500 Internal Server Error | ' + response.message, variant: 'destructive', duration: 5000 });
+		});
+		StatesServices.findAll().then((response) => {
+			if (!response.statusCode) {
+				setStatesSelect(response);
+				setStatesSelectKey(Math.random());
+			}
+			if (response.statusCode > 399) toast({ title: response.statusCode, description: response.message, variant: 'destructive', duration: 5000 });
+			if (response instanceof Error) toast({ title: 'Error', description: '500 Internal Server Error | ' + response.message, variant: 'destructive', duration: 5000 });
+		});
+	}, [propertyForm]);
 	// #endregion
 	// #region Form actions
 	function handleSubmitProduct(values: z.infer<typeof propertySchema>) {
@@ -133,6 +168,17 @@ function CreateProduct() {
 	function handleInputChange(event: FormEvent<HTMLInputElement>) {
 		setChosenImage(event.currentTarget.value.split('\\')[2]);
 	}
+
+	function fillZipCode(event: string) {
+		propertyForm.setValue('zip', citiesSelect.find((city) => city.city === event)?.zip || '');
+	}
+
+    function filterCitiesByState(state: string) {
+        setCitySelectDisabled(false);
+        setCitiesSelectKey(Math.random());
+        setCitiesSelect(cities.filter((city) => city.state === state));
+        propertyForm.setValue('city', '');
+    }
 	// #endregion
 	return (
 		<main className='flex-1 animate-fadeIn overflow-y-auto'>
@@ -255,7 +301,70 @@ function CreateProduct() {
 										<Separator className='mt-2' />
 									</div>
 									<div className='flex flex-row gap-6 md:flex-row md:gap-6'>
-										<div className='flex w-2/3 flex-row md:w-2/3 md:flex-col'>
+										<div className='flex w-full flex-row md:w-1/2 md:flex-col'>
+											<FormField
+												control={propertyForm.control}
+												name='state'
+												render={({ field }) => (
+													<FormItem className='w-full space-y-1'>
+														<FormLabel className='font-semibold text-slate-500'>{ProductsConfig.form.state}</FormLabel>
+														<Select key={statesSelectKey} onValueChange={(event) => {
+                                                            field.onChange(event);
+                                                            filterCitiesByState(event);
+                                                        }}>
+															<FormControl>
+																<SelectTrigger>
+																	<SelectValue placeholder='' />
+																</SelectTrigger>
+															</FormControl>
+															<SelectContent>
+																{statesSelect.map((el) => (
+																	<SelectItem key={el.id} value={el.state} className='text-sm'>
+																		{capitalize(el.state)}
+																	</SelectItem>
+																))}
+															</SelectContent>
+														</Select>
+														<FormMessage />
+													</FormItem>
+												)}
+											/>
+										</div>
+										<div className='flex w-full flex-row md:w-1/2 md:flex-col'>
+											<FormField
+												control={propertyForm.control}
+												name='city'
+												render={({ field }) => (
+													<FormItem className='w-full space-y-1'>
+														<FormLabel className='font-semibold text-slate-500'>{ProductsConfig.form.city}</FormLabel>
+														<Select
+                                                            disabled={citySelectDisabled}
+															key={citiesSelectKey}
+															onValueChange={(event) => {
+																field.onChange(event);
+																fillZipCode(event);
+															}}>
+															<FormControl>
+																<SelectTrigger>
+																	<SelectValue placeholder='' />
+																</SelectTrigger>
+															</FormControl>
+															<SelectContent>
+																{citiesSelect.map((el) => (
+																	<SelectItem key={el.id} value={el.city} className='text-sm'>
+																		{capitalize(el.city)}
+																	</SelectItem>
+																))}
+															</SelectContent>
+														</Select>
+														<FormMessage />
+													</FormItem>
+												)}
+											/>
+										</div>
+									</div>
+									<div className='flex flex-row gap-6 md:flex-row md:gap-6'>
+										<div className='flex w-full flex-row md:w-1/2 md:flex-col'>
 											<FormField
 												control={propertyForm.control}
 												name='street'
@@ -270,39 +379,7 @@ function CreateProduct() {
 												)}
 											/>
 										</div>
-										<div className='flex w-auto flex-row md:w-1/3 md:flex-col'>
-											<FormField
-												control={propertyForm.control}
-												name='city'
-												render={({ field }) => (
-													<FormItem className='w-full space-y-1'>
-														<FormLabel className='font-semibold text-slate-500'>{ProductsConfig.form.city}</FormLabel>
-														<FormControl>
-															<Input placeholder='' {...field} />
-														</FormControl>
-														<FormMessage />
-													</FormItem>
-												)}
-											/>
-										</div>
-									</div>
-									<div className='flex flex-row gap-6 md:flex-row md:gap-6'>
-										<div className='flex w-2/3 flex-row md:w-2/3 md:flex-col'>
-											<FormField
-												control={propertyForm.control}
-												name='state'
-												render={({ field }) => (
-													<FormItem className='w-full space-y-1'>
-														<FormLabel className='font-semibold text-slate-500'>{ProductsConfig.form.state}</FormLabel>
-														<FormControl>
-															<Input placeholder='' {...field} />
-														</FormControl>
-														<FormMessage />
-													</FormItem>
-												)}
-											/>
-										</div>
-										<div className='flex w-auto flex-row md:w-1/3 md:flex-col'>
+										<div className='flex w-full flex-row md:w-1/2 md:flex-col'>
 											<FormField
 												control={propertyForm.control}
 												name='zip'
@@ -310,7 +387,7 @@ function CreateProduct() {
 													<FormItem className='w-full space-y-1'>
 														<FormLabel className='font-semibold text-slate-500'>{ProductsConfig.form.zip}</FormLabel>
 														<FormControl>
-															<Input type='text' {...field} />
+															<Input disabled type='text' {...field} />
 														</FormControl>
 														<FormMessage />
 													</FormItem>

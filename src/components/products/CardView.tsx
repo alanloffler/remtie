@@ -134,7 +134,7 @@ function CardView({ type, properties, getProducts }: { type?: string; properties
 									<div className='flex flex-row text-slate-600'>
 										<div className='flex flex-row items-center space-x-2'>
 											<MapPin className='h-4 w-4' strokeWidth='1.5' />
-											<span className='text-sm'>{`${property.street} - ${property.city}`}</span>
+											<span className='text-sm'>{`${property.street} - ${capitalize(property.city)}`}</span>
 										</div>
 									</div>
 									{(store.getState().role === Roles.ADMIN || type === 'client') && (

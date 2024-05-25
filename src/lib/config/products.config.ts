@@ -56,8 +56,8 @@ export const ProductsConfig = {
             lastUpdate: 'Última actualización realizada el',
             sentence: {
                 goToProperty: 'Ver la propiedad',
-                creation: ['Creado por ', ' el ', ],
-                location: ['Ubicado en ', ', '],
+                creation: ['Creada por ', ' el ', ],
+                location: ['Ubicada en ', ', '],
             }
         }
     },

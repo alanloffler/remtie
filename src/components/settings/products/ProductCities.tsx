@@ -9,18 +9,20 @@ import { Form, FormControl, FormField, FormItem, FormMessage } from '@/component
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Separator } from '@/components/ui/separator';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { toast } from '@/components/ui/use-toast';
 // App
 import { ButtonsConfig } from '@/lib/config/buttons.config';
+import { ChangeEvent, FormEvent, useEffect, useState } from 'react';
 import { CitiesServices } from '@/services/cities.services';
 import { ColumnDef } from '@tanstack/react-table';
-import { FormEvent, useEffect, useState } from 'react';
 import { ICity } from '@/lib/interfaces/city.interface';
 import { IDialog } from '@/lib/interfaces/dialog.interface';
 import { IState } from '@/lib/interfaces/state.interface';
 import { SettingsConfig } from '@/lib/config/settings.config';
 import { StatesServices } from '@/services/states.services';
 import { citiesSchema } from '@/lib/schemas/cities.schema';
+import { statesSchema } from '@/lib/schemas/states.schema';
 import { useCapitalize } from '@/hooks/useCapitalize';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
@@ -28,26 +30,32 @@ import { zodResolver } from '@hookform/resolvers/zod';
 // React component
 function ProductCities() {
 	const [cities, setCities] = useState<ICity[]>([]);
+	const [citiesSearch, setCitiesSearch] = useState<ICity[]>([]);
 	const [cityDialog, setCityDialog] = useState<IDialog>({ id: 0, name: '', title: '', subtitle: '', message: <span></span> });
 	const [citySelected, setCitySelected] = useState<ICity>({} as ICity);
-	const [dialogAction, setDialogAction] = useState<string>('');
+	const [dialogAction, setDialogAction] = useState<{ action: string; content: string }>({ action: '', content: '' });
 	const [openDialog, setOpenDialog] = useState<boolean>(false);
 	const [showCityEditForm, setShowCityEditForm] = useState<boolean>(false);
+	const [showStateEditForm, setShowStateEditForm] = useState<boolean>(false);
+	const [stateSelected, setStateSelected] = useState<IState>({} as IState);
 	const [states, setStates] = useState<IState[]>([]);
+	const [statesForSelect, setStatesForSelect] = useState<IState[]>([]);
+	const [statesSearch, setStatesSearch] = useState<IState[]>([]);
 	const [statesSelectKey, setStatesSelectKey] = useState<number>(0);
 	const [updateCities, setUpdateCities] = useState<number>(0);
-	// const [statesSelect, setStatesSelect] = useState<IState[]>([]);
+	const [updateStates, setUpdateStates] = useState<number>(0);
 	const capitalize = useCapitalize();
 
 	// #region Load data
-
 	useEffect(() => {
 		function getCities() {
 			CitiesServices.findAllAdmin().then((response) => {
 				if (!response.statusCode) {
 					setCities(response);
+					setCitiesSearch(response);
 				}
-				// TODO MANAGE ERROR
+				if (response.statusCode > 399) toast({ title: response.statusCode, description: response.message, variant: 'destructive', duration: 5000 });
+				if (response instanceof Error) toast({ title: 'Error', description: '500 Internal Server Error | ' + response.message, variant: 'destructive', duration: 5000 });
 			});
 		}
 
@@ -59,14 +67,27 @@ function ProductCities() {
 			StatesServices.findAllAdmin().then((response) => {
 				if (!response.statusCode) {
 					setStates(response);
-					setStatesSelectKey(Math.random());
-					// TODO MANAGE ERROR
+					setStatesSearch(response);
 				}
+				if (response.statusCode > 399) toast({ title: response.statusCode, description: response.message, variant: 'destructive', duration: 5000 });
+				if (response instanceof Error) toast({ title: 'Error', description: '500 Internal Server Error | ' + response.message, variant: 'destructive', duration: 5000 });
+			});
+		}
+
+		function getStatesForSelect() {
+			StatesServices.findAll().then((response) => {
+				if (!response.statusCode) {
+					setStatesForSelect(response);
+					setStatesSelectKey(Math.random());
+				}
+				if (response.statusCode > 399) toast({ title: response.statusCode, description: response.message, variant: 'destructive', duration: 5000 });
+				if (response instanceof Error) toast({ title: 'Error', description: '500 Internal Server Error | ' + response.message, variant: 'destructive', duration: 5000 });
 			});
 		}
 
 		getStates();
-	}, []);
+		getStatesForSelect();
+	}, [updateStates]);
 	// #endregion
 	// #region Table
 	const cityColumns: ColumnDef<ICity>[] = [
@@ -99,7 +120,7 @@ function ProductCities() {
 				);
 			},
 			cell: ({ row }) => {
-				return <div className={'h-3 w-3 items-center justify-center rounded-full border pl-1 ' + (row.original.deletedAt === null ? 'border-emerald-400 bg-emerald-300' : 'border-red-400 bg-red-300')}></div>;
+				return <div className={`h-3 w-3 items-center justify-center rounded-full border pl-1 ${row.original.deletedAt === null ? 'border-emerald-400 bg-emerald-300' : 'border-red-400 bg-red-300'}`}></div>;
 			}
 		},
 		{
@@ -157,80 +178,110 @@ function ProductCities() {
 				return (
 					<div className='w-36 space-x-2'>
 						{/* Update button */}
-						<Button onClick={() => handleCityFormEdit(row.original)} variant='outline' size='miniIcon' className='hover:bg-white hover:text-emerald-400'>
-							<Pencil className='h-5 w-5' strokeWidth='1.5' />
-						</Button>
+						<TooltipProvider>
+							<Tooltip>
+								<TooltipTrigger asChild>
+									<Button onClick={() => handleCityFormEdit(row.original)} variant='outline' size='miniIcon' className='hover:bg-white hover:text-emerald-400'>
+										<Pencil className='h-5 w-5' strokeWidth='1.5' />
+									</Button>
+								</TooltipTrigger>
+								<TooltipContent>{ButtonsConfig.actions.edit}</TooltipContent>
+							</Tooltip>
+						</TooltipProvider>
 						{/* Remove soft and restore */}
 						{row.original.deletedAt === null ? (
-							<Button
-								onClick={() => {
-									setOpenDialog(true);
-									setCityDialog({
-										id: Number(row.original.id),
-										name: row.original.city,
-										title: SettingsConfig.dialog.title,
-										subtitle: SettingsConfig.dialog.possibleRevertion,
-										message: (
-											<div className='flex flex-col space-y-2'>
-												<div className='text-md flex flex-row font-bold text-slate-900'>{row.original.city}</div>
-												<div className='flex flex-row'>{SettingsConfig.dialog.city.citySoftDelete}</div>
-											</div>
-										)
-									});
-									setDialogAction('removeSoft');
-								}}
-								variant='outline'
-								size='miniIcon'
-								className='hover:bg-white hover:text-rose-400'>
-								<Trash2 className='h-5 w-5' strokeWidth='1.5' />
-							</Button>
+							<TooltipProvider>
+								<Tooltip>
+									<TooltipTrigger asChild>
+										<Button
+											onClick={() => {
+												setOpenDialog(true);
+												setCityDialog({
+													id: Number(row.original.id),
+													name: row.original.city,
+													title: SettingsConfig.dialog.title,
+													subtitle: SettingsConfig.dialog.possibleRevertion,
+													message: (
+														<div className='flex flex-col space-y-2'>
+															<div className='text-md flex flex-row font-bold text-slate-900'>{row.original.city}</div>
+															<div className='flex flex-row'>{SettingsConfig.dialog.city.citySoftDelete}</div>
+														</div>
+													)
+												});
+												setDialogAction({ action: 'removeSoft', content: 'city' });
+											}}
+											variant='outline'
+											size='miniIcon'
+											className='hover:bg-white hover:text-rose-400'>
+											<Trash2 className='h-5 w-5' strokeWidth='1.5' />
+										</Button>
+									</TooltipTrigger>
+									<TooltipContent>{ButtonsConfig.actions.delete}</TooltipContent>
+								</Tooltip>
+							</TooltipProvider>
 						) : (
-							<Button
-								onClick={() => {
-									setOpenDialog(true);
-									setCityDialog({
-										id: Number(row.original.id),
-										name: row.original.city,
-										title: SettingsConfig.dialog.title,
-										subtitle: SettingsConfig.dialog.possibleRevertion,
-										message: (
-											<div className='flex flex-col space-y-2'>
-												<div className='text-md flex flex-row font-bold text-slate-900'>{row.original.city}</div>
-												<div className='flex flex-row'>{SettingsConfig.dialog.city.cityRestore}</div>
-											</div>
-										)
-									});
-									setDialogAction('restore');
-								}}
-								variant='outline'
-								size='miniIcon'
-								className='hover:bg-white hover:text-emerald-400'>
-								<CheckCircle className='h-5 w-5' strokeWidth='1.5' />
-							</Button>
+							<TooltipProvider>
+								<Tooltip>
+									<TooltipTrigger asChild>
+										<Button
+											onClick={() => {
+												setOpenDialog(true);
+												setCityDialog({
+													id: Number(row.original.id),
+													name: row.original.city,
+													title: SettingsConfig.dialog.title,
+													subtitle: SettingsConfig.dialog.possibleRevertion,
+													message: (
+														<div className='flex flex-col space-y-2'>
+															<div className='text-md flex flex-row font-bold text-slate-900'>{row.original.city}</div>
+															<div className='flex flex-row'>{SettingsConfig.dialog.city.cityRestore}</div>
+														</div>
+													)
+												});
+												setDialogAction({ action: 'restore', content: 'city' });
+											}}
+											variant='outline'
+											size='miniIcon'
+											className='hover:bg-white hover:text-emerald-400'>
+											<CheckCircle className='h-5 w-5' strokeWidth='1.5' />
+										</Button>
+									</TooltipTrigger>
+									<TooltipContent>{ButtonsConfig.actions.restore}</TooltipContent>
+								</Tooltip>
+							</TooltipProvider>
 						)}
 						{/* Remove button */}
-						<Button
-							onClick={() => {
-								setOpenDialog(true);
-								setCityDialog({
-									id: Number(row.original.id),
-									name: row.original.city,
-									title: SettingsConfig.dialog.title,
-									subtitle: SettingsConfig.dialog.impossibleRevertion,
-									message: (
-										<div className='flex flex-col space-y-2'>
-											<div className='text-md flex flex-row font-bold text-slate-900'>{row.original.city}</div>
-											<div className='flex flex-row'>{SettingsConfig.dialog.city.cityDelete}</div>
-										</div>
-									)
-								});
-								setDialogAction('remove');
-							}}
-							variant='outline'
-							size='miniIcon'
-							className='hover:bg-white hover:text-rose-400'>
-							<BadgeX className='h-5 w-5' strokeWidth='1.5' />
-						</Button>
+						<TooltipProvider>
+							<Tooltip>
+								<TooltipTrigger asChild>
+									<Button
+										onClick={() => {
+											setOpenDialog(true);
+											setCityDialog({
+												id: Number(row.original.id),
+												name: row.original.city,
+												title: SettingsConfig.dialog.title,
+												subtitle: SettingsConfig.dialog.impossibleRevertion,
+												message: (
+													<div className='flex flex-col space-y-2'>
+														<div className='text-md flex flex-row font-bold text-slate-900'>{row.original.city}</div>
+														<div className='flex flex-row'>{SettingsConfig.dialog.city.cityDelete}</div>
+													</div>
+												)
+											});
+											setDialogAction({ action: 'remove', content: 'city' });
+										}}
+										variant='outline'
+										size='miniIcon'
+										className='hover:bg-white hover:text-rose-400'>
+										<BadgeX className='h-5 w-5' strokeWidth='1.5' />
+									</Button>
+								</TooltipTrigger>
+								<TooltipContent>
+									<p>{ButtonsConfig.actions.deletePermanent}</p>
+								</TooltipContent>
+							</Tooltip>
+						</TooltipProvider>
 					</div>
 				);
 			}
@@ -269,7 +320,7 @@ function ProductCities() {
 			cell: ({ row }) => {
 				return (
 					<div className=''>
-						<div className={'flex h-3 w-3 items-center rounded-full border pl-1 ' + (row.original.deletedAt !== null ? 'border-emerald-400 bg-emerald-300' : 'border-slate-300/50 bg-input')}></div>
+						<div className={`flex h-3 w-3 items-center rounded-full border pl-1 ${row.original.deletedAt === null ? 'border-emerald-400 bg-emerald-300' : 'border-red-400 bg-red-300'}`}></div>
 					</div>
 				);
 			}
@@ -290,91 +341,119 @@ function ProductCities() {
 				return <>{capitalize(row.original.state)}</>;
 			}
 		},
-        {
+		{
 			header: SettingsConfig.sections.cities.tableHeaders[5],
 			accessorKey: 'actions',
 			cell: ({ row }) => {
 				return (
 					<div className='w-36 space-x-2'>
 						{/* Update button */}
-						<Button onClick={() => handleStateFormEdit(row.original)} variant='outline' size='miniIcon' className='hover:bg-white hover:text-emerald-400'>
-							<Pencil className='h-5 w-5' strokeWidth='1.5' />
-						</Button>
+						<TooltipProvider>
+							<Tooltip>
+								<TooltipTrigger asChild>
+									<Button onClick={() => handleStateFormEdit(row.original)} variant='outline' size='miniIcon' className='hover:bg-white hover:text-emerald-400'>
+										<Pencil className='h-5 w-5' strokeWidth='1.5' />
+									</Button>
+								</TooltipTrigger>
+								<TooltipContent>{ButtonsConfig.actions.edit}</TooltipContent>
+							</Tooltip>
+						</TooltipProvider>
 						{/* Remove soft and restore */}
 						{row.original.deletedAt === null ? (
-							<Button
-								onClick={() => {
-									setOpenDialog(true);
-									setCityDialog({
-										id: Number(row.original.id),
-										name: row.original.state,
-										title: SettingsConfig.dialog.title,
-										subtitle: SettingsConfig.dialog.possibleRevertion,
-										message: (
-											<div className='flex flex-col space-y-2'>
-												<div className='text-md flex flex-row font-bold text-slate-900'>{row.original.state}</div>
-												<div className='flex flex-row'>{SettingsConfig.dialog.state.stateDelete}</div>
-											</div>
-										)
-									});
-									setDialogAction('removeSoft');
-								}}
-								variant='outline'
-								size='miniIcon'
-								className='hover:bg-white hover:text-rose-400'>
-								<Trash2 className='h-5 w-5' strokeWidth='1.5' />
-							</Button>
+							<TooltipProvider>
+								<Tooltip>
+									<TooltipTrigger asChild>
+										<Button
+											onClick={() => {
+												setOpenDialog(true);
+												setCityDialog({
+													id: Number(row.original.id),
+													name: row.original.state,
+													title: SettingsConfig.dialog.title,
+													subtitle: SettingsConfig.dialog.possibleRevertion,
+													message: (
+														<div className='flex flex-col space-y-2'>
+															<div className='text-md flex flex-row font-bold text-slate-900'>{row.original.state}</div>
+															<div className='flex flex-row'>{SettingsConfig.dialog.state.stateDelete}</div>
+														</div>
+													)
+												});
+												setDialogAction({ action: 'removeSoft', content: 'state' });
+											}}
+											variant='outline'
+											size='miniIcon'
+											className='hover:bg-white hover:text-rose-400'>
+											<Trash2 className='h-5 w-5' strokeWidth='1.5' />
+										</Button>
+									</TooltipTrigger>
+									<TooltipContent>{ButtonsConfig.actions.delete}</TooltipContent>
+								</Tooltip>
+							</TooltipProvider>
 						) : (
-							<Button
-								onClick={() => {
-									setOpenDialog(true);
-									setCityDialog({
-										id: Number(row.original.id),
-										name: row.original.state,
-										title: SettingsConfig.dialog.title,
-										subtitle: SettingsConfig.dialog.possibleRevertion,
-										message: (
-											<div className='flex flex-col space-y-2'>
-												<div className='text-md flex flex-row font-bold text-slate-900'>{row.original.state}</div>
-												<div className='flex flex-row'>{SettingsConfig.dialog.state.stateRestore}</div>
-											</div>
-										)
-									});
-									setDialogAction('restore');
-								}}
-								variant='outline'
-								size='miniIcon'
-								className='hover:bg-white hover:text-emerald-400'>
-								<CheckCircle className='h-5 w-5' strokeWidth='1.5' />
-							</Button>
+							<TooltipProvider>
+								<Tooltip>
+									<TooltipTrigger asChild>
+										<Button
+											onClick={() => {
+												setOpenDialog(true);
+												setCityDialog({
+													id: Number(row.original.id),
+													name: row.original.state,
+													title: SettingsConfig.dialog.title,
+													subtitle: SettingsConfig.dialog.possibleRevertion,
+													message: (
+														<div className='flex flex-col space-y-2'>
+															<div className='text-md flex flex-row font-bold text-slate-900'>{row.original.state}</div>
+															<div className='flex flex-row'>{SettingsConfig.dialog.state.stateRestore}</div>
+														</div>
+													)
+												});
+												setDialogAction({ action: 'restore', content: 'state' });
+											}}
+											variant='outline'
+											size='miniIcon'
+											className='hover:bg-white hover:text-emerald-400'>
+											<CheckCircle className='h-5 w-5' strokeWidth='1.5' />
+										</Button>
+									</TooltipTrigger>
+									<TooltipContent>{ButtonsConfig.actions.restore}</TooltipContent>
+								</Tooltip>
+							</TooltipProvider>
 						)}
 						{/* Remove button */}
-						<Button
-							onClick={() => {
-								setOpenDialog(true);
-								setCityDialog({
-									id: Number(row.original.id),
-									name: row.original.state,
-									title: SettingsConfig.dialog.title,
-									subtitle: SettingsConfig.dialog.impossibleRevertion,
-									message: (
-										<div className='flex flex-col space-y-2'>
-											<div className='text-md flex flex-row font-bold text-slate-900'>{row.original.state}</div>
-											<div className='flex flex-row'>{SettingsConfig.dialog.state.stateDelete}</div>
-										</div>
-									)
-								});
-								setDialogAction('remove');
-							}}
-							variant='outline'
-							size='miniIcon'
-							className='hover:bg-white hover:text-rose-400'>
-							<BadgeX className='h-5 w-5' strokeWidth='1.5' />
-						</Button>
+						<TooltipProvider>
+							<Tooltip>
+								<TooltipTrigger asChild>
+									<Button
+										onClick={() => {
+											setOpenDialog(true);
+											setCityDialog({
+												id: Number(row.original.id),
+												name: row.original.state,
+												title: SettingsConfig.dialog.title,
+												subtitle: SettingsConfig.dialog.impossibleRevertion,
+												message: (
+													<div className='flex flex-col space-y-2'>
+														<div className='text-md flex flex-row font-bold text-slate-900'>{row.original.state}</div>
+														<div className='flex flex-row'>{SettingsConfig.dialog.state.stateDelete}</div>
+													</div>
+												)
+											});
+											setDialogAction({ action: 'remove', content: 'state' });
+										}}
+										variant='outline'
+										size='miniIcon'
+										className='hover:bg-white hover:text-rose-400'>
+										<BadgeX className='h-5 w-5' strokeWidth='1.5' />
+									</Button>
+								</TooltipTrigger>
+								<TooltipContent>{ButtonsConfig.actions.deletePermanent}</TooltipContent>
+							</Tooltip>
+						</TooltipProvider>
 					</div>
 				);
 			}
-        }
+		}
 	];
 	// #endregion
 	// #region Forms
@@ -396,6 +475,20 @@ function ProductCities() {
 		}
 	});
 
+	const stateForm = useForm<z.infer<typeof statesSchema>>({
+		resolver: zodResolver(statesSchema),
+		defaultValues: {
+			state: ''
+		}
+	});
+
+	const stateEditForm = useForm<z.infer<typeof statesSchema>>({
+		resolver: zodResolver(statesSchema),
+		defaultValues: {
+			state: ''
+		}
+	});
+	// Cities
 	function handleCityCreate(values: z.infer<typeof citiesSchema>) {
 		CitiesServices.create(values).then((response) => {
 			if (response.statusCode === 200) {
@@ -442,9 +535,78 @@ function ProductCities() {
 			setShowCityEditForm(false);
 		}
 	}
+	// States
+	function handleStateCreate(values: z.infer<typeof statesSchema>) {
+		StatesServices.create(values).then((response) => {
+			if (response.statusCode === 200) {
+				setUpdateStates(Math.random());
+				stateForm.reset();
+				toast({ title: response.statusCode, description: response.message, variant: 'success', duration: 5000 });
+			}
+			if (response.statusCode > 399) toast({ title: response.statusCode, description: response.message, variant: 'destructive', duration: 5000 });
+			if (response instanceof Error) toast({ title: 'Error', description: '500 Internal Server Error | ' + response.message, variant: 'destructive', duration: 5000 });
+		});
+	}
+
+	function handleStateUpdate(values: z.infer<typeof statesSchema>) {
+		StatesServices.update(stateSelected.id, values).then((response) => {
+			if (response.statusCode === 200) {
+				setUpdateStates(Math.random());
+				stateEditForm.reset();
+				setShowStateEditForm(false);
+				toast({ title: response.statusCode, description: response.message, variant: 'success', duration: 5000 });
+			}
+			if (response.statusCode > 399) toast({ title: response.statusCode, description: response.message, variant: 'destructive', duration: 5000 });
+			if (response instanceof Error) toast({ title: 'Error', description: '500 Internal Server Error | ' + response.message, variant: 'destructive', duration: 5000 });
+		});
+	}
+
+	function handleStateFormEdit(state: IState) {
+		setStateSelected(state);
+		stateEditForm.reset();
+		stateEditForm.setValue('state', state.state);
+		setShowStateEditForm(true);
+	}
+
+	function handleStateCancel(event: FormEvent<HTMLButtonElement>, task: 'create' | 'update') {
+		event.preventDefault();
+		if (task === 'create') {
+			stateForm.reset();
+			stateForm.setValue('state', '');
+		}
+		if (task === 'update') {
+			stateEditForm.reset();
+			setShowStateEditForm(false);
+		}
+	}
+	// Search
+	function citySearch(event: ChangeEvent<HTMLInputElement>) {
+		const value = event.target.value;
+		if (value === '') {
+			setCitiesSearch(cities);
+			return;
+		} else {
+			const citiesSearch: ICity[] = cities.filter((city) => city.city.toLowerCase().includes(value.toLowerCase()));
+			setCitiesSearch(citiesSearch);
+			return;
+		}
+	}
+
+	function stateSearch(event: ChangeEvent<HTMLInputElement>) {
+		const value = event.target.value;
+		if (value === '') {
+			setStatesSearch(states);
+			return;
+		} else {
+			const statesSearch: IState[] = states.filter((state) => state.state.toLowerCase().includes(value.toLowerCase()));
+			setStatesSearch(statesSearch);
+			return;
+		}
+	}
 	// #endregion
 	// #region Dialog actions
-	function remove(id: number) {
+	// City
+	function removeCity(id: number) {
 		CitiesServices.remove(id).then((response) => {
 			if (response.statusCode === 200) {
 				toast({ title: response.statusCode, description: response.message, variant: 'success', duration: 5000 });
@@ -456,7 +618,7 @@ function ProductCities() {
 		});
 	}
 
-	function removeSoft(id: number) {
+	function removeSoftCity(id: number) {
 		CitiesServices.removeSoft(id).then((response) => {
 			if (response.statusCode === 200) {
 				toast({ title: response.statusCode, description: response.message, variant: 'success', duration: 5000 });
@@ -468,11 +630,47 @@ function ProductCities() {
 		});
 	}
 
-	function restore(id: number) {
+	function restoreCity(id: number) {
 		CitiesServices.restore(id).then((response) => {
 			if (response.statusCode === 200) {
 				toast({ title: response.statusCode, description: response.message, variant: 'success', duration: 5000 });
 				setUpdateCities(Math.random());
+				setOpenDialog(false);
+			}
+			if (response.statusCode > 399) toast({ title: response.statusCode, description: response.message, variant: 'destructive', duration: 5000 });
+			if (response instanceof Error) toast({ title: 'Error', description: '500 Internal Server Error | ' + response.message, variant: 'destructive', duration: 5000 });
+		});
+	}
+	// State
+	function removeState(id: number) {
+		StatesServices.remove(id).then((response) => {
+			if (response.statusCode === 200) {
+				toast({ title: response.statusCode, description: response.message, variant: 'success', duration: 5000 });
+				setUpdateStates(Math.random());
+				setOpenDialog(false);
+			}
+			if (response.statusCode > 399) toast({ title: response.statusCode, description: response.message, variant: 'destructive', duration: 5000 });
+			if (response instanceof Error) toast({ title: 'Error', description: '500 Internal Server Error | ' + response.message, variant: 'destructive', duration: 5000 });
+		});
+	}
+
+	function removeSoftState(id: number) {
+		StatesServices.removeSoft(id).then((response) => {
+			if (response.statusCode === 200) {
+				toast({ title: response.statusCode, description: response.message, variant: 'success', duration: 5000 });
+				setUpdateStates(Math.random());
+				setOpenDialog(false);
+			}
+			if (response.statusCode > 399) toast({ title: response.statusCode, description: response.message, variant: 'destructive', duration: 5000 });
+			if (response instanceof Error) toast({ title: 'Error', description: '500 Internal Server Error | ' + response.message, variant: 'destructive', duration: 5000 });
+		});
+	}
+
+	function restoreState(id: number) {
+		StatesServices.restore(id).then((response) => {
+			if (response.statusCode === 200) {
+				toast({ title: response.statusCode, description: response.message, variant: 'success', duration: 5000 });
+				setUpdateStates(Math.random());
 				setOpenDialog(false);
 			}
 			if (response.statusCode > 399) toast({ title: response.statusCode, description: response.message, variant: 'destructive', duration: 5000 });
@@ -487,14 +685,18 @@ function ProductCities() {
 			<span className='text-base font-medium text-slate-500'>{SettingsConfig.sections.cities.title}</span>
 			{/* SECTION: Table and forms */}
 			<div className='flex flex-col space-y-8 pt-4'>
-				<div className='flex flex-row gap-8'>
+				{/* SECTION: Cities */}
+				<div className='flex flex-col gap-8 md:flex-row lg:flex-row'>
 					{/* SECTION: City list */}
-					<Card className='space-y-2 overflow-x-auto px-4 py-4 lg:w-2/3'>
-						<span className='text-base font-medium text-slate-700'>{SettingsConfig.sections.cities.list.cities}</span>
-						<DataTable columns={cityColumns} data={cities} rowsPerPage={10} tableFor='users' />
+					<Card className='w-full space-y-4 overflow-x-auto px-4 py-4 md:w-2/3 lg:w-2/3'>
+						<div className='flex flex-row items-center justify-between'>
+							<span className='text-base font-medium text-slate-700'>{SettingsConfig.sections.cities.list.cities}</span>
+							<Input onChange={(e) => citySearch(e)} type='search' placeholder={ButtonsConfig.search} className='h-8 w-[200px]' />
+						</div>
+						<DataTable columns={cityColumns} data={citiesSearch} rowsPerPage={10} tableFor='users' />
 					</Card>
 					{/* SECTION: City form */}
-					<div className='flex w-1/3 flex-col space-y-6'>
+					<div className='flex w-full flex-col space-y-6 md:w-1/3 lg:w-1/3'>
 						{/* Create city */}
 						<div className='flex flex-col space-y-4 pb-2'>
 							<div className='flex flex-row text-base font-medium text-slate-500'>{SettingsConfig.sections.cities.form.cityTitle}</div>
@@ -514,7 +716,7 @@ function ProductCities() {
 																</SelectTrigger>
 															</FormControl>
 															<SelectContent>
-																{states.map((el) => (
+																{statesForSelect.map((el) => (
 																	<SelectItem key={el.id} value={el.state} className='text-sm'>
 																		{capitalize(el.state)}
 																	</SelectItem>
@@ -644,20 +846,88 @@ function ProductCities() {
 						)}
 					</div>
 				</div>
-				<div className='flex flex-row gap-8'>
+				{/* SECTION: States */}
+				<div className='flex flex-col gap-8 md:flex-row lg:flex-row'>
 					{/* SECTION: States list */}
-					<Card className='space-y-2 overflow-x-auto px-4 py-4 lg:w-2/3'>
-						<span className='text-base font-medium text-slate-700'>{SettingsConfig.sections.cities.list.states}</span>
-						<DataTable columns={stateColumns} data={states} rowsPerPage={10} tableFor='users' />
+					<Card className='w-full space-y-4 overflow-x-auto px-4 py-4 md:w-2/3 lg:w-2/3'>
+						<div className='flex flex-row items-center justify-between'>
+							<span className='text-base font-medium text-slate-700'>{SettingsConfig.sections.cities.list.states}</span>
+							<Input onChange={(e) => stateSearch(e)} type='search' placeholder={ButtonsConfig.search} className='h-8 w-[200px]' />
+						</div>
+						<DataTable columns={stateColumns} data={statesSearch} rowsPerPage={10} tableFor='users' />
 					</Card>
-                    {/* SECTION: City form */}
-					<div className='flex w-1/3 flex-col space-y-6'>
-                        {/* SECTION: Create State */}
-                        <div className='flex flex-col space-y-4 pb-2'>
-                            <div className='flex flex-row text-base font-medium text-slate-500'>{SettingsConfig.sections.cities.form.stateTitle}</div>
-                            <div className='flex flex-row'></div>
-                        </div>
-                    </div>
+					{/* SECTION: City form */}
+					<div className='flex w-full flex-col space-y-6 md:w-1/3 lg:w-1/3'>
+						{/* SECTION: Create State */}
+						<div className='flex flex-col space-y-4 pb-2'>
+							<div className='flex flex-row text-base font-medium text-slate-500'>{SettingsConfig.sections.cities.form.stateTitle}</div>
+							<div className='flex flex-row'>
+								<Form {...stateForm}>
+									<form onSubmit={stateForm.handleSubmit(handleStateCreate)} className='flex w-full flex-col space-y-6'>
+										<FormField
+											control={stateForm.control}
+											name='state'
+											render={({ field }) => (
+												<div className='flex flex-col'>
+													<FormItem className='w-2/3'>
+														<FormControl>
+															<Input {...field} type='text' placeholder={SettingsConfig.sections.cities.form.cityPlaceholder} className='h-8' />
+														</FormControl>
+													</FormItem>
+													<FormMessage className='pt-2 text-xs font-light' />
+												</div>
+											)}
+										/>
+										<div className='flex flex-row justify-start gap-6'>
+											<Button type='submit' variant='default' size='sm'>
+												{ButtonsConfig.actions.save}
+											</Button>
+											<Button onClick={(event) => handleStateCancel(event, 'create')} variant='ghost' size='sm'>
+												{ButtonsConfig.actions.cancel}
+											</Button>
+										</div>
+									</form>
+								</Form>
+							</div>
+						</div>
+						{/* Update city */}
+						{showStateEditForm && (
+							<>
+								<Separator />
+								<div className='flex animate-fadeIn flex-col space-y-4'>
+									<div className='flex flex-row text-base font-medium text-slate-500'>{SettingsConfig.sections.cities.form.editStateTitle}</div>
+									<div className='flex flex-row'>
+										<Form {...stateEditForm}>
+											<form onSubmit={stateEditForm.handleSubmit(handleStateUpdate)} className='flex w-full flex-col space-y-6'>
+												<FormField
+													control={stateEditForm.control}
+													name='state'
+													render={({ field }) => (
+														<div className='flex flex-col'>
+															<FormItem className='w-2/3'>
+																<FormControl>
+																	<Input {...field} type='text' placeholder={SettingsConfig.sections.cities.form.statePlaceholder} className='h-8' />
+																</FormControl>
+															</FormItem>
+															<FormMessage className='pt-2 text-xs font-light' />
+														</div>
+													)}
+												/>
+												<div className='flex flex-row justify-start gap-6'>
+													<Button type='submit' variant='default' size='sm'>
+														{ButtonsConfig.actions.save}
+													</Button>
+													<Button onClick={(event) => handleStateCancel(event, 'update')} variant='ghost' size='sm'>
+														{ButtonsConfig.actions.cancel}
+													</Button>
+												</div>
+											</form>
+										</Form>
+									</div>
+								</div>
+							</>
+						)}
+					</div>
 				</div>
 			</div>
 			{/* SECTION: Dialog */}
@@ -673,18 +943,35 @@ function ProductCities() {
 							<Button variant='ghost' onClick={() => setOpenDialog(false)}>
 								{ButtonsConfig.actions.cancel}
 							</Button>
-							{dialogAction === 'removeSoft' && (
-								<Button variant='delete' onClick={() => removeSoft(cityDialog.id)}>
+							{/* City */}
+							{dialogAction.action === 'removeSoft' && dialogAction.content === 'city' && (
+								<Button variant='delete' onClick={() => removeSoftCity(cityDialog.id)}>
 									{ButtonsConfig.actions.delete}
 								</Button>
 							)}
-							{dialogAction === 'restore' && (
-								<Button variant='default' onClick={() => restore(cityDialog.id)}>
+							{dialogAction.action === 'restore' && dialogAction.content === 'city' && (
+								<Button variant='default' onClick={() => restoreCity(cityDialog.id)}>
 									{ButtonsConfig.actions.restore}
 								</Button>
 							)}
-							{dialogAction === 'remove' && (
-								<Button variant='delete' onClick={() => remove(cityDialog.id)}>
+							{dialogAction.action === 'remove' && dialogAction.content === 'city' && (
+								<Button variant='delete' onClick={() => removeCity(cityDialog.id)}>
+									{ButtonsConfig.actions.delete}
+								</Button>
+							)}
+							{/* State */}
+							{dialogAction.action === 'removeSoft' && dialogAction.content === 'state' && (
+								<Button variant='delete' onClick={() => removeSoftState(cityDialog.id)}>
+									{ButtonsConfig.actions.delete}
+								</Button>
+							)}
+							{dialogAction.action === 'restore' && dialogAction.content === 'state' && (
+								<Button variant='default' onClick={() => restoreState(cityDialog.id)}>
+									{ButtonsConfig.actions.restore}
+								</Button>
+							)}
+							{dialogAction.action === 'remove' && dialogAction.content === 'state' && (
+								<Button variant='delete' onClick={() => removeState(cityDialog.id)}>
 									{ButtonsConfig.actions.delete}
 								</Button>
 							)}

@@ -1,5 +1,5 @@
 // Icons: Lucide (https://lucide.dev/)
-import { ArrowUpDown, BadgeX, CheckCircle, Pencil, Trash2 } from 'lucide-react';
+import { ArrowUpDown, BadgeX, Check, CheckCircle, Pencil, Trash2 } from 'lucide-react';
 // UI: Shadcn-ui (https://ui.shadcn.com/)
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
@@ -711,8 +711,8 @@ function ProductCities() {
 													<FormItem className='w-2/3 space-y-1'>
 														<Select key={statesSelectKey} value={field.value} onValueChange={(event) => field.onChange(event)}>
 															<FormControl>
-																<SelectTrigger className='h-8'>
-																	<SelectValue placeholder={<span className='text-muted-foreground'>{SettingsConfig.sections.cities.form.statePlaceholder}</span>} />
+																<SelectTrigger className='h-8 placeholder:text-muted-foreground'>
+																	<SelectValue placeholder={SettingsConfig.sections.cities.form.statePlaceholder} />
 																</SelectTrigger>
 															</FormControl>
 															<SelectContent>
@@ -757,10 +757,11 @@ function ProductCities() {
 											)}
 										/>
 										<div className='flex flex-row justify-start gap-6'>
-											<Button type='submit' variant='default' size='sm'>
+											<Button type='submit' variant='ghost' size='sm' className='text-xs h-8 gap-2 border border-slate-300 bg-slate-300/50 p-2 text-slate-400 hover:border-slate-400/50 hover:bg-slate-300 hover:text-slate-500'>
+                                            <Check className='h-3 w-3' strokeWidth='2' />
 												{ButtonsConfig.actions.save}
 											</Button>
-											<Button onClick={(event) => handleCityCancel(event, 'create')} variant='ghost' size='sm'>
+											<Button onClick={(event) => handleCityCancel(event, 'create')} variant='ghost' size='sm' className='h-8 text-xs'>
 												{ButtonsConfig.actions.cancel}
 											</Button>
 										</div>
@@ -831,10 +832,11 @@ function ProductCities() {
 													)}
 												/>
 												<div className='flex flex-row justify-start gap-6'>
-													<Button type='submit' variant='default' size='sm'>
-														{ButtonsConfig.actions.save}
+													<Button type='submit' variant='ghost' size='sm' className='text-xs h-8 gap-2 border border-slate-300 bg-slate-300/50 p-2 text-slate-400 hover:border-slate-400/50 hover:bg-slate-300 hover:text-slate-500'>
+                                                        <Check className='h-3 w-3' strokeWidth='2' />
+                                                        {ButtonsConfig.actions.save}
 													</Button>
-													<Button onClick={(event) => handleCityCancel(event, 'update')} variant='ghost' size='sm'>
+													<Button onClick={(event) => handleCityCancel(event, 'update')} variant='ghost' size='sm' className='h-8 text-xs'>
 														{ButtonsConfig.actions.cancel}
 													</Button>
 												</div>
@@ -879,10 +881,11 @@ function ProductCities() {
 											)}
 										/>
 										<div className='flex flex-row justify-start gap-6'>
-											<Button type='submit' variant='default' size='sm'>
-												{ButtonsConfig.actions.save}
+											<Button type='submit' variant='ghost' size='sm' className='text-xs h-8 gap-2 border border-slate-300 bg-slate-300/50 p-2 text-slate-400 hover:border-slate-400/50 hover:bg-slate-300 hover:text-slate-500'>
+												<Check className='h-3 w-3' strokeWidth='2' />
+                                                {ButtonsConfig.actions.save}
 											</Button>
-											<Button onClick={(event) => handleStateCancel(event, 'create')} variant='ghost' size='sm'>
+											<Button onClick={(event) => handleStateCancel(event, 'create')} variant='ghost' size='sm' className='h-8 text-xs'>
 												{ButtonsConfig.actions.cancel}
 											</Button>
 										</div>
@@ -914,10 +917,11 @@ function ProductCities() {
 													)}
 												/>
 												<div className='flex flex-row justify-start gap-6'>
-													<Button type='submit' variant='default' size='sm'>
+													<Button type='submit' variant='ghost' size='sm' className='text-xs h-8 gap-2 border border-slate-300 bg-slate-300/50 p-2 text-slate-400 hover:border-slate-400/50 hover:bg-slate-300 hover:text-slate-500'>
+                                                        <Check className='h-3 w-3' strokeWidth='2' />
 														{ButtonsConfig.actions.save}
 													</Button>
-													<Button onClick={(event) => handleStateCancel(event, 'update')} variant='ghost' size='sm'>
+													<Button onClick={(event) => handleStateCancel(event, 'update')} variant='ghost' size='sm' className='h-8 text-xs'>
 														{ButtonsConfig.actions.cancel}
 													</Button>
 												</div>

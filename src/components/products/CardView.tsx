@@ -4,10 +4,11 @@ import { BadgeX, CalendarPlus, CheckCircle, FileText, MapPin, Pencil, Trash2 } f
 import { Button } from '@/components/ui/button';
 import { Card, CardHeader, CardContent, CardFooter, CardTitle, CardDescription } from '@/components/ui/card';
 import { Dialog, DialogHeader, DialogFooter, DialogContent, DialogTitle, DialogDescription } from '@/components/ui/dialog';
-import { toast } from '@/components/ui/use-toast';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+import { toast } from '@/components/ui/use-toast';
 // App
 import CurrencyFormat from '@/components/shared/CurrencyFormat';
+import FavButton from '../shared/FavButton';
 import { IDialog } from '@/lib/interfaces/dialog.interface';
 import { IProperty } from '@/lib/interfaces/property.interface';
 import { ProductsServices } from '@/services/products.services';
@@ -15,10 +16,8 @@ import { ReactElement, useState } from 'react';
 import { Roles } from '@/lib/constants';
 import { store } from '@/services/store.services';
 import { useCapitalize } from '@/hooks/useCapitalize';
-import { useNavigate } from 'react-router-dom';
 import { useLocaleDate } from '@/hooks/useLocaleDate';
-// import { FavoritesServices } from '@/services/favorite.services';
-import FavButton from '../shared/FavButton';
+import { useNavigate } from 'react-router-dom';
 // .env constants
 const APP_URL: string = import.meta.env.VITE_APP_URL;
 // React component
@@ -174,6 +173,7 @@ function CardView({ type, properties, getProducts }: { type?: string; properties
 												</Button>
 											</TooltipTrigger>
 											<TooltipContent>
+                                                {/* TODO HERE! */}
 												<p>Ver detalle</p>
 											</TooltipContent>
 										</Tooltip>

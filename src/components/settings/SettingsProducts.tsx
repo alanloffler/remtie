@@ -11,14 +11,14 @@ function SettingsProducts() {
 			<div className='mb-8 flex animate-fadeIn flex-col md:flex-row md:gap-6'>
 				<div className='w-full p-2 md:w-1/2'>
 					<div className='space-y-4'>
-						{/* <ProductBusinessSettings /> */}
-						{/* <ProductCategoriesSettings /> */}
+						<ProductBusinessSettings />
+						<ProductCategoriesSettings />
 					</div>
 				</div>
 				<div className='w-full p-2 md:w-1/2'>
 					<div className='space-y-4'>
-						{/* <ProductViewSettings /> */}
-						{/* <ProductRowsPerPage /> */}
+						<ProductViewSettings />
+						<ProductRowsPerPage />
 					</div>
 				</div>
 			</div>

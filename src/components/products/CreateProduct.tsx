@@ -37,6 +37,9 @@ import { useNavigate } from 'react-router-dom';
 import { zodResolver } from '@hookform/resolvers/zod';
 // .env constants
 const APP_URL: string = import.meta.env.VITE_APP_URL;
+// Google Maps
+import { APIProvider, Map, AdvancedMarker, MapMouseEvent } from '@vis.gl/react-google-maps';
+const API_KEY: string = import.meta.env.VITE_GOOGLE_MAPS_API_KEY;
 // React component
 function CreateProduct() {
 	const [business, setBusiness] = useState<IBusiness[]>([]);
@@ -46,7 +49,7 @@ function CreateProduct() {
 	const [chosenImage, setChosenImage] = useState<string>('');
 	const [cities, setCities] = useState<ICity[]>([]);
 	const [citiesSelect, setCitiesSelect] = useState<ICity[]>([]);
-    const [citySelectDisabled, setCitySelectDisabled] = useState<boolean>(true);
+	const [citySelectDisabled, setCitySelectDisabled] = useState<boolean>(true);
 	const [citiesSelectKey, setCitiesSelectKey] = useState<number>(0);
 	const [imageDialog, setImageDialog] = useState<IImage>({ id: 0, name: '', propertyId: 0, deletedAt: '' });
 	const [images, setImages] = useState<IImage[]>([]);
@@ -57,7 +60,7 @@ function CreateProduct() {
 	const [statesSelect, setStatesSelect] = useState<IState[]>([]);
 	const capitalize = useCapitalize();
 	const navigate = useNavigate();
-
+	// #region Form declaration
 	const propertyForm = useForm<z.infer<typeof propertySchema>>({
 		resolver: zodResolver(propertySchema),
 		values: {
@@ -81,6 +84,7 @@ function CreateProduct() {
 			file: undefined
 		}
 	});
+	// #endregion
 	// #region Load data
 	useEffect(() => {
 		BusinessServices.findAllUI().then((response) => {
@@ -123,7 +127,7 @@ function CreateProduct() {
 		const color = categories.find((cat) => cat.name === values.type)?.color;
 		let isActive: number;
 		values.is_active === true ? (isActive = 1) : (isActive = 0);
-		const propertyData = { ...values, color: color ? color : '', is_active: isActive };
+		const propertyData = { ...values, color: color ? color : '', is_active: isActive, ...marker };
 
 		ProductsServices.create(propertyData).then((response) => {
 			if (response.id) {
@@ -173,13 +177,38 @@ function CreateProduct() {
 		propertyForm.setValue('zip', citiesSelect.find((city) => city.city === event)?.zip || '');
 	}
 
-    function filterCitiesByState(state: string) {
-        setCitySelectDisabled(false);
-        setCitiesSelectKey(Math.random());
-        setCitiesSelect(cities.filter((city) => city.state === state));
-        propertyForm.setValue('city', '');
-    }
+	function filterCitiesByState(state: string) {
+		setCitySelectDisabled(false);
+		setCitiesSelectKey(Math.random());
+		setCitiesSelect(cities.filter((city) => city.state === state));
+		propertyForm.setValue('city', '');
+	}
 	// #endregion
+
+	// #region Google Map
+	interface IMarker {
+		lat: number;
+		lng: number;
+		key: string;
+		zoom: number;
+	}
+	const [marker, setMarker] = useState<IMarker>({} as IMarker);
+	const [addMarker, setAddMarker] = useState<boolean>(false);
+
+	function createMarker(event: MapMouseEvent) {
+		const uuid: string = self.crypto.randomUUID();
+		const newMarker: IMarker = {
+			lat: event.detail.latLng?.lat || 0,
+			lng: event.detail.latLng?.lng || 0,
+			key: `marker-${uuid}`,
+			zoom: event.map.getZoom() || 10
+		};
+		setMarker(newMarker);
+		setAddMarker(true);
+		console.log(marker);
+	}
+	// #endregion
+
 	return (
 		<main className='flex-1 animate-fadeIn overflow-y-auto'>
 			<div className='flex flex-row items-center justify-between px-8 pt-8'>
@@ -308,10 +337,12 @@ function CreateProduct() {
 												render={({ field }) => (
 													<FormItem className='w-full space-y-1'>
 														<FormLabel className='font-semibold text-slate-500'>{ProductsConfig.form.state}</FormLabel>
-														<Select key={statesSelectKey} onValueChange={(event) => {
-                                                            field.onChange(event);
-                                                            filterCitiesByState(event);
-                                                        }}>
+														<Select
+															key={statesSelectKey}
+															onValueChange={(event) => {
+																field.onChange(event);
+																filterCitiesByState(event);
+															}}>
 															<FormControl>
 																<SelectTrigger>
 																	<SelectValue placeholder='' />
@@ -338,7 +369,7 @@ function CreateProduct() {
 													<FormItem className='w-full space-y-1'>
 														<FormLabel className='font-semibold text-slate-500'>{ProductsConfig.form.city}</FormLabel>
 														<Select
-                                                            disabled={citySelectDisabled}
+															disabled={citySelectDisabled}
 															key={citiesSelectKey}
 															onValueChange={(event) => {
 																field.onChange(event);
@@ -428,6 +459,25 @@ function CreateProduct() {
 												)}
 											/>
 										</div>
+									</div>
+									{/* SECTION: Google Maps */}
+									<div className='flex flex-col pt-4'>
+										<APIProvider apiKey={API_KEY}>
+											{/* prettier-ignore */}
+											<Map 
+                                                className='w-full h-80 md:h-96 lg:h-96'
+                                                mapId='1c6903a9111fa3c3' 
+                                                defaultCenter={{ lat: -26.000694, lng: -54.57684 }} 
+                                                defaultZoom={10} 
+                                                gestureHandling={'greedy'} 
+                                                disableDefaultUI={true} 
+                                                onDblclick={(event) => createMarker(event)} 
+                                                onZoomChanged={(event) => setMarker({ ...marker, zoom: event.map.getZoom() || 10})}
+                                                disableDoubleClickZoom={true}
+                                            >
+                                                {addMarker && <AdvancedMarker position={marker} />}
+                                            </Map>
+										</APIProvider>
 									</div>
 									<div className='flex flex-row justify-end space-x-4 pt-6'>
 										<Button

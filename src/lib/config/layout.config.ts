@@ -4,6 +4,7 @@ export const LayoutConfig = {
 		menu: {
             allProducts: 'Propiedades',
 			dashboard: 'Tablero',
+            map: 'Mapa',
 			products: 'Editar Propiedades',
 			settings: 'Configuraciones',
 			users: 'Usuarios'

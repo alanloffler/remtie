@@ -9,12 +9,12 @@ import { useEffect, useState } from 'react';
 // React component
 function FavButton({ property, height }: { property: IProperty; height: number }) {
     const [isFavorite, setIsFavorite] = useState<boolean>(false);
-    
+
     useEffect(() => {
         FavoritesServices.findOne(property.id).then(response => {
             if (response.propertyId === property.id) setIsFavorite(true);
         });
-    }, [property.id]);
+    }, [property]);
     
     function handleFavorite() {
         FavoritesServices.toggleFavorite(property).then((response) => {

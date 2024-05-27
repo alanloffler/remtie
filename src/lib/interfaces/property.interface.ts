@@ -1,3 +1,4 @@
+import { IImage } from "./image.interface";
 import { IUser } from "./user.interface";
 
 export interface IProperty {
@@ -18,7 +19,12 @@ export interface IProperty {
 	created_at?: string;
 	updated_at?: string;
     deletedAt?: string;
-	[attribute: string]: string | number | boolean | undefined | IUser;
+	[attribute: string]: string | number | boolean | undefined | IUser | IImage[];
 	color: string;
     user?: IUser;
+    images: IImage[];
+    lat: number;
+    lng: number;
+    key: string;
+    zoom: number;
 }

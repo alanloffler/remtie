@@ -8,22 +8,23 @@ import { Toaster } from '@/components/ui/toaster';
 import Layout from '@/components/layout/Layout';
 import ProtectedRoutes from './components/login/ProtectedRoutes';
 import Loading2 from '@/components/shared/Loading2';
-const Login = React.lazy(() => import('./components/login/Login'));
-const Dashboard = React.lazy(() => import('./components/dashboard/Dashboard'));
-const ListUsers = React.lazy(() => import('./components/users/ListUsers'));
-const CreateUser = React.lazy(() => import('./components/users/CreateUser'));
-const UpdateUser = React.lazy(() => import('./components/users/UpdateUser'));
-const ViewUser = React.lazy(() => import('./components/users/ViewUser'));
-const ListProducts = React.lazy(() => import('./components/products/ListProducts'));
-const ListAllProducts = React.lazy(() => import('./components/products/ListAllProducts'));
-const ViewProduct = React.lazy(() => import('./components/products/ViewProduct'));
 const CreateProduct = React.lazy(() => import('./components/products/CreateProduct'));
-const UpdateProduct = React.lazy(() => import('./components/products/UpdateProduct'));
+const CreateUser = React.lazy(() => import('./components/users/CreateUser'));
+const Dashboard = React.lazy(() => import('./components/dashboard/Dashboard'));
+const ListAllProducts = React.lazy(() => import('./components/products/ListAllProducts'));
+const ListProducts = React.lazy(() => import('./components/products/ListProducts'));
+const ListUsers = React.lazy(() => import('./components/users/ListUsers'));
+const Login = React.lazy(() => import('./components/login/Login'));
+const MapProperty = React.lazy(() => import('./components/map/MapProperties'));
 const NotFound = React.lazy(() => import('./components/shared/NotFound'));
 const Settings = React.lazy(() => import('./components/settings/Settings'));
+const SettingsDashboard = React.lazy(() => import('./components/settings/SettingsDashboard'));
 const SettingsProducts = React.lazy(() => import('./components/settings/SettingsProducts'));
 const SettingsUsers = React.lazy(() => import('./components/settings/SettingsUsers'));
-const SettingsDashboard = React.lazy(() => import('./components/settings/SettingsDashboard'));
+const UpdateProduct = React.lazy(() => import('./components/products/UpdateProduct'));
+const UpdateUser = React.lazy(() => import('./components/users/UpdateUser'));
+const ViewProduct = React.lazy(() => import('./components/products/ViewProduct'));
+const ViewUser = React.lazy(() => import('./components/users/ViewUser'));
 // .env constants
 const APP_URL: string = import.meta.env.VITE_APP_URL;
 // React component
@@ -39,7 +40,8 @@ function App() {
 		{ id: 7, path: `${APP_URL}/productos/crear`, element: <CreateProduct /> },
 		{ id: 8, path: `${APP_URL}/productos/modificar/:id`, element: <UpdateProduct /> },
 		{ id: 9, path: `${APP_URL}/config`, element: <Settings /> },
-		{ id: 10, path: `${APP_URL}/tablero`, element: <Dashboard /> }
+		{ id: 10, path: `${APP_URL}/tablero`, element: <Dashboard /> },
+		{ id: 11, path: `${APP_URL}/mapa`, element: <MapProperty /> }
 	];
 
 	const settingsRoutes = [

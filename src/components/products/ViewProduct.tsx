@@ -6,8 +6,8 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
-import { toast } from '@/components/ui/use-toast';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+import { toast } from '@/components/ui/use-toast';
 // App
 import Carousel from '@/components/shared/Carousel';
 import CurrencyFormat from '@/components/shared/CurrencyFormat';
@@ -26,12 +26,12 @@ import { useCapitalize } from '@/hooks/useCapitalize';
 import { useLocaleDate } from '@/hooks/useLocaleDate';
 import { useNavigate, useParams } from 'react-router-dom';
 // .env constants
+const API_KEY: string = import.meta.env.VITE_GOOGLE_MAPS_API_KEY;
 const APP_URL: string = import.meta.env.VITE_APP_URL;
 // Google Map
 import { APIProvider, Map, AdvancedMarker } from '@vis.gl/react-google-maps';
 import { IMarker } from '@/lib/interfaces/google-map.interface';
 import { confirmMapExistence } from '@/lib/utils';
-const API_KEY: string = import.meta.env.VITE_GOOGLE_MAPS_API_KEY;
 // React component
 function ViewProduct() {
 	const propertyId = Number(useParams().id);

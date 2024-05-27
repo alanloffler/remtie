@@ -3,7 +3,7 @@ export const UsersConfig = {
 		editYourData: 'Editá tus datos'
 	},
 	dialog: {
-		impossibleRevertion: 'Esta acción es posible de revertir por el administrador',
+		impossibleRevertion: 'Esta acción es imposible de revertir',
 		possibleRevertion: 'Esta acción es posible de revertir por el administrador',
 		userDelete: 'La cuenta del usuario va a ser eliminada permanentemente de la base de datos.',
 		userSoftDelete: 'La cuenta del usuario va a ser eliminada en la base de datos, y ya no estará activa.',

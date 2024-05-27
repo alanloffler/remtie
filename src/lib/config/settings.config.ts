@@ -28,7 +28,7 @@ export const SettingsConfig = {
 			stateSoftDelete: 'La provincia va a ser eliminada de la base de datos.',
 			stateRestore: 'La provincia va a ser restaurada de la base de datos.'
 		},
-		impossibleRevertion: 'Esta acción es posible de revertir por el administrador',
+		impossibleRevertion: 'Esta acción es imposible de revertir',
 		possibleRevertion: 'Esta acción es posible de revertir por el administrador',
 		title: '¿Estás realmente seguro?'
 	},

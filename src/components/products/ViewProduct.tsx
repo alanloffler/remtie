@@ -58,7 +58,7 @@ function ViewProduct() {
 					setActive(response.is_active);
 					setShowCard(true);
 					// Google Map
-					const newMarker: IMarker = { lat: Number(response.lat), lng: Number(response.lng), key: response.key, zoom: Number(response.zoom) };
+					const newMarker: IMarker = { propertyId: response.id, lat: Number(response.lat), lng: Number(response.lng), key: response.key, zoom: Number(response.zoom) };
 					const confirmedMapExistence = confirmMapExistence(newMarker);
 					if (confirmedMapExistence) {
 						setMarker(newMarker);

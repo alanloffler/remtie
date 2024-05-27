@@ -59,7 +59,7 @@ function ListAllProducts({ type }: { type: string }) {
 	const tabActive: string = store.getState().tabActive;
 	const capitalize = useCapitalize();
 	const navigate = useNavigate();
-    const isClicked = store((state) => state.isClicked);
+	const isClicked = store((state) => state.isClicked);
 
 	const content: ReactElement | false =
 		store.getState().role === Roles.ADMIN ? (
@@ -116,7 +116,7 @@ function ListAllProducts({ type }: { type: string }) {
 				setPropertiesFiltered(props);
 				setProperties(props);
 			}
-            setShowCard(true);
+			setShowCard(true);
 			if (response.statusCode > 399) toast({ title: response.statusCode, description: response.message, variant: 'destructive', duration: 5000 });
 			if (response instanceof Error) toast({ title: 'Error', description: '500 Internal Server Error | ' + response.message, variant: 'destructive', duration: 5000 });
 		});
@@ -133,7 +133,7 @@ function ListAllProducts({ type }: { type: string }) {
 		getBusiness();
 		getCategories();
 		getProducts();
-        isClicked(0);
+		isClicked(0);
 	}, []);
 	// #endregion
 	// #region Table columns
@@ -197,7 +197,6 @@ function ListAllProducts({ type }: { type: string }) {
 				return <CurrencyFormat value={row.original.price} locale='es-AR' digits={0} className='font-semibold italic tracking-tight' />;
 			}
 		},
-		// #region Actions
 		{
 			header: ProductsConfig.headers[6],
 			id: 'actions',
@@ -227,7 +226,7 @@ function ListAllProducts({ type }: { type: string }) {
 		if (event === 'reset') {
 			setBusinessSelected('');
 			setBusinessKey(+new Date());
-            setSearchParams(updateDeletedParams(searchParams, 't'));
+			setSearchParams(updateDeletedParams(searchParams, 't'));
 		} else {
 			setBusinessSelected(event);
 			categorySelected !== '' ? setSearchParams({ c: categorySelected, t: event }) : setSearchParams({ t: event });
@@ -254,14 +253,14 @@ function ListAllProducts({ type }: { type: string }) {
 		setSearchParams([]);
 	}
 
-    function updateDeletedParams(paramsArray: URLSearchParams, param: string) {
-        const searchParamsArray = [...paramsArray.entries()];
-        const filteredParamsArray = searchParamsArray.filter(([key]) => key !== param);
-        const filteredSearchParams = filteredParamsArray.reduce((obj, [key, value]) => {
-            return { ...obj, [key]: value };
-        }, {});
-        return filteredSearchParams;
-    }
+	function updateDeletedParams(paramsArray: URLSearchParams, param: string) {
+		const searchParamsArray = [...paramsArray.entries()];
+		const filteredParamsArray = searchParamsArray.filter(([key]) => key !== param);
+		const filteredSearchParams = filteredParamsArray.reduce((obj, [key, value]) => {
+			return { ...obj, [key]: value };
+		}, {});
+		return filteredSearchParams;
+	}
 
 	useEffect(() => {
 		function applyFilters(prop: IProperty[], filterAttributes: string[], filterValues: (string | number)[], search: string) {
@@ -304,7 +303,7 @@ function ListAllProducts({ type }: { type: string }) {
 	}
 	// #endregion
 	return (
-		<main className='flex-1 overflow-y-auto animate-fadeIn'>
+		<main className='flex-1 animate-fadeIn overflow-y-auto'>
 			<div className='mx-8 mb-8 mt-8 flex flex-row items-center justify-between'>
 				<h1 className='text-2xl font-normal text-slate-600'>{LayoutConfig.sidebar.menu.allProducts}</h1>
 				<div>

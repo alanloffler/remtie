@@ -16,6 +16,6 @@ export const emptyUser: IUser = {
 };
 // Google Map
 export function confirmMapExistence(marker: IMarker) {
-    if ((marker.lat === 0 && marker.lng === 0) || marker.key === '' || marker.key === null || marker.zoom === 0) return false;
+    if (!marker.key || marker.key === '' || marker.key === null) return false;
     return true;
 }

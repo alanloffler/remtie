@@ -1,5 +1,5 @@
 // Icons: Lucide (https://lucide.dev/)
-import { EllipsisVertical, FilePenIcon, Home, LayoutDashboard, LogOut, Settings, UserRound } from 'lucide-react';
+import { EllipsisVertical, FilePenIcon, Home, LayoutDashboard, LogOut, MapPinned, Settings, UserRound } from 'lucide-react';
 // UI: Shadcn-ui (https://ui.shadcn.com/)
 import { Button } from '@/components/ui/button';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
@@ -27,10 +27,10 @@ function Sidebar() {
 	function handleClick(item: number) {
 		isClicked(item);
 		if (isOpen === true) store.getState().toggleOpen();
-        if (item === 10) {
-            sessionStorage.removeItem('sticky-menu');
-            sessionStorage.setItem('sticky-menu', '1');
-        }
+		if (item === 10) {
+			sessionStorage.removeItem('sticky-menu');
+			sessionStorage.setItem('sticky-menu', '1');
+		}
 	}
 
 	useEffect(() => {
@@ -106,25 +106,31 @@ function Sidebar() {
 				</div>
 				<div className='mt-8 grid gap-1 px-1 py-1'>
 					<Link to={`${APP_URL}/`}>
-						<Button variant='ghost' onClick={() => handleClick(0)} className={`w-full pl-2 justify-start gap-2 ${clicked === 0 && ' bg-accent'}`}>
-                            <Home size='24' strokeWidth='2' className='h-4 w-4' />
+						<Button variant='ghost' onClick={() => handleClick(0)} className={`w-full justify-start gap-2 pl-2 ${clicked === 0 && ' bg-accent'}`}>
+							<Home size='24' strokeWidth='2' className='h-4 w-4' />
 							{LayoutConfig.sidebar.menu.allProducts}
 						</Button>
 					</Link>
+					<Link to={`${APP_URL}/mapa`}>
+						<Button variant='ghost' onClick={() => handleClick(4)} className={`w-full justify-start gap-2 pl-2 ${clicked === 4 && ' bg-accent'}`}>
+							<MapPinned size='24' strokeWidth='2' className='h-4 w-4' />
+							{LayoutConfig.sidebar.menu.map}
+						</Button>
+					</Link>
 					<Link to={`${APP_URL}/tablero`}>
-						<Button variant='ghost' onClick={() => handleClick(1)} className={`w-full pl-2 justify-start gap-2 ${clicked === 1 && ' bg-accent'}`}>
+						<Button variant='ghost' onClick={() => handleClick(1)} className={`w-full justify-start gap-2 pl-2 ${clicked === 1 && ' bg-accent'}`}>
 							<LayoutDashboard size='24' strokeWidth='2' className='h-4 w-4' />
 							{LayoutConfig.sidebar.menu.dashboard}
 						</Button>
 					</Link>
 					<Link to={`${APP_URL}/productos`}>
-						<Button variant='ghost' onClick={() => handleClick(2)} className={`flex flex-row place-items-center w-full pl-2 justify-start gap-2 ${clicked === 2 && ' bg-accent'}`}>
-                        <FilePenIcon size='24' strokeWidth='2' className='h-4 w-4' />
+						<Button variant='ghost' onClick={() => handleClick(2)} className={`flex w-full flex-row place-items-center justify-start gap-2 pl-2 ${clicked === 2 && ' bg-accent'}`}>
+							<FilePenIcon size='24' strokeWidth='2' className='h-4 w-4' />
 							{LayoutConfig.sidebar.menu.products}
 						</Button>
 					</Link>
 					<Link to={`${APP_URL}/usuarios`}>
-						<Button variant='ghost' onClick={() => handleClick(3)} className={`w-full pl-2 justify-start gap-2 ${clicked === 3 && ' bg-accent'}`}>
+						<Button variant='ghost' onClick={() => handleClick(3)} className={`w-full justify-start gap-2 pl-2 ${clicked === 3 && ' bg-accent'}`}>
 							<UserRound size='24' strokeWidth='2' className='h-4 w-4' />
 							{LayoutConfig.sidebar.menu.users}
 						</Button>
@@ -133,7 +139,7 @@ function Sidebar() {
 						<>
 							<Separator className='my-4 h-[1px] bg-slate-200' />
 							<Link to={`${APP_URL}/config/productos`}>
-								<Button variant='ghost' onClick={() => handleClick(10)} className={`w-full pl-2 justify-start gap-2 ${clicked === 10 && ' bg-accent'}`}>
+								<Button variant='ghost' onClick={() => handleClick(10)} className={`w-full justify-start gap-2 pl-2 ${clicked === 10 && ' bg-accent'}`}>
 									<Settings size='24' strokeWidth='2' className='h-4 w-4' />
 									{LayoutConfig.sidebar.menu.settings}
 								</Button>

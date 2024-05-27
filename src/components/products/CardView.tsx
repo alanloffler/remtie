@@ -1,5 +1,5 @@
 // Icons: Lucide (https://lucide.dev/)
-import { BadgeX, CalendarPlus, CheckCircle, FileText, MapPin, Pencil, Trash2 } from 'lucide-react';
+import { BadgeX, CalendarPlus, CheckCircle, FileText, Image, MapPin, MapPinned, Pencil, Trash2 } from 'lucide-react';
 // UI: Shadcn-ui (https://ui.shadcn.com/)
 import { Button } from '@/components/ui/button';
 import { Card, CardHeader, CardContent, CardFooter, CardTitle, CardDescription } from '@/components/ui/card';
@@ -9,6 +9,8 @@ import { toast } from '@/components/ui/use-toast';
 // App
 import CurrencyFormat from '@/components/shared/CurrencyFormat';
 import FavButton from '../shared/FavButton';
+import { ButtonsConfig } from '@/lib/config/buttons.config';
+import { CardViewConfig } from '@/lib/config/card-view.config';
 import { IDialog } from '@/lib/interfaces/dialog.interface';
 import { IProperty } from '@/lib/interfaces/property.interface';
 import { ProductsServices } from '@/services/products.services';
@@ -28,7 +30,7 @@ function CardView({ type, properties, getProducts }: { type?: string; properties
 	const capitalize = useCapitalize();
 	const localeDate = useLocaleDate();
 	const navigate = useNavigate();
-
+	// #region Dialog buttons actions
 	async function removeSoft(id: number) {
 		ProductsServices.removeSoft(id).then((response) => {
 			if (response.statusCode === 200) {
@@ -64,34 +66,37 @@ function CardView({ type, properties, getProducts }: { type?: string; properties
 			setOpenDialog(false);
 		});
 	}
-
+	// #endregion
 	// #region Dialog
 	function handleDialog(property: IProperty, action: string) {
 		let message: ReactElement | false = false;
 		let subtitle: string = '';
 
 		if (action === 'removeSoft') {
-			subtitle = 'Esta acción es posible de revertir por el administrador';
+			subtitle = CardViewConfig.dialog.possibleRevertion;
 			message = (
-				<>
-					La propiedad <span className='text-md font-bold text-slate-900'>{property.id < 10 ? `COD/0${property.id}` : `COD/${property.id}`}</span> va a ser eliminada de la base de datos.
-				</>
+				<div className='flex flex-col'>
+					<span>{CardViewConfig.dialog.propertySoftDelete}</span>
+					<span className='text-md font-bold text-slate-900'>{property.id < 10 ? `COD/0${property.id}` : `COD/${property.id}`}</span>
+				</div>
 			);
 		}
 		if (action === 'remove') {
-			subtitle = 'Esta acción es imposible de revertir.';
+			subtitle = CardViewConfig.dialog.impossibleRevertion;
 			message = (
-				<>
-					La propiedad <span className='text-md font-bold text-slate-900'>{property.id < 10 ? `COD/0${property.id}` : `COD/${property.id}`}</span> va a ser eliminada permanentemente de la base de datos.
-				</>
+				<div className='flex flex-col'>
+					<span>{CardViewConfig.dialog.propertyDelete}</span>
+					<span className='text-md font-bold text-slate-900'>{property.id < 10 ? `COD/0${property.id}` : `COD/${property.id}`}</span>
+				</div>
 			);
 		}
 		if (action === 'restore') {
-			subtitle = 'Esta acción es posible de revertir por el administrador';
+			subtitle = CardViewConfig.dialog.possibleRevertion;
 			message = (
-				<>
-					La propiedad <span className='text-md font-bold text-slate-900'>{property.id < 10 ? `COD/0${property.id}` : `COD/${property.id}`}</span> va a ser restaurada de la base de datos.
-				</>
+				<div className='flex flex-col'>
+					<span>{CardViewConfig.dialog.propertyRestore}</span>
+					<span className='text-md font-bold text-slate-900'>{property.id < 10 ? `COD/0${property.id}` : `COD/${property.id}`}</span>
+				</div>
 			);
 		}
 
@@ -105,7 +110,7 @@ function CardView({ type, properties, getProducts }: { type?: string; properties
 		});
 		setDialogAction(action);
 	}
-
+	// #endregion
 	return (
 		<>
 			<div className='grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4'>
@@ -124,7 +129,7 @@ function CardView({ type, properties, getProducts }: { type?: string; properties
 										<div className=''>{property.type}</div>
 									</div>
 									<Button variant='ghost' size='miniIcon' className='hover:bg-transparent'>
-                                        <FavButton property={property} height={22} />
+										<FavButton property={property} height={22} />
 									</Button>
 								</div>
 								<CardHeader onClick={() => navigate(`${APP_URL}/productos/${property.id}`)} className='space-y-2 rounded-sm p-4 hover:cursor-default'>
@@ -150,8 +155,24 @@ function CardView({ type, properties, getProducts }: { type?: string; properties
 											<span className='text-sm'>{localeDate(property.created_at)}</span>
 										</div>
 									</div>
+									{property.images.length > 0 && (
+										<div className='flex flex-row items-center text-slate-600'>
+											<div className='flex flex-row items-center space-x-2'>
+												<Image className='h-4 w-4' strokeWidth='1.5' />
+												<span className='text-sm'>{property.images.length > 1 ? `${property.images.length} ${CardViewConfig.words.images}` : `${property.images.length} ${CardViewConfig.words.image}`}</span>
+											</div>
+										</div>
+									)}
+									{property.key && (
+										<div className='flex flex-row items-center text-slate-600'>
+											<div className='flex flex-row items-center space-x-2'>
+												<MapPinned className='h-4 w-4' strokeWidth='1.5' />
+												<span className='text-sm'>{CardViewConfig.words.googleMaps}</span>
+											</div>
+										</div>
+									)}
 								</CardHeader>
-								<CardContent className='px-4 py-0 pb-4'>
+								<CardContent className='space-y-2 px-4 py-0 pb-4'>
 									<div className='flex flex-row items-center justify-end space-x-4 text-sm font-semibold text-slate-700'>
 										<div className='tracking-tight'>{capitalize(property.business_type)}</div>
 										<CurrencyFormat value={property.price} locale='es-AR' digits={0} className='' />
@@ -161,7 +182,7 @@ function CardView({ type, properties, getProducts }: { type?: string; properties
 							<CardFooter className='mt-auto justify-between gap-2 bg-slate-100 p-2'>
 								<div className='flex items-center'>
 									<div className={'flex h-4 w-4 items-center rounded-full border pl-1 ' + (property.is_active ? 'border-emerald-400 bg-emerald-300' : 'border-slate-300/50 bg-input')}>
-										<span className='flex items-center pl-5 text-xs font-normal text-slate-400/70'>{property.is_active ? 'Activo' : 'Inactivo'}</span>
+										<span className='flex items-center pl-5 text-xs font-normal text-slate-400/70'>{property.is_active ? CardViewConfig.property.status.active : CardViewConfig.property.status.inactive}</span>
 									</div>
 								</div>
 								<div className='flex items-center space-x-2'>
@@ -173,8 +194,7 @@ function CardView({ type, properties, getProducts }: { type?: string; properties
 												</Button>
 											</TooltipTrigger>
 											<TooltipContent>
-                                                {/* TODO HERE! */}
-												<p>Ver detalle</p>
+												<p>{CardViewConfig.tooltip.details}</p>
 											</TooltipContent>
 										</Tooltip>
 									</TooltipProvider>
@@ -187,7 +207,7 @@ function CardView({ type, properties, getProducts }: { type?: string; properties
 													</Button>
 												</TooltipTrigger>
 												<TooltipContent>
-													<p>Editar</p>
+													<p>{CardViewConfig.tooltip.edit}</p>
 												</TooltipContent>
 											</Tooltip>
 										</TooltipProvider>
@@ -201,7 +221,7 @@ function CardView({ type, properties, getProducts }: { type?: string; properties
 													</Button>
 												</TooltipTrigger>
 												<TooltipContent>
-													<p>Eliminar</p>
+													<p>{CardViewConfig.tooltip.delete}</p>
 												</TooltipContent>
 											</Tooltip>
 										</TooltipProvider>
@@ -215,7 +235,7 @@ function CardView({ type, properties, getProducts }: { type?: string; properties
 														</Button>
 													</TooltipTrigger>
 													<TooltipContent>
-														<p>Restaurar</p>
+														<p>{CardViewConfig.tooltip.restore}</p>
 													</TooltipContent>
 												</Tooltip>
 											</TooltipProvider>
@@ -230,7 +250,7 @@ function CardView({ type, properties, getProducts }: { type?: string; properties
 													</Button>
 												</TooltipTrigger>
 												<TooltipContent>
-													<p>Eliminar permanente</p>
+													<p>{CardViewConfig.tooltip.deletePermanent}</p>
 												</TooltipContent>
 											</Tooltip>
 										</TooltipProvider>
@@ -241,7 +261,7 @@ function CardView({ type, properties, getProducts }: { type?: string; properties
 					</div>
 				))}
 			</div>
-			{/* Dialog */}
+			{/* SECTION: Dialog */}
 			<Dialog open={openDialog} onOpenChange={setOpenDialog}>
 				<DialogContent>
 					<DialogHeader>
@@ -252,21 +272,21 @@ function CardView({ type, properties, getProducts }: { type?: string; properties
 					<DialogFooter>
 						<div className='mt-6 flex flex-row gap-4'>
 							<Button variant='ghost' onClick={() => setOpenDialog(false)}>
-								Cancelar
+								{ButtonsConfig.actions.cancel}
 							</Button>
 							{dialogAction === 'removeSoft' && (
 								<Button variant='delete' onClick={() => removeSoft(propertyDialog.id)}>
-									Eliminar
+									{ButtonsConfig.actions.delete}
 								</Button>
 							)}
 							{dialogAction === 'restore' && (
 								<Button variant='default' onClick={() => restore(propertyDialog.id)}>
-									Restaurar
+									{ButtonsConfig.actions.restore}
 								</Button>
 							)}
 							{dialogAction === 'remove' && (
 								<Button variant='delete' onClick={() => remove(propertyDialog.id)}>
-									Eliminar
+									{ButtonsConfig.actions.delete}
 								</Button>
 							)}
 						</div>

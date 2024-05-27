@@ -27,8 +27,10 @@ import { useLocaleDate } from '@/hooks/useLocaleDate';
 import { useNavigate, useParams } from 'react-router-dom';
 // .env constants
 const APP_URL: string = import.meta.env.VITE_APP_URL;
-// Google Maps
+// Google Map
 import { APIProvider, Map, AdvancedMarker } from '@vis.gl/react-google-maps';
+import { IMarker } from '@/lib/interfaces/google-map.interface';
+import { confirmMapExistence } from '@/lib/utils';
 const API_KEY: string = import.meta.env.VITE_GOOGLE_MAPS_API_KEY;
 // React component
 function ViewProduct() {
@@ -44,13 +46,7 @@ function ViewProduct() {
 	const capitalize = useCapitalize();
 	const localeDate = useLocaleDate();
 	const navigate = useNavigate();
-    // Google Map
-    interface IMarker {
-		lat: number;
-		lng: number;
-		key: string;
-		zoom: number;
-	}
+	// Google Map
 	const [marker, setMarker] = useState<IMarker>({} as IMarker);
 	const [addMarker, setAddMarker] = useState<boolean>(false);
 	// #region Load data
@@ -61,15 +57,16 @@ function ViewProduct() {
 					setProperty(response);
 					setActive(response.is_active);
 					setShowCard(true);
-                    // Google Map
-                    // console.log(response.lat);
-                    // console.log(response.lng);
-                    // console.log(response.key);
-                    // console.log(response.zoom);
-
-                    setMarker({ lat: Number(response.lat), lng: Number(response.lng), key: response.key, zoom: Number(response.zoom) });
-                    setAddMarker(true);
-                    console.log(marker);
+					// Google Map
+					const newMarker: IMarker = { lat: Number(response.lat), lng: Number(response.lng), key: response.key, zoom: Number(response.zoom) };
+					const confirmedMapExistence = confirmMapExistence(newMarker);
+					if (confirmedMapExistence) {
+						setMarker(newMarker);
+						setAddMarker(true);
+					} else {
+						setAddMarker(false);
+						return;
+					}
 				}
 				if (response.statusCode > 399) toast({ title: response.statusCode, description: response.message, variant: 'destructive', duration: 5000 });
 				if (response instanceof Error) toast({ title: '1 Error', description: '500 Internal Server Error | ' + response.message, variant: 'destructive', duration: 5000 });
@@ -175,10 +172,7 @@ function ViewProduct() {
 		});
 	}
 	// #endregion
-	// #region Google Map
-
-    // #endregion
-    return (
+	return (
 		<main className='flex-1 animate-fadeIn overflow-y-auto'>
 			<div className='mx-6 mb-4 mt-6 flex flex-row items-center justify-end'>
 				<Button variant='ghost' size='sm' onClick={() => navigate(-1)}>
@@ -226,24 +220,27 @@ function ViewProduct() {
 									<Carousel images={images} />
 								</div>
 							)}
-                            {/* SECTION: Google Maps */}
-                            {/* TODO: MANAGE IF THERE IS NO LOCATION */}
-                            <div className='flex flex-row pb-4'>
-                                <APIProvider apiKey={API_KEY}>
-                                    {/* prettier-ignore */}
-                                    <Map 
+							{/* SECTION: Google Map */}
+							{addMarker && (
+								<div className='flex flex-row py-2'>
+									<APIProvider apiKey={API_KEY}>
+										{/* prettier-ignore */}
+										<Map 
                                         className='w-full h-80 md:h-96 lg:h-96'
                                         mapId='1c6903a9111fa3c3' 
                                         defaultCenter={{ lat: marker.lat, lng: marker.lng }} 
                                         defaultZoom={marker.zoom} 
+                                        mapTypeId={'roadmap'} 
                                         gestureHandling={'greedy'} 
-                                        disableDefaultUI={false}                        
+                                        disableDefaultUI={false}
+                                        controlSize={25}                        
                                     >
-                                        {addMarker && <AdvancedMarker position={marker} />}
+                                        <AdvancedMarker position={marker} />
                                     </Map>
-                                </APIProvider>
-                            </div>
-							<div className='flex flex-row items-center pt-2 text-sm text-slate-400'>{`${ProductsConfig.pages.view.lastUpdate} ${localeDate(property.updated_at)}`}</div>
+									</APIProvider>
+								</div>
+							)}
+							<div className='flex flex-row items-center pt-4 text-sm text-slate-400'>{`${ProductsConfig.pages.view.lastUpdate} ${localeDate(property.updated_at)}`}</div>
 						</CardContent>
 						<CardFooter className='mt-auto justify-between bg-slate-200/50 p-2'>
 							<div className='flex items-center space-x-2'>

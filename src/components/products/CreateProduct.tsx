@@ -39,6 +39,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 const APP_URL: string = import.meta.env.VITE_APP_URL;
 // Google Maps
 import { APIProvider, Map, AdvancedMarker, MapMouseEvent } from '@vis.gl/react-google-maps';
+import { IMarker } from '@/lib/interfaces/google-map.interface';
 const API_KEY: string = import.meta.env.VITE_GOOGLE_MAPS_API_KEY;
 // React component
 function CreateProduct() {
@@ -59,7 +60,7 @@ function CreateProduct() {
 	const [statesSelectKey, setStatesSelectKey] = useState<number>(0);
 	const [statesSelect, setStatesSelect] = useState<IState[]>([]);
 	const capitalize = useCapitalize();
-	const navigate = useNavigate();
+	const navigate = useNavigate();    
 	// #region Form declaration
 	const propertyForm = useForm<z.infer<typeof propertySchema>>({
 		resolver: zodResolver(propertySchema),
@@ -184,14 +185,7 @@ function CreateProduct() {
 		propertyForm.setValue('city', '');
 	}
 	// #endregion
-
 	// #region Google Map
-	interface IMarker {
-		lat: number;
-		lng: number;
-		key: string;
-		zoom: number;
-	}
 	const [marker, setMarker] = useState<IMarker>({} as IMarker);
 	const [addMarker, setAddMarker] = useState<boolean>(false);
 
@@ -201,14 +195,12 @@ function CreateProduct() {
 			lat: event.detail.latLng?.lat || 0,
 			lng: event.detail.latLng?.lng || 0,
 			key: `marker-${uuid}`,
-			zoom: event.map.getZoom() || 10
+			zoom: event.map.getZoom() || 0
 		};
 		setMarker(newMarker);
 		setAddMarker(true);
-		console.log(marker);
 	}
 	// #endregion
-
 	return (
 		<main className='flex-1 animate-fadeIn overflow-y-auto'>
 			<div className='flex flex-row items-center justify-between px-8 pt-8'>
@@ -469,11 +461,13 @@ function CreateProduct() {
                                                 mapId='1c6903a9111fa3c3' 
                                                 defaultCenter={{ lat: -26.000694, lng: -54.57684 }} 
                                                 defaultZoom={10} 
+                                                mapTypeId={'roadmap'}
                                                 gestureHandling={'greedy'} 
-                                                disableDefaultUI={true} 
+                                                disableDefaultUI={false} 
+                                                disableDoubleClickZoom={true}
+                                                controlSize={25}
                                                 onDblclick={(event) => createMarker(event)} 
                                                 onZoomChanged={(event) => setMarker({ ...marker, zoom: event.map.getZoom() || 10})}
-                                                disableDoubleClickZoom={true}
                                             >
                                                 {addMarker && <AdvancedMarker position={marker} />}
                                             </Map>

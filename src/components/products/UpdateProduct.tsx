@@ -40,7 +40,12 @@ import { useCapitalize } from '@/hooks/useCapitalize';
 import { useNavigate, useParams } from 'react-router-dom';
 import { zodResolver } from '@hookform/resolvers/zod';
 // .env constants
+const API_KEY: string = import.meta.env.VITE_GOOGLE_MAPS_API_KEY;
 const APP_URL: string = import.meta.env.VITE_APP_URL;
+// Google Map
+import { APIProvider, Map, AdvancedMarker, MapMouseEvent } from '@vis.gl/react-google-maps';
+import { IMarker } from '@/lib/interfaces/google-map.interface';
+import { confirmMapExistence } from '@/lib/utils';
 // React component
 function UpdateProduct() {
 	const { id } = useParams();
@@ -64,7 +69,10 @@ function UpdateProduct() {
 	const [statesSelect, setStatesSelect] = useState<IState[]>([]);
 	const [statesSelectKey, setStatesSelectKey] = useState<number>(0);
 	const [updateUI, setUpdateUI] = useState<number>(0);
-
+    // Google Map
+	const [marker, setMarker] = useState<IMarker>({} as IMarker);
+	const [addMarker, setAddMarker] = useState<boolean>(false);
+    // #region Forms declaration
 	const propertyForm = useForm<z.infer<typeof propertySchema>>({
 		resolver: zodResolver(propertySchema),
 		values: {
@@ -88,6 +96,7 @@ function UpdateProduct() {
 			file: undefined
 		}
 	});
+    // #endregion
 	// #region Load data
 	useEffect(() => {
 		ProductsServices.findOne(propertyId).then((response) => {
@@ -104,6 +113,16 @@ function UpdateProduct() {
 				propertyForm.setValue('zip', response.zip);
 				propertyForm.setValue('price', response.price);
 				propertyForm.setValue('is_active', Boolean(response.is_active));
+                // Google Map
+                const newMarker: IMarker = { propertyId: response.id, lat: Number(response.lat), lng: Number(response.lng), key: response.key, zoom: Number(response.zoom) };
+                const confirmedMapExistence = confirmMapExistence(newMarker);
+                if (confirmedMapExistence) {
+                    setMarker(newMarker);
+                    setAddMarker(true);
+                } else {
+                    setAddMarker(false);
+                    return;
+                }
 			}
 			if (response.statusCode > 399) toast({ title: response.statusCode, description: response.message, variant: 'destructive', duration: 5000 });
 			if (response instanceof Error) toast({ title: 'Error', description: '500 Internal Server Error | ' + response.message, variant: 'destructive', duration: 5000 });
@@ -159,7 +178,7 @@ function UpdateProduct() {
 	function handleSubmitProduct(values: z.infer<typeof propertySchema>) {
 		const color: string | undefined = categories.find((cat) => cat.name === values.type)?.color;
 		const isActive: number = values.is_active === true ? 1 : 0;
-		const propertyData = { ...values, color: color ? color : '', is_active: isActive };
+		const propertyData = { ...values, color: color ? color : '', is_active: isActive, lat: marker.lat, lng: marker.lng, key: marker.key, zoom: marker.zoom };
 		ProductsServices.update(propertyId, propertyData).then((response) => {
 			if (response.statusCode === 200) toast({ title: response.statusCode, description: response.message, variant: 'success', duration: 5000 });
 			if (response.statusCode > 399) toast({ title: response.statusCode, description: response.message, variant: 'destructive', duration: 5000 });
@@ -283,7 +302,21 @@ function UpdateProduct() {
         propertyForm.setValue('zip', '');
     }
 	// #endregion
-	return (
+	// #region Google Maps
+    function createMarker(event: MapMouseEvent) {
+		const uuid: string = self.crypto.randomUUID();
+		const newMarker: IMarker = {
+            propertyId: propertyId,
+			lat: event.detail.latLng?.lat || 0,
+			lng: event.detail.latLng?.lng || 0,
+			key: `marker-${uuid}`,
+			zoom: event.map.getZoom() || 0
+		};
+		setMarker(newMarker);
+		setAddMarker(true);
+	}
+    // #endregion
+    return (
 		<main className='flex-1 animate-fadeIn overflow-y-auto'>
 			<div className='flex flex-row items-center justify-between px-8 pt-8'>
 				<h1 className='text-2xl font-normal text-slate-600'>{ProductsConfig.pages.update.title}</h1>
@@ -540,7 +573,28 @@ function UpdateProduct() {
 											/>
 										</div>
 									</div>
-									<div className='flex flex-row justify-end space-x-4 pt-6'>
+                                    {/* Google Maps */}
+                                    {addMarker && <div className='flex flex-row pt-2'>
+                                        <APIProvider apiKey={API_KEY}>
+                                            {/* prettier-ignore */}
+                                            <Map 
+                                                className='w-full h-80 md:h-96 lg:h-96'
+                                                mapId='1c6903a9111fa3c3' 
+                                                defaultCenter={{ lat: marker.lat, lng: marker.lng }} 
+                                                defaultZoom={marker.zoom} 
+                                                mapTypeId={'roadmap'} 
+                                                gestureHandling={'greedy'} 
+                                                disableDefaultUI={false}
+                                                disableDoubleClickZoom={true}
+                                                controlSize={25} 
+                                                onDblclick={(event) => createMarker(event)} 
+                                                onZoomChanged={(event) => setMarker({ ...marker, zoom: event.map.getZoom() || 10})}              
+                                            >
+                                                <AdvancedMarker position={marker} />
+                                            </Map>
+                                        </APIProvider>
+                                    </div>}
+									<div className='flex flex-row justify-end space-x-4 pt-4'>
 										<Button
 											variant='ghost'
 											onClick={(e) => {
@@ -556,11 +610,10 @@ function UpdateProduct() {
 								</div>
 							</form>
 						</Form>
-						{/* working here */}
 						<div className='px-8'>
-							<Accordion type='single' defaultValue='item-1' collapsible>
+							<Accordion type='single' collapsible>
 								<AccordionItem value='item-1' className='border-none'>
-									<AccordionTrigger className='justify-start gap-2 pb-0 pt-4'>{ProductsConfig.form.addImages}</AccordionTrigger>
+									<AccordionTrigger className='justify-start gap-2 pb-0 pt-4'>{ProductsConfig.form.editImages}</AccordionTrigger>
 									<AccordionContent className='py-0'>
 										{/* SECTION: Images list */}
 										<div className='grid gap-4 pt-6'>

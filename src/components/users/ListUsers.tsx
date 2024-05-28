@@ -199,7 +199,7 @@ function ListUsers() {
 
 	async function getRoles() {
 		RolesServices.findAll().then((response) => {
-			if (response.length > 0) setRoles(response);
+			if (!response.statusCode) setRoles(response);
 			if (response.statusCode > 399) toast({ title: response.statusCode, description: response.message, variant: 'destructive', duration: 5000 });
 			if (response instanceof Error) toast({ title: 'Error', description: '500 Internal Server Error | ' + response.message, variant: 'destructive', duration: 5000 });
 		});
@@ -218,6 +218,7 @@ function ListUsers() {
 				toast({ title: response.statusCode, description: response.message, variant: 'success', duration: 5000 });
 				getAllUsers();
 				setUpdateUI(Math.random());
+                (store.getState().role === Roles.USER) ? navigate(`${APP_URL}`) : navigate(`${APP_URL}/usuarios`);
 			}
 			if (response.statusCode > 399) toast({ title: response.statusCode, description: response.message, variant: 'destructive', duration: 5000 });
 			if (response instanceof Error) toast({ title: 'Error', description: '500 Internal Server Error | ' + response.message, variant: 'destructive', duration: 5000 });

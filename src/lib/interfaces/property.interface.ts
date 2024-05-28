@@ -1,4 +1,6 @@
+import { ICity } from "./city.interface";
 import { IImage } from "./image.interface";
+import { IState } from "./state.interface";
 import { IUser } from "./user.interface";
 
 export interface IProperty {
@@ -11,15 +13,15 @@ export interface IProperty {
 	short_description: string;
 	long_description: string;
 	street: string;
-	city: string;
-	state: string;
+	city: ICity;
+	state: IState;
 	zip: string;
 	price: number;
 	created_by: number;
 	created_at?: string;
 	updated_at?: string;
     deletedAt?: string;
-	[attribute: string]: string | number | boolean | undefined | IUser | IImage[];
+	[attribute: string]: string | number | boolean | undefined | IUser | IImage[] | IState | ICity;
 	color: string;
     user?: IUser;
     images: IImage[];

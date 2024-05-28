@@ -30,40 +30,46 @@ const API_KEY: string = import.meta.env.VITE_GOOGLE_MAPS_API_KEY;
 const APP_URL: string = import.meta.env.VITE_APP_URL;
 // Google Map
 import { APIProvider, Map, AdvancedMarker } from '@vis.gl/react-google-maps';
-import { IMarker } from '@/lib/interfaces/google-map.interface';
+import { IMapOptions, IMarkerProp } from '@/lib/interfaces/google-map.interface';
+import { SettingsServices } from '@/services/settings.services';
 import { confirmMapExistence } from '@/lib/utils';
 // React component
 function ViewProduct() {
-	const propertyId = Number(useParams().id);
 	const [active, setActive] = useState<boolean>(false);
 	const [dialogAction, setDialogAction] = useState<string>('');
 	const [images, setImages] = useState<IImage[]>([]);
+	const [mapOptions, setMapOptions] = useState<IMapOptions>({} as IMapOptions);
 	const [openDialog, setOpenDialog] = useState<boolean>(false);
 	const [property, setProperty] = useState<IProperty>({} as IProperty);
 	const [propertyDialog, setPropertyDialog] = useState<IDialog>({ id: 0, name: '', title: '', subtitle: '', message: <span></span> });
 	const [showCard, setShowCard] = useState<boolean>(false);
 	const [updateUI, setUpdateUI] = useState<number>(0);
+	const propertyId = Number(useParams().id);
+    const [mapId, setMapId] = useState<string>('');
+    const [showMap, setShowMap] = useState<boolean>(false);
 	const capitalize = useCapitalize();
 	const localeDate = useLocaleDate();
 	const navigate = useNavigate();
 	// Google Map
-	const [marker, setMarker] = useState<IMarker>({} as IMarker);
+	const [marker, setMarker] = useState<IMarkerProp>({} as IMarkerProp);
 	const [addMarker, setAddMarker] = useState<boolean>(false);
 	// #region Load data
 	useEffect(() => {
 		async function getProperty(id: number) {
-			ProductsServices.findOne(id).then((response) => {
+			ProductsServices.findOneClient(id).then((response) => {
 				if (response.id) {
 					setProperty(response);
 					setActive(response.is_active);
 					setShowCard(true);
 					// Google Map
-					const newMarker: IMarker = { propertyId: response.id, lat: Number(response.lat), lng: Number(response.lng), key: response.key, zoom: Number(response.zoom) };
+					const newMarker: IMarkerProp = { propertyId: response.id, lat: Number(response.lat), lng: Number(response.lng), key: response.key, zoom: Number(response.zoom) };
 					const confirmedMapExistence = confirmMapExistence(newMarker);
 					if (confirmedMapExistence) {
 						setMarker(newMarker);
+                        setShowMap(true);
 						setAddMarker(true);
 					} else {
+                        setShowMap(false);
 						setAddMarker(false);
 						return;
 					}
@@ -80,6 +86,20 @@ function ViewProduct() {
 				if (response instanceof Error) toast({ title: 'Error', description: '500 Internal Server Error | ' + response.message, variant: 'destructive', duration: 5000 });
 			});
 		}
+        SettingsServices.findOne('mapId').then((response) => {
+			if (!response.statusCode) {
+				setMapId(response.value);
+			}
+			if (response.statusCode > 399) toast({ title: response.statusCode, description: response.message, variant: 'destructive', duration: 5000 });
+			if (response instanceof Error) toast({ title: 'Error', description: '500 Internal Server Error | ' + response.message, variant: 'destructive', duration: 5000 });
+		});
+		SettingsServices.findOne('mapCPOptions').then((response) => {
+			if (!response.statusCode) {
+				setMapOptions(JSON.parse(response.value));
+			}
+			if (response.statusCode > 399) toast({ title: response.statusCode, description: response.message, variant: 'destructive', duration: 5000 });
+			if (response instanceof Error) toast({ title: 'Error', description: '500 Internal Server Error | ' + response.message, variant: 'destructive', duration: 5000 });
+		});
 
 		getProperty(propertyId);
 		getImages(propertyId);
@@ -200,7 +220,7 @@ function ViewProduct() {
 							<div className='pt-4'>
 								<div className='flex items-center space-x-2 py-1 text-sm'>
 									<MapPin className='h-4 w-4' />
-									<span>{`${ProductsConfig.pages.view.sentence.location[0]}${property.street}${ProductsConfig.pages.view.sentence.location[1]}${capitalize(property.city)}${ProductsConfig.pages.view.sentence.location[1]}${capitalize(property.state)}`}</span>
+									<span>{`${ProductsConfig.pages.view.sentence.location[0]}${property.street}${ProductsConfig.pages.view.sentence.location[1]}${capitalize(property.city.city)}${ProductsConfig.pages.view.sentence.location[1]}${capitalize(property.state.state)}`}</span>
 								</div>
 								<div className='flex items-center space-x-2 py-1 text-sm'>
 									<CalendarPlus className='h-4 w-4' />
@@ -221,22 +241,22 @@ function ViewProduct() {
 								</div>
 							)}
 							{/* SECTION: Google Map */}
-							{addMarker && (
+							{showMap && (
 								<div className='flex flex-row py-2'>
 									<APIProvider apiKey={API_KEY}>
 										{/* prettier-ignore */}
 										<Map 
-                                        className='w-full h-80 md:h-96 lg:h-96'
-                                        mapId='1c6903a9111fa3c3' 
-                                        defaultCenter={{ lat: marker.lat, lng: marker.lng }} 
-                                        defaultZoom={marker.zoom} 
-                                        mapTypeId={'roadmap'} 
-                                        gestureHandling={'greedy'} 
-                                        disableDefaultUI={false}
-                                        controlSize={25}                        
-                                    >
-                                        <AdvancedMarker position={marker} />
-                                    </Map>
+                                            className='w-full h-80 md:h-96 lg:h-96'
+                                            mapId={mapId}
+                                            defaultCenter={{ lat: Number(mapOptions.lat), lng: Number(mapOptions.lng) }} 
+                                            defaultZoom={mapOptions.zoom} 
+                                            mapTypeId={mapOptions.mapType}
+                                            gestureHandling={'greedy'} 
+                                            disableDefaultUI={false}
+                                            controlSize={25}                        
+                                        >
+                                            {addMarker && <AdvancedMarker position={marker} />}
+                                        </Map>
 									</APIProvider>
 								</div>
 							)}
@@ -253,7 +273,8 @@ function ViewProduct() {
 								/>
 								<Label className='text-slate-400/70'>Activo</Label>
 							</div>
-							<div className='flex gap-2'>
+
+							{(store.getState().role === Roles.ADMIN || store.getState().userId === property.user?.id) && <div className='flex gap-2'>
 								<TooltipProvider>
 									<Tooltip>
 										<TooltipTrigger asChild>
@@ -307,7 +328,7 @@ function ViewProduct() {
 										</Tooltip>
 									</TooltipProvider>
 								)}
-							</div>
+							</div>}
 						</CardFooter>
 					</Card>
 				)}

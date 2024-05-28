@@ -17,9 +17,21 @@ function FavButton({ property, height }: { property: IProperty; height: number }
     }, [property]);
     
     function handleFavorite() {
-        FavoritesServices.toggleFavorite(property).then((response) => {
-            if (response.statusCode === 200) setIsFavorite(!isFavorite);
-        });
+        console.log(isFavorite);
+        if (isFavorite === false) {
+            FavoritesServices.createFavorite(property).then(response => {
+                if (response.statusCode === 200) setIsFavorite(true);
+            });
+        }
+        if (isFavorite === true) {
+            FavoritesServices.removeFavorite(property).then(response => {
+                if (response.statusCode === 200) setIsFavorite(false);
+            });
+        }
+        // if (!isFavorite) FavoritesServices.removeFavorite(property);
+        // FavoritesServices.toggleFavorite(property).then((response) => {
+        //     if (response.statusCode === 200) setIsFavorite(!isFavorite);
+        // });
     }
 
 	return (

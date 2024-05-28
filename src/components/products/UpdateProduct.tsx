@@ -44,8 +44,9 @@ const API_KEY: string = import.meta.env.VITE_GOOGLE_MAPS_API_KEY;
 const APP_URL: string = import.meta.env.VITE_APP_URL;
 // Google Map
 import { APIProvider, Map, AdvancedMarker, MapMouseEvent } from '@vis.gl/react-google-maps';
-import { IMarker } from '@/lib/interfaces/google-map.interface';
+import { IMapOptions, IMarkerProp } from '@/lib/interfaces/google-map.interface';
 import { confirmMapExistence } from '@/lib/utils';
+import { SettingsServices } from '@/services/settings.services';
 // React component
 function UpdateProduct() {
 	const { id } = useParams();
@@ -57,9 +58,7 @@ function UpdateProduct() {
 	const [categories, setCategories] = useState<ICategory[]>([]);
 	const [categoriesKey, setCategoriesKey] = useState<number>(0);
 	const [chosenImage, setChosenImage] = useState<string>('');
-    const [cities, setCities] = useState<ICity[]>([]);
 	const [citiesSelect, setCitiesSelect] = useState<ICity[]>([]);
-    const [citySelectDisabled, setCitySelectDisabled] = useState<boolean>(true);
 	const [citiesSelectKey, setCitiesSelectKey] = useState<number>(0);
 	const [dialogAction, setDialogAction] = useState<string>('');
 	const [imageDialog, setImageDialog] = useState<IDialog>({ id: 0, name: '', title: '', subtitle: '', message: <span></span> });
@@ -69,9 +68,14 @@ function UpdateProduct() {
 	const [statesSelect, setStatesSelect] = useState<IState[]>([]);
 	const [statesSelectKey, setStatesSelectKey] = useState<number>(0);
 	const [updateUI, setUpdateUI] = useState<number>(0);
+    const [cities, setCities] = useState<ICity[]>([]);
+    const [citySelectDisabled, setCitySelectDisabled] = useState<boolean>(true);
     // Google Map
-	const [marker, setMarker] = useState<IMarker>({} as IMarker);
 	const [addMarker, setAddMarker] = useState<boolean>(false);
+	const [mapOptions, setMapOptions] = useState<IMapOptions>({} as IMapOptions);
+	const [marker, setMarker] = useState<IMarkerProp>({} as IMarkerProp);
+	const [showMap, setShowMap] = useState<boolean>(false);
+    const [mapId, setMapId] = useState<string>('');
     // #region Forms declaration
 	const propertyForm = useForm<z.infer<typeof propertySchema>>({
 		resolver: zodResolver(propertySchema),
@@ -83,7 +87,7 @@ function UpdateProduct() {
 			long_description: '',
 			street: '',
 			city: '',
-			state: '',
+			state: 0,
 			zip: '',
 			is_active: true,
 			price: 0
@@ -109,18 +113,20 @@ function UpdateProduct() {
 				propertyForm.setValue('long_description', response.long_description);
 				propertyForm.setValue('street', response.street);
 				propertyForm.setValue('city', response.city);
-				propertyForm.setValue('state', response.state);
+				propertyForm.setValue('state', response.state.id);
 				propertyForm.setValue('zip', response.zip);
 				propertyForm.setValue('price', response.price);
 				propertyForm.setValue('is_active', Boolean(response.is_active));
                 // Google Map
-                const newMarker: IMarker = { propertyId: response.id, lat: Number(response.lat), lng: Number(response.lng), key: response.key, zoom: Number(response.zoom) };
+                const newMarker: IMarkerProp = { propertyId: response.id, lat: Number(response.lat), lng: Number(response.lng), key: response.key, zoom: Number(response.zoom) };
                 const confirmedMapExistence = confirmMapExistence(newMarker);
                 if (confirmedMapExistence) {
                     setMarker(newMarker);
                     setAddMarker(true);
+                    setShowMap(true);
                 } else {
                     setAddMarker(false);
+                    setShowMap(true);
                     return;
                 }
 			}
@@ -160,6 +166,21 @@ function UpdateProduct() {
 			if (!response.statusCode) {
 				setStatesSelect(response);
 				setStatesSelectKey(Math.random());
+			}
+			if (response.statusCode > 399) toast({ title: response.statusCode, description: response.message, variant: 'destructive', duration: 5000 });
+			if (response instanceof Error) toast({ title: 'Error', description: '500 Internal Server Error | ' + response.message, variant: 'destructive', duration: 5000 });
+		});
+        SettingsServices.findOne('mapId').then((response) => {
+			if (!response.statusCode) {
+				setMapId(response.value);
+			}
+			if (response.statusCode > 399) toast({ title: response.statusCode, description: response.message, variant: 'destructive', duration: 5000 });
+			if (response instanceof Error) toast({ title: 'Error', description: '500 Internal Server Error | ' + response.message, variant: 'destructive', duration: 5000 });
+		});
+		SettingsServices.findOne('mapCPOptions').then((response) => {
+			if (!response.statusCode) {
+				setMapOptions(JSON.parse(response.value));
+				setShowMap(true);
 			}
 			if (response.statusCode > 399) toast({ title: response.statusCode, description: response.message, variant: 'destructive', duration: 5000 });
 			if (response instanceof Error) toast({ title: 'Error', description: '500 Internal Server Error | ' + response.message, variant: 'destructive', duration: 5000 });
@@ -297,7 +318,7 @@ function UpdateProduct() {
     function filterCitiesByState(state: string) {
         setCitySelectDisabled(false);
         setCitiesSelectKey(Math.random());
-        setCitiesSelect(cities.filter((city) => city.state === state));
+        setCitiesSelect(cities.filter((city) => city.state.state === state));
         propertyForm.setValue('city', '');
         propertyForm.setValue('zip', '');
     }
@@ -305,7 +326,7 @@ function UpdateProduct() {
 	// #region Google Maps
     function createMarker(event: MapMouseEvent) {
 		const uuid: string = self.crypto.randomUUID();
-		const newMarker: IMarker = {
+		const newMarker: IMarkerProp = {
             propertyId: propertyId,
 			lat: event.detail.latLng?.lat || 0,
 			lng: event.detail.latLng?.lng || 0,
@@ -454,7 +475,7 @@ function UpdateProduct() {
 																field.onChange(event);
 																filterCitiesByState(event);
 															}}
-															value={field.value}>
+															value={String(field.value)}>
 															<FormControl>
 																<SelectTrigger>
 																	<SelectValue placeholder='' />
@@ -462,7 +483,7 @@ function UpdateProduct() {
 															</FormControl>
 															<SelectContent>
 																{statesSelect.map((el) => (
-																	<SelectItem key={el.id} value={el.state} className='text-sm'>
+																	<SelectItem key={el.id} value={String(el.id)} className='text-sm'>
 																		{capitalize(el.state)}
 																	</SelectItem>
 																))}
@@ -574,15 +595,15 @@ function UpdateProduct() {
 										</div>
 									</div>
                                     {/* Google Maps */}
-                                    {addMarker && <div className='flex flex-row pt-2'>
+                                    {showMap && <div className='flex flex-row pt-2'>
                                         <APIProvider apiKey={API_KEY}>
                                             {/* prettier-ignore */}
                                             <Map 
                                                 className='w-full h-80 md:h-96 lg:h-96'
-                                                mapId='1c6903a9111fa3c3' 
-                                                defaultCenter={{ lat: marker.lat, lng: marker.lng }} 
-                                                defaultZoom={marker.zoom} 
-                                                mapTypeId={'roadmap'} 
+                                                mapId={mapId}
+                                                defaultCenter={{ lat: Number(mapOptions.lat), lng: Number(mapOptions.lng) }} 
+                                                defaultZoom={mapOptions.zoom} 
+                                                mapTypeId={mapOptions.mapType}
                                                 gestureHandling={'greedy'} 
                                                 disableDefaultUI={false}
                                                 disableDoubleClickZoom={true}
@@ -590,7 +611,7 @@ function UpdateProduct() {
                                                 onDblclick={(event) => createMarker(event)} 
                                                 onZoomChanged={(event) => setMarker({ ...marker, zoom: event.map.getZoom() || 10})}              
                                             >
-                                                <AdvancedMarker position={marker} />
+                                                {addMarker && <AdvancedMarker position={marker} />}
                                             </Map>
                                         </APIProvider>
                                     </div>}

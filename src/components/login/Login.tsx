@@ -5,14 +5,14 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '
 import { Input } from '@/components/ui/input';
 // App
 import { ILogin } from '@/lib/interfaces/login.interface';
+import { LoginConfig } from '@/lib/config/login.config';
+import { SettingsServices } from '@/services/settings.services';
 import { store } from '@/services/store.services';
 import { useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { useNavigate } from 'react-router-dom';
 import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { SettingsServices } from '@/services/settings.services';
-import { LoginConfig } from '@/lib/config/login.config';
 // Constants
 const API_URL: string = import.meta.env.VITE_REACT_BACKEND_API;
 const SIGN_IN_URL: string = `${API_URL}/auth/login`;
@@ -82,7 +82,7 @@ function Login() {
 		<div className='mt-8'>
 			<Card className='mx-8 md:mx-auto md:w-[400px] lg:mx-auto'>
 				<CardHeader className='space-y-1'>
-					<CardTitle className='text-2xl font-bold'>{LoginConfig.title}</CardTitle>
+					<CardTitle className='text-3xl font-bold text-center'>{LoginConfig.title}</CardTitle>
 					<CardDescription>{LoginConfig.subtitle}</CardDescription>
 				</CardHeader>
 				<CardContent>

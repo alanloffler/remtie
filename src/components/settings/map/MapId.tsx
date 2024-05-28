@@ -1,18 +1,22 @@
+// Icons: Lucide (https://lucide.dev/)
+import { Check, Pencil } from 'lucide-react';
+// UI: Shadcn-ui (https://ui.shadcn.com/)
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { FormField, FormItem, FormControl, FormMessage } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
-import { SettingsConfig } from '@/lib/config/settings.config';
-import { ISetting } from '@/lib/interfaces/setting.interface';
-import { settingsSchema } from '@/lib/schemas/settings.schema';
-import { SettingsServices } from '@/services/settings.services';
-import { zodResolver } from '@hookform/resolvers/zod';
-import { Separator } from '@radix-ui/react-dropdown-menu';
-import { Check, Pencil } from 'lucide-react';
-import { MouseEvent, useEffect, useState } from 'react';
+import { Separator } from '@/components/ui/separator';
+import { toast } from '@/components/ui/use-toast';
+// App
 import { FormProvider, useForm } from 'react-hook-form';
+import { ISetting } from '@/lib/interfaces/setting.interface';
+import { MouseEvent, useEffect, useState } from 'react';
+import { SettingsConfig } from '@/lib/config/settings.config';
+import { SettingsServices } from '@/services/settings.services';
+import { settingsSchema } from '@/lib/schemas/settings.schema';
 import { z } from 'zod';
-
+import { zodResolver } from '@hookform/resolvers/zod';
+// React component
 function MapId() {
 	const [disabledInput, setDisabledInput] = useState<boolean>(true);
 	const [mapIdSetting, setMapIdSetting] = useState<ISetting>({} as ISetting);
@@ -23,13 +27,15 @@ function MapId() {
 			value: ''
 		}
 	});
+    // #region Load Data
 	useEffect(() => {
 		SettingsServices.findOne('mapId').then((response) => {
 			setMapIdSetting(response);
 			mapIdForm.setValue('value', response.value);
 		});
 	}, [mapIdForm]);
-
+    // #endregion
+    // #region Buttons actions
 	function handleDisabledInput(event: MouseEvent) {
 		event.preventDefault();
 		setDisabledInput(!disabledInput);
@@ -37,18 +43,20 @@ function MapId() {
 
 	function handleMapIdSubmit(data: z.infer<typeof settingsSchema>) {
 		SettingsServices.update(mapIdSetting.id, data.value).then((response) => {
-			console.log(response);
-            setDisabledInput(!disabledInput);
+            if (response.statusCode === 200) {
+                setDisabledInput(!disabledInput);
+            }
+            if (response.statusCode > 399) toast({ title: response.statusCode, description: response.message, variant: 'destructive', duration: 5000 });
+            if (response instanceof Error) toast({ title: 'Error', description: '500 Internal Server Error | ' + response.message, variant: 'destructive', duration: 5000 });
 		});
 	}
-
+    // #endregion
 	return (
 		<div className='space-y-4'>
 			<Separator className='mb-4' />
 			<span className='flex text-base font-medium text-slate-500'>{SettingsConfig.sections.mapId.title}</span>
 			<span className='flex text-sm font-normal text-slate-500'>{SettingsConfig.sections.mapId.subtitle}</span>
 			<Card className='p-6'>
-				{/* SECTION: Map Identificator */}
 				<FormProvider {...mapIdForm}>
 					<form onSubmit={mapIdForm.handleSubmit(handleMapIdSubmit)} className='flex flex-col items-center space-y-4'>
 						<div className='flex w-full flex-row items-center space-x-4'>
@@ -84,4 +92,5 @@ function MapId() {
 		</div>
 	);
 }
+// Export React component
 export default MapId;

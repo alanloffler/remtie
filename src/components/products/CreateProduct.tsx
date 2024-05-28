@@ -77,7 +77,7 @@ function CreateProduct() {
 			long_description: '',
 			street: '',
 			city: '',
-			state: '',
+			state: 0,
 			zip: '',
 			is_active: true,
 			price: 0
@@ -201,7 +201,7 @@ function CreateProduct() {
 	function filterCitiesByState(state: string) {
 		setCitySelectDisabled(false);
 		setCitiesSelectKey(Math.random());
-		setCitiesSelect(cities.filter((city) => city.state === state));
+		setCitiesSelect(cities.filter((city) => city.state.state === state));
 		propertyForm.setValue('city', '');
 	}
 	// #endregion
@@ -212,7 +212,6 @@ function CreateProduct() {
 	function createMarker(event: MapMouseEvent) {
 		const uuid: string = self.crypto.randomUUID();
 		const newMarker: IMarker = {
-			propertyId: Math.random(),
 			lat: event.detail.latLng?.lat || 0,
 			lng: event.detail.latLng?.lng || 0,
 			key: `marker-${uuid}`,
@@ -363,7 +362,7 @@ function CreateProduct() {
 															</FormControl>
 															<SelectContent>
 																{statesSelect.map((el) => (
-																	<SelectItem key={el.id} value={el.state} className='text-sm'>
+																	<SelectItem key={el.id} value={String(el.id)} className='text-sm'>
 																		{capitalize(el.state)}
 																	</SelectItem>
 																))}
@@ -479,20 +478,20 @@ function CreateProduct() {
 											<APIProvider apiKey={API_KEY}>
 												{/* prettier-ignore */}
 												<Map 
-                                                className='w-full h-80 md:h-96 lg:h-96'
-                                                mapId={mapId}
-                                                defaultCenter={{ lat: Number(mapOptions.lat), lng: Number(mapOptions.lng) }} 
-                                                defaultZoom={mapOptions.zoom} 
-                                                mapTypeId={mapOptions.mapType}
-                                                gestureHandling={'greedy'} 
-                                                disableDefaultUI={false} 
-                                                disableDoubleClickZoom={true}
-                                                controlSize={25}
-                                                onDblclick={(event) => createMarker(event)} 
-                                                onZoomChanged={(event) => setMarker({ ...marker, zoom: event.map.getZoom() || 10})}
-                                            >
-                                                {addMarker && <AdvancedMarker position={marker} />}
-                                            </Map>
+                                                    className='w-full h-80 md:h-96 lg:h-96'
+                                                    mapId={mapId}
+                                                    defaultCenter={{ lat: Number(mapOptions.lat), lng: Number(mapOptions.lng) }} 
+                                                    defaultZoom={mapOptions.zoom} 
+                                                    mapTypeId={mapOptions.mapType}
+                                                    gestureHandling={'greedy'} 
+                                                    disableDefaultUI={false} 
+                                                    disableDoubleClickZoom={true}
+                                                    controlSize={25}
+                                                    onDblclick={(event) => createMarker(event)} 
+                                                    onZoomChanged={(event) => setMarker({ ...marker, zoom: event.map.getZoom() || 10})}
+                                                >
+                                                    {addMarker && <AdvancedMarker position={marker} />}
+                                                </Map>
 											</APIProvider>
 										</div>
 									)}

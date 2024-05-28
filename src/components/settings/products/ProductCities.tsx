@@ -152,7 +152,7 @@ function ProductCities() {
 				);
 			},
 			cell: ({ row }) => {
-				return <div className='w-20'>{capitalize(row.original.state)}</div>;
+				return <div className='w-20'>{capitalize(row.original.state.state)}</div>;
 			}
 		},
 		{
@@ -461,7 +461,7 @@ function ProductCities() {
 		resolver: zodResolver(citiesSchema),
 		defaultValues: {
 			city: '',
-			state: '',
+			state: 0,
 			zip: ''
 		}
 	});
@@ -470,7 +470,7 @@ function ProductCities() {
 		resolver: zodResolver(citiesSchema),
 		defaultValues: {
 			city: '',
-			state: '',
+			state: 0,
 			zip: ''
 		}
 	});
@@ -518,7 +518,7 @@ function ProductCities() {
 	function handleCityFormEdit(city: ICity) {
 		setCitySelected(city);
 		cityEditForm.reset();
-		cityEditForm.setValue('state', city.state);
+		cityEditForm.setValue('state', city.state.id);
 		cityEditForm.setValue('city', city.city);
 		cityEditForm.setValue('zip', city.zip);
 		setShowCityEditForm(true);
@@ -528,7 +528,7 @@ function ProductCities() {
 		event.preventDefault();
 		if (task === 'create') {
 			cityForm.reset();
-			cityForm.setValue('state', '');
+			cityForm.setValue('state', 0);
 		}
 		if (task === 'update') {
 			cityEditForm.reset();
@@ -709,7 +709,7 @@ function ProductCities() {
 											render={({ field }) => (
 												<div className='flex flex-col'>
 													<FormItem className='w-2/3 space-y-1'>
-														<Select key={statesSelectKey} value={field.value} onValueChange={(event) => field.onChange(event)}>
+														<Select key={statesSelectKey} value={String(field.value)} onValueChange={(event) => field.onChange(event)}>
 															<FormControl>
 																<SelectTrigger className='h-8 placeholder:text-muted-foreground'>
 																	<SelectValue placeholder={SettingsConfig.sections.cities.form.statePlaceholder} />
@@ -717,7 +717,7 @@ function ProductCities() {
 															</FormControl>
 															<SelectContent>
 																{statesForSelect.map((el) => (
-																	<SelectItem key={el.id} value={el.state} className='text-sm'>
+																	<SelectItem key={el.id} value={String(el.id)} className='text-sm'>
 																		{capitalize(el.state)}
 																	</SelectItem>
 																))}
@@ -784,7 +784,7 @@ function ProductCities() {
 													render={({ field }) => (
 														<div className='flex flex-col'>
 															<FormItem className='w-2/3 space-y-1'>
-																<Select key={statesSelectKey} value={field.value} onValueChange={(event) => field.onChange(event)}>
+																<Select key={statesSelectKey} value={String(field.value)} onValueChange={(event) => field.onChange(event)}>
 																	<FormControl>
 																		<SelectTrigger className='h-8'>
 																			<SelectValue placeholder={<span className='text-muted-foreground'>{SettingsConfig.sections.cities.form.statePlaceholder}</span>} />
@@ -792,7 +792,7 @@ function ProductCities() {
 																	</FormControl>
 																	<SelectContent>
 																		{states.map((el) => (
-																			<SelectItem key={el.id} value={el.state} className='text-sm'>
+																			<SelectItem key={el.id} value={String(el.id)} className='text-sm'>
 																				{capitalize(el.state)}
 																			</SelectItem>
 																		))}

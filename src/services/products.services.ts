@@ -57,6 +57,24 @@ export class ProductsServices {
 		}
 	}
 
+    static async findOneClient(id: number) {
+		try {
+			const token: string = store.getState().authToken;
+			let sql: string = `${ProductsServices.API_URL}/properties/${id}/client`;
+			if (store.getState().role === Roles.ADMIN) sql = `${ProductsServices.API_URL}/properties/${id}/withDeleted`;
+			const query: Response = await fetch(sql, {
+				method: 'GET',
+				headers: {
+					'content-type': 'application/json;charset=UTF-8',
+					Authorization: `Bearer ${token}`
+				}
+			});
+			return await query.json();
+		} catch (error) {
+			return error;
+		}
+	}
+
 	static async create(data: object) {
 		if (ProductsServices.abortController) ProductsServices.abortController.abort();
 		ProductsServices.abortController = new AbortController();

@@ -6,61 +6,74 @@ export class FavoritesServices {
 	static abortController: AbortController = new AbortController();
 
 	static async findAll() {
-        try {
-            const token: string = store.getState().authToken;
-            const sql: string = `${FavoritesServices.API_URL}/favorites`;
-            const query: Response = await fetch(sql, {
-                method: 'GET',
-                headers: {
-                    'content-type': 'application/json;charset=UTF-8',
-                    Authorization: `Bearer ${token}`
-                }
-            });
-            return await query.json();
-        } catch (error) {
-            return error;
-        }
-    }
+		try {
+			const token: string = store.getState().authToken;
+			const sql: string = `${FavoritesServices.API_URL}/favorites`;
+			const query: Response = await fetch(sql, {
+				method: 'GET',
+				headers: {
+					'content-type': 'application/json;charset=UTF-8',
+					Authorization: `Bearer ${token}`
+				}
+			});
+			return await query.json();
+		} catch (error) {
+			return error;
+		}
+	}
 
-    static async findOne(id: number) {
-        try {
-            const token: string = store.getState().authToken;
-            const sql: string = `${FavoritesServices.API_URL}/favorites/${id}`;
-            const query: Response = await fetch(sql, {
-                method: 'GET',
-                headers: {
-                    'content-type': 'application/json;charset=UTF-8',
-                    Authorization: `Bearer ${token}`
-                }
-            });
-            return await query.json();
-        } catch (error) {
-            return error;
-        }
-    }
+	static async findOne(id: number) {
+		try {
+			const token: string = store.getState().authToken;
+			const sql: string = `${FavoritesServices.API_URL}/favorites/${id}`;
+			const query: Response = await fetch(sql, {
+				method: 'GET',
+				headers: {
+					'content-type': 'application/json;charset=UTF-8',
+					Authorization: `Bearer ${token}`
+				}
+			});
+			return await query.json();
+		} catch (error) {
+			return error;
+		}
+	}
 
-    static async toggleFavorite(property: IProperty) {
-        property.isFavorite = !property.isFavorite;
+    static async createFavorite(property: IProperty) {
         if (FavoritesServices.abortController) FavoritesServices.abortController.abort();
-        FavoritesServices.abortController = new AbortController();
-        const signal: AbortSignal = FavoritesServices.abortController.signal;
+		FavoritesServices.abortController = new AbortController();
+		const signal: AbortSignal = FavoritesServices.abortController.signal;
         try {
             const token: string = store.getState().authToken;
-            let sql: string = '';
-            let method: string = '';
-            if (property.isFavorite === false) {
-                sql = `${FavoritesServices.API_URL}/favorites/${property.id}`;
-                method = 'DELETE';
-            } else {
-                sql = `${FavoritesServices.API_URL}/favorites/${property.id}`;
-                method = 'POST';
-            }
+            const sql: string = `${FavoritesServices.API_URL}/favorites/${property.id}`;
             const query: Response = await fetch(sql, {
-                method: method,
-                signal: signal,
+                method: 'POST',
                 headers: {
+                    'content-type': 'application/json;charset=UTF-8',
                     Authorization: `Bearer ${token}`
-                }
+                },
+                signal: signal
+            });
+            return await query.json();
+        } catch (error) {
+            return error;
+        }
+    }
+
+    static async removeFavorite(property: IProperty) {
+        if (FavoritesServices.abortController) FavoritesServices.abortController.abort();
+		FavoritesServices.abortController = new AbortController();
+		const signal: AbortSignal = FavoritesServices.abortController.signal;
+        try {
+            const token: string = store.getState().authToken;
+            const sql: string = `${FavoritesServices.API_URL}/favorites/${property.id}`;
+            const query: Response = await fetch(sql, {
+                method: 'DELETE',
+                headers: {
+                    'content-type': 'application/json;charset=UTF-8',
+                    Authorization: `Bearer ${token}`
+                },
+                signal: signal
             });
             return await query.json();
         } catch (error) {

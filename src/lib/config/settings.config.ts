@@ -41,7 +41,7 @@ export const SettingsConfig = {
 				cityPlaceholder: 'Nombre',
 				editCityTitle: 'Editar ciudad',
 				stateTitle: 'Crear provincia',
-                editStateTitle: 'Editar provincia',
+				editStateTitle: 'Editar provincia',
 				statePlaceholder: 'Seleccione provincia',
 				zipPlaceholder: 'Código Postal'
 			},
@@ -58,6 +58,35 @@ export const SettingsConfig = {
 		defaultView: {
 			title: 'Vista predeterminada',
 			subtitle: 'La vista actual es'
+		},
+		createMap: {
+			title: 'Configuración de mapa (Crear propiedad)',
+			form: {
+				label: {
+					lat: 'Latitud centro',
+					lng: 'Longitud centro',
+					mapId: 'Id del mapa',
+					mapType: 'Tipo de mapa',
+					zoom: 'Zoom'
+				},
+				placeholder: {
+					lat: 'Latitud',
+					lng: 'Longitud',
+					mapId: 'ID del mapa',
+					mapType: 'Tipo de mapa',
+					zoom: 'Zoom'
+				},
+				mapTypeOptions: [
+					{ name: 'Híbrido', value: 'hybrid' },
+					{ name: 'Satélite', value: 'satellite' },
+					{ name: 'Terreno', value: 'terrain' },
+					{ name: 'Vial', value: 'roadmap' }
+				]
+			}
+		},
+		mapId: {
+			title: 'Identificador de mapas',
+			subtitle: 'Provisto por la API de Google Maps'
 		},
 		rowsPerPage: {
 			title: 'Opciones de paginación',

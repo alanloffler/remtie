@@ -1,5 +1,5 @@
 export interface IImage {
-    url: string;
+    url?: string;
     deletedAt: string;
 	id: number;
 	name: string;

@@ -23,6 +23,7 @@ import { ColumnDef } from '@tanstack/react-table';
 import { DataTable } from '@/components/data-table/DataTable';
 import { FavoritesServices } from '@/services/favorite.services';
 import { IBusiness, ICategory } from '@/lib/interfaces/inputs.interface';
+import { ICity } from '@/lib/interfaces/city.interface';
 import { IDialog } from '@/lib/interfaces/dialog.interface';
 import { IFavorite } from '@/lib/interfaces/favorite.interface';
 import { IProperty } from '@/lib/interfaces/property.interface';
@@ -185,7 +186,13 @@ function ListProducts() {
 			}
 		},
 		// City
-		{ accessorKey: 'city', header: ProductsConfig.headers[4] },
+        {
+            accessorKey: 'city',
+            header: ProductsConfig.headers[4],
+            cell: ({ row }) => {
+                return <div className='text-left'>{capitalize(row.original.city.city)}</div>;
+            }
+        },
 		{
 			accessorKey: 'price',
 			header: ({ column }) => {
@@ -297,7 +304,7 @@ function ListProducts() {
 			// Input filter
 			if (search === null) search = '';
 			if (search !== '') {
-				const searchProperties = filteredProperties.filter((item: { city: string }) => item.city.toLowerCase().includes(search.toLowerCase()));
+				const searchProperties = filteredProperties.filter((item: { city: ICity }) => item.city.city.toLowerCase().includes(search.toLowerCase()));
 				return searchProperties;
 			} else {
 				return filteredProperties;

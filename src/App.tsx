@@ -19,6 +19,7 @@ const MapProperty = React.lazy(() => import('./components/map/MapProperties'));
 const NotFound = React.lazy(() => import('./components/shared/NotFound'));
 const Settings = React.lazy(() => import('./components/settings/Settings'));
 const SettingsDashboard = React.lazy(() => import('./components/settings/SettingsDashboard'));
+const SettingsMap = React.lazy(() => import('./components/settings/SettingsMap'));
 const SettingsProducts = React.lazy(() => import('./components/settings/SettingsProducts'));
 const SettingsUsers = React.lazy(() => import('./components/settings/SettingsUsers'));
 const UpdateProduct = React.lazy(() => import('./components/products/UpdateProduct'));
@@ -47,7 +48,8 @@ function App() {
 	const settingsRoutes = [
 		{ id: 101, path: `${APP_URL}/config/productos`, element: <SettingsProducts /> },
 		{ id: 102, path: `${APP_URL}/config/usuarios`, element: <SettingsUsers /> },
-		{ id: 103, path: `${APP_URL}/config/tablero`, element: <SettingsDashboard /> }
+		{ id: 103, path: `${APP_URL}/config/tablero`, element: <SettingsDashboard /> },
+		{ id: 104, path: `${APP_URL}/config/mapa`, element: <SettingsMap /> }
 	];
 
 	return (

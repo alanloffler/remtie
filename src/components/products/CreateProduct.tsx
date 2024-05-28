@@ -39,7 +39,8 @@ import { zodResolver } from '@hookform/resolvers/zod';
 const APP_URL: string = import.meta.env.VITE_APP_URL;
 // Google Maps
 import { APIProvider, Map, AdvancedMarker, MapMouseEvent } from '@vis.gl/react-google-maps';
-import { IMarker } from '@/lib/interfaces/google-map.interface';
+import { IMapOptions, IMarker } from '@/lib/interfaces/google-map.interface';
+import { SettingsServices } from '@/services/settings.services';
 const API_KEY: string = import.meta.env.VITE_GOOGLE_MAPS_API_KEY;
 // React component
 function CreateProduct() {
@@ -52,7 +53,7 @@ function CreateProduct() {
 	const [citiesSelect, setCitiesSelect] = useState<ICity[]>([]);
 	const [citySelectDisabled, setCitySelectDisabled] = useState<boolean>(true);
 	const [citiesSelectKey, setCitiesSelectKey] = useState<number>(0);
-	const [imageDialog, setImageDialog] = useState<IImage>({ id: 0, name: '', propertyId: 0, deletedAt: '' });
+	const [imageDialog, setImageDialog] = useState<IImage>({} as IImage);
 	const [images, setImages] = useState<IImage[]>([]);
 	const [openDialog, setOpenDialog] = useState<boolean>(false);
 	const [propertyCreated, setPropertyCreated] = useState<boolean>(false);
@@ -60,7 +61,11 @@ function CreateProduct() {
 	const [statesSelectKey, setStatesSelectKey] = useState<number>(0);
 	const [statesSelect, setStatesSelect] = useState<IState[]>([]);
 	const capitalize = useCapitalize();
-	const navigate = useNavigate();    
+	const navigate = useNavigate();
+
+	const [mapId, setMapId] = useState<string>('');
+	const [mapOptions, setMapOptions] = useState<IMapOptions>({} as IMapOptions);
+	const [showMap, setShowMap] = useState<boolean>(false);
 	// #region Form declaration
 	const propertyForm = useForm<z.infer<typeof propertySchema>>({
 		resolver: zodResolver(propertySchema),
@@ -117,6 +122,21 @@ function CreateProduct() {
 			if (!response.statusCode) {
 				setStatesSelect(response);
 				setStatesSelectKey(Math.random());
+			}
+			if (response.statusCode > 399) toast({ title: response.statusCode, description: response.message, variant: 'destructive', duration: 5000 });
+			if (response instanceof Error) toast({ title: 'Error', description: '500 Internal Server Error | ' + response.message, variant: 'destructive', duration: 5000 });
+		});
+		SettingsServices.findOne('mapId').then((response) => {
+			if (!response.statusCode) {
+				setMapId(response.value);
+			}
+			if (response.statusCode > 399) toast({ title: response.statusCode, description: response.message, variant: 'destructive', duration: 5000 });
+			if (response instanceof Error) toast({ title: 'Error', description: '500 Internal Server Error | ' + response.message, variant: 'destructive', duration: 5000 });
+		});
+		SettingsServices.findOne('mapCPOptions').then((response) => {
+			if (!response.statusCode) {
+				setMapOptions(JSON.parse(response.value));
+				setShowMap(true);
 			}
 			if (response.statusCode > 399) toast({ title: response.statusCode, description: response.message, variant: 'destructive', duration: 5000 });
 			if (response instanceof Error) toast({ title: 'Error', description: '500 Internal Server Error | ' + response.message, variant: 'destructive', duration: 5000 });
@@ -192,6 +212,7 @@ function CreateProduct() {
 	function createMarker(event: MapMouseEvent) {
 		const uuid: string = self.crypto.randomUUID();
 		const newMarker: IMarker = {
+			propertyId: Math.random(),
 			lat: event.detail.latLng?.lat || 0,
 			lng: event.detail.latLng?.lng || 0,
 			key: `marker-${uuid}`,
@@ -453,15 +474,16 @@ function CreateProduct() {
 										</div>
 									</div>
 									{/* SECTION: Google Maps */}
-									<div className='flex flex-col pt-4'>
-										<APIProvider apiKey={API_KEY}>
-											{/* prettier-ignore */}
-											<Map 
+									{showMap && (
+										<div className='flex flex-col pt-4'>
+											<APIProvider apiKey={API_KEY}>
+												{/* prettier-ignore */}
+												<Map 
                                                 className='w-full h-80 md:h-96 lg:h-96'
-                                                mapId='1c6903a9111fa3c3' 
-                                                defaultCenter={{ lat: -26.000694, lng: -54.57684 }} 
-                                                defaultZoom={10} 
-                                                mapTypeId={'roadmap'}
+                                                mapId={mapId}
+                                                defaultCenter={{ lat: Number(mapOptions.lat), lng: Number(mapOptions.lng) }} 
+                                                defaultZoom={mapOptions.zoom} 
+                                                mapTypeId={mapOptions.mapType}
                                                 gestureHandling={'greedy'} 
                                                 disableDefaultUI={false} 
                                                 disableDoubleClickZoom={true}
@@ -471,8 +493,9 @@ function CreateProduct() {
                                             >
                                                 {addMarker && <AdvancedMarker position={marker} />}
                                             </Map>
-										</APIProvider>
-									</div>
+											</APIProvider>
+										</div>
+									)}
 									<div className='flex flex-row justify-end space-x-4 pt-6'>
 										<Button
 											variant='ghost'

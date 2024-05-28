@@ -53,7 +53,7 @@ function MapId() {
 					<form onSubmit={mapIdForm.handleSubmit(handleMapIdSubmit)} className='flex flex-col items-center space-y-4'>
 						<div className='flex w-full flex-row items-center space-x-4'>
 							<div className='w-1/3 space-y-7 text-end'>
-								<div className='text-sm font-medium text-slate-600'>{SettingsConfig.sections.createMap.form.label.mapId}</div>
+								<div className='text-sm font-medium text-slate-600'>{SettingsConfig.sections.formMaps.form.label.mapId}</div>
 							</div>
 							<div className='flex w-2/3 items-center space-x-4'>
 								<FormField
@@ -63,7 +63,7 @@ function MapId() {
 										<FormItem className='flex w-full flex-row items-center'>
 											<FormControl className='flex w-full'>
 												<div className='flex items-center space-x-4'>
-													<Input disabled={disabledInput} {...field} type='text' placeholder={SettingsConfig.sections.createMap.form.placeholder.mapId} className='h-8' />
+													<Input disabled={disabledInput} {...field} type='text' placeholder={SettingsConfig.sections.formMaps.form.placeholder.mapId} className='h-8' />
 												</div>
 											</FormControl>
 											<FormMessage className='text-xs font-light' />

@@ -60,7 +60,7 @@ function MapProperties() {
     // #region Marker events
 	function handleMarkerClicked(propertyId: number) {
 		const property = properties.find((property) => property.id === propertyId);
-		if (property) {
+		if (property?.id) {
 			setSelectedProperty(property);
 		} else {
 			setSelectedProperty(properties[0]);
@@ -115,7 +115,7 @@ function MapProperties() {
 							</APIProvider>
 						</div>
 						<div className='flex w-full md:w-1/3 lg:w-1/3'>
-							<Card className='w-full overflow-hidden'>
+							<Card className='w-full h-fit overflow-hidden'>
 								<CardHeader className='pb-4'>
 									<div className='flex justify-between text-xs font-bold uppercase text-slate-500'>
 										<div className='flex items-center gap-4'>
@@ -127,7 +127,7 @@ function MapProperties() {
 									<CardDescription className='text-sm'>{selectedProperty.short_description}</CardDescription>
 								</CardHeader>
 								<CardContent>
-									<div className='text-sm'>{selectedProperty.long_description}</div>
+									{/* <div className='text-sm'>{selectedProperty.long_description}</div> */}
 									<div className='pt-2'>
 										<div className='flex items-center space-x-2 py-1 text-sm'>
 											<MapPin className='h-4 w-4' />

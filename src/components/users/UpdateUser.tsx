@@ -67,7 +67,7 @@ function UpdateUser() {
 				if (response instanceof Error) toast({ title: 'Error', description: '500 Internal Server Error | ' + response.message, variant: 'destructive', duration: 5000 });
 			});
 		}
-
+        
 		getRoles();
 		getUser(userId);
 	}, [form, userId]);
@@ -78,7 +78,7 @@ function UpdateUser() {
 		UsersServices.update(userId, values).then((response) => {
 			if (response.statusCode === 200) {
 				toast({ title: response.statusCode, description: response.message, variant: 'success', duration: 5000 });
-				navigate(`${APP_URL}/usuarios`);
+                navigate(`${APP_URL}/usuarios`);
 			}
 			if (response.statusCode > 399) toast({ title: response.statusCode, description: response.message, variant: 'destructive', duration: 5000 });
 			if (response instanceof Error) toast({ title: 'Error', description: '500 Internal Server Error | ' + response.message, variant: 'destructive', duration: 5000 });

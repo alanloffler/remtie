@@ -757,8 +757,8 @@ function ProductCities() {
 											)}
 										/>
 										<div className='flex flex-row justify-start gap-6'>
-											<Button type='submit' variant='ghost' size='sm' className='text-xs h-8 gap-2 border border-slate-300 bg-slate-300/50 p-2 text-slate-400 hover:border-slate-400/50 hover:bg-slate-300 hover:text-slate-500'>
-                                            <Check className='h-3 w-3' strokeWidth='2' />
+											<Button type='submit' variant='ghost' size='sm' className='h-8 gap-2 border border-slate-300 bg-slate-300/50 p-2 text-xs text-slate-400 hover:border-slate-400/50 hover:bg-slate-300 hover:text-slate-500'>
+												<Check className='h-3 w-3' strokeWidth='2' />
 												{ButtonsConfig.actions.save}
 											</Button>
 											<Button onClick={(event) => handleCityCancel(event, 'create')} variant='ghost' size='sm' className='h-8 text-xs'>
@@ -832,9 +832,9 @@ function ProductCities() {
 													)}
 												/>
 												<div className='flex flex-row justify-start gap-6'>
-													<Button type='submit' variant='ghost' size='sm' className='text-xs h-8 gap-2 border border-slate-300 bg-slate-300/50 p-2 text-slate-400 hover:border-slate-400/50 hover:bg-slate-300 hover:text-slate-500'>
-                                                        <Check className='h-3 w-3' strokeWidth='2' />
-                                                        {ButtonsConfig.actions.save}
+													<Button type='submit' variant='ghost' size='sm' className='h-8 gap-2 border border-slate-300 bg-slate-300/50 p-2 text-xs text-slate-400 hover:border-slate-400/50 hover:bg-slate-300 hover:text-slate-500'>
+														<Check className='h-3 w-3' strokeWidth='2' />
+														{ButtonsConfig.actions.save}
 													</Button>
 													<Button onClick={(event) => handleCityCancel(event, 'update')} variant='ghost' size='sm' className='h-8 text-xs'>
 														{ButtonsConfig.actions.cancel}
@@ -881,9 +881,9 @@ function ProductCities() {
 											)}
 										/>
 										<div className='flex flex-row justify-start gap-6'>
-											<Button type='submit' variant='ghost' size='sm' className='text-xs h-8 gap-2 border border-slate-300 bg-slate-300/50 p-2 text-slate-400 hover:border-slate-400/50 hover:bg-slate-300 hover:text-slate-500'>
+											<Button type='submit' variant='ghost' size='sm' className='h-8 gap-2 border border-slate-300 bg-slate-300/50 p-2 text-xs text-slate-400 hover:border-slate-400/50 hover:bg-slate-300 hover:text-slate-500'>
 												<Check className='h-3 w-3' strokeWidth='2' />
-                                                {ButtonsConfig.actions.save}
+												{ButtonsConfig.actions.save}
 											</Button>
 											<Button onClick={(event) => handleStateCancel(event, 'create')} variant='ghost' size='sm' className='h-8 text-xs'>
 												{ButtonsConfig.actions.cancel}
@@ -917,8 +917,8 @@ function ProductCities() {
 													)}
 												/>
 												<div className='flex flex-row justify-start gap-6'>
-													<Button type='submit' variant='ghost' size='sm' className='text-xs h-8 gap-2 border border-slate-300 bg-slate-300/50 p-2 text-slate-400 hover:border-slate-400/50 hover:bg-slate-300 hover:text-slate-500'>
-                                                        <Check className='h-3 w-3' strokeWidth='2' />
+													<Button type='submit' variant='ghost' size='sm' className='h-8 gap-2 border border-slate-300 bg-slate-300/50 p-2 text-xs text-slate-400 hover:border-slate-400/50 hover:bg-slate-300 hover:text-slate-500'>
+														<Check className='h-3 w-3' strokeWidth='2' />
 														{ButtonsConfig.actions.save}
 													</Button>
 													<Button onClick={(event) => handleStateCancel(event, 'update')} variant='ghost' size='sm' className='h-8 text-xs'>

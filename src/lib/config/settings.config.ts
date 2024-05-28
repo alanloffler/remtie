@@ -59,8 +59,8 @@ export const SettingsConfig = {
 			title: 'Vista predeterminada',
 			subtitle: 'La vista actual es'
 		},
-		createMap: {
-			title: 'Configuración de mapa (Crear propiedad)',
+		formMaps: {
+			title: 'Configuración de mapas (Formularios)',
 			form: {
 				label: {
 					lat: 'Latitud centro',

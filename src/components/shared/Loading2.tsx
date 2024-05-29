@@ -1,5 +1,7 @@
+// App
+import { GeneralConfig } from '@/lib/config/general.config';
 import { SVGProps } from 'react';
-
+// React component
 function Loading2({ width = 24, height = 24, dur = '0.75', color }: SVGProps<SVGElement>): JSX.Element {
 	return (
 		<div className='mx-auto flex flex-col items-center place-content-center'>
@@ -10,9 +12,9 @@ function Loading2({ width = 24, height = 24, dur = '0.75', color }: SVGProps<SVG
 					</path>
 				</svg>
 			</div>
-			<div className='flex mt-4 text-slate-400'>Cargando</div>
+			<div className='flex mt-4 text-slate-400'>{GeneralConfig.loading}</div>
 		</div>
 	);
 }
-
+// Export React component
 export default Loading2;

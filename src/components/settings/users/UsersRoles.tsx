@@ -6,11 +6,11 @@ import { Card } from '@/components/ui/card';
 import { Form, FormControl, FormField, FormItem, FormMessage } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { Separator } from '@/components/ui/separator';
-import { toast } from '@/components/ui/use-toast';
 // App
 import { IRole } from '@/lib/interfaces/role.interface';
 import { RolesServices } from '@/services/roles.services';
 import { SettingsConfig } from '@/lib/config/settings.config';
+import { handleServerResponse } from '@/lib/handleServerResponse';
 import { rolesSchema } from '@/lib/schemas/roles.schema';
 import { useCapitalize } from '@/hooks/useCapitalize';
 import { useEffect, useState } from 'react';
@@ -29,9 +29,8 @@ function UsersRoles() {
 
 	async function getRoles() {
 		RolesServices.findAll().then((response) => {
-			if (response.length > 0) setRoles(response);
-			if (response.statusCode > 399) toast({ title: response.statusCode, description: response.message, variant: 'success', duration: 5000 });
-			if (response instanceof Error) toast({ title: 'Error', description: '500 Internal Server Error | ' + response.message, variant: 'destructive', duration: 5000 });
+			if (!response.statusCode) setRoles(response);
+            handleServerResponse(response);
 		});
 	}
 	// #region Form
@@ -61,13 +60,11 @@ function UsersRoles() {
 		};
 		RolesServices.update(data.id, formattedData).then((response) => {
 			if (response.statusCode === 200) {
-				toast({ title: response.statusCode, description: response.message, variant: 'success', duration: 5000 });
 				getRoles();
 				rolesForm.reset();
 				setShowForm(false);
 			}
-			if (response.statusCode > 399) toast({ title: response.statusCode, description: response.message, variant: 'destructive', duration: 5000 });
-			if (response instanceof Error) toast({ title: 'Error', description: '500 Internal Server Error | ' + response.message, variant: 'destructive', duration: 5000 });
+            handleServerResponse(response);
 		});
 	}
 

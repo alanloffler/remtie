@@ -9,8 +9,8 @@ import { Separator } from '@/components/ui/separator';
 import { ISetting } from '@/lib/interfaces/setting.interface';
 import { SettingsConfig } from '@/lib/config/settings.config';
 import { SettingsServices } from '@/services/settings.services';
+import { handleServerResponse } from '@/lib/handleServerResponse';
 import { settingsSchema } from '@/lib/schemas/settings.schema';
-import { toast } from '@/components/ui/use-toast';
 import { useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
@@ -29,8 +29,11 @@ function DashboardLimit() {
 	useEffect(() => {
 		function findOneSettings(setting: string) {
 			SettingsServices.findOne(setting).then((response) => {
-				setSetting(response);
-				form.setValue('value', response.value);
+				if (response.statusCode === 200) {
+					setSetting(response);
+					form.setValue('value', response.value);
+				}
+                handleServerResponse(response);
 			});
 		}
 		findOneSettings('dashboardLimit');
@@ -39,12 +42,8 @@ function DashboardLimit() {
 	// #region Form
 	function handleSettingSubmit(event: z.infer<typeof settingsSchema>) {
 		SettingsServices.update(setting.id, event.value).then((response) => {
-			if (response.statusCode === 200) {
-				setSetting({ ...setting, value: event.value });
-				toast({ title: response.statusCode, description: response.message, variant: 'success', duration: 5000 });
-			}
-			if (response.statusCode > 399) toast({ title: response.statusCode, description: response.message, variant: 'destructive', duration: 5000 });
-			if (response instanceof Error) toast({ title: 'Error', description: '500 Internal Server Error | ' + response.message, variant: 'destructive', duration: 5000 });
+			if (response.statusCode === 200) setSetting({ ...setting, value: event.value });
+            handleServerResponse(response);
 		});
 	}
 	// #endregion

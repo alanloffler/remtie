@@ -6,17 +6,17 @@ import { Card } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Form, FormControl, FormField, FormItem, FormMessage } from '@/components/ui/form';
 import { Separator } from '@/components/ui/separator';
-import { toast } from '@/components/ui/use-toast';
 // App
+import { BusinessServices } from '@/services/business.services';
+import { IBusiness, IBusinessForm } from '@/lib/interfaces/inputs.interface';
+import { SettingsConfig } from '@/lib/config/settings.config';
+import { businessSchema } from '@/lib/schemas/business.schema';
+import { handleServerResponse } from '@/lib/handleServerResponse';
 import { useCapitalize } from '@/hooks/useCapitalize';
 import { useEffect, useState } from 'react';
-import { IBusiness, IBusinessForm } from '@/lib/interfaces/inputs.interface';
-import { BusinessServices } from '@/services/business.services';
-import { businessSchema } from '@/lib/schemas/business.schema';
+import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { useForm } from 'react-hook-form';
-import { SettingsConfig } from '@/lib/config/settings.config';
 // React component
 function ProductBusinessSettings() {
 	const [business, setBusiness] = useState<IBusiness[]>([]);
@@ -28,44 +28,29 @@ function ProductBusinessSettings() {
 
 	function getBusiness() {
 		BusinessServices.findAll().then((response) => {
-			if (response.length > 0) {
-				if (response.statusCode < 399) toast({ title: response.statusCode, description: response.message, variant: 'success', duration: 5000 });
-				setBusiness(response);
-			}
-			if (response instanceof Error) toast({ title: 'Error', description: '500 Internal Server Error | ' + response.message, variant: 'destructive', duration: 5000 });
+            if (!response.statusCode) setBusiness(response)
+            handleServerResponse(response);
 		});
 	}
 
 	function restoreBusiness(id: number) {
 		BusinessServices.restore(id).then((response) => {
-			if (response.statusCode === 200) {
-				toast({ title: response.statusCode, description: response.message, variant: 'success', duration: 5000 });
-				getBusiness();
-			}
-			if (response.statusCode > 399) toast({ title: response.statusCode, description: response.message, variant: 'destructive', duration: 5000 });
-			if (response instanceof Error) toast({ title: 'Error', description: '500 Internal Server Error | ' + response.message, variant: 'destructive', duration: 5000 });
+			if (response.statusCode === 200) getBusiness();
+            handleServerResponse(response);
 		});
 	}
 
 	function removeSoftBusiness(id: number) {
 		BusinessServices.removeSoft(id).then((response) => {
-			if (response.statusCode === 200) {
-				toast({ title: response.statusCode, description: response.message, variant: 'success', duration: 5000 });
-				getBusiness();
-			}
-			if (response.statusCode > 399) toast({ title: response.statusCode, description: response.message, variant: 'destructive', duration: 5000 });
-			if (response instanceof Error) toast({ title: 'Error', description: '500 Internal Server Error | ' + response.message, variant: 'destructive', duration: 5000 });
+			if (response.statusCode === 200) getBusiness();
+			handleServerResponse(response);
 		});
 	}
 
 	function removeBusiness(id: number) {
 		BusinessServices.remove(id).then((response) => {
-			if (response.statusCode === 200) {
-				toast({ title: response.statusCode, description: response.message, variant: 'success', duration: 5000 });
-				getBusiness();
-			}
-			if (response.statusCode > 399) toast({ title: response.statusCode, description: response.message, variant: 'destructive', duration: 5000 });
-			if (response instanceof Error) toast({ title: 'Error', description: '500 Internal Server Error | ' + response.message, variant: 'destructive', duration: 5000 });
+			if (response.statusCode === 200) getBusiness();
+			handleServerResponse(response);
 		});
 	}
 	// #region Form actions
@@ -81,12 +66,10 @@ function ProductBusinessSettings() {
 		const formattedData = { name: data.name.trim().toLowerCase(), plural: data.plural.trim().toLowerCase() };
 		BusinessServices.create(formattedData).then((response) => {
 			if (response.statusCode === 200) {
-				toast({ title: response.statusCode, description: response.message, variant: 'success', duration: 5000 });
 				getBusiness();
 				businessForm.reset();
 			}
-			if (response.statusCode > 399) toast({ title: response.statusCode, description: response.message, variant: 'destructive', duration: 5000 });
-			if (response instanceof Error) toast({ title: 'Error', description: '500 Internal Server Error | ' + response.message, variant: 'destructive', duration: 5000 });
+            handleServerResponse(response);
 		});
 	}
 	// #endregion

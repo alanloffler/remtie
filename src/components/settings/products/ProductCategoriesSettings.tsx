@@ -6,12 +6,12 @@ import { Card } from '@/components/ui/card';
 import { Form, FormControl, FormField, FormItem, FormMessage } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { Separator } from '@/components/ui/separator';
-import { toast } from '@/components/ui/use-toast';
 // App
 import { CategoriesServices } from '@/services/categories.services';
 import { ICategory, ICategoryForm } from '@/lib/interfaces/inputs.interface';
 import { SettingsConfig } from '@/lib/config/settings.config';
 import { categoriesSchema } from '@/lib/schemas/categories.schema';
+import { handleServerResponse } from '@/lib/handleServerResponse';
 import { useCapitalize } from '@/hooks/useCapitalize';
 import { useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
@@ -28,44 +28,29 @@ function ProductBusinessSettings() {
 
 	function getCategories() {
 		CategoriesServices.findAll().then((response) => {
-			if (response.length > 0) {
-				if (response.statusCode < 399) toast({ title: response.statusCode, description: response.message, variant: 'success', duration: 5000 });
-				setCategories(response);
-			}
-			if (response instanceof Error) toast({ title: 'Error', description: '500 Internal Server Error | ' + response.message, variant: 'destructive', duration: 5000 });
+			if (!response.statusCode) setCategories(response);
+            handleServerResponse(response);
 		});
 	}
 
 	function restoreBusiness(id: number) {
 		CategoriesServices.restore(id).then((response) => {
-			if (response.statusCode === 200) {
-				toast({ title: response.statusCode, description: response.message, variant: 'success', duration: 5000 });
-				getCategories();
-			}
-			if (response.statusCode > 399) toast({ title: response.statusCode, description: response.message, variant: 'destructive', duration: 5000 });
-			if (response instanceof Error) toast({ title: 'Error', description: '500 Internal Server Error | ' + response.message, variant: 'destructive', duration: 5000 });
+			if (response.statusCode === 200) getCategories();
+			handleServerResponse(response);
 		});
 	}
 
 	function removeSoftBusiness(id: number) {
 		CategoriesServices.removeSoft(id).then((response) => {
-			if (response.statusCode === 200) {
-				toast({ title: response.statusCode, description: response.message, variant: 'success', duration: 5000 });
-				getCategories();
-			}
-			if (response.statusCode > 399) toast({ title: response.statusCode, description: response.message, variant: 'destructive', duration: 5000 });
-			if (response instanceof Error) toast({ title: 'Error', description: '500 Internal Server Error | ' + response.message, variant: 'destructive', duration: 5000 });
+			if (response.statusCode === 200) getCategories();
+			handleServerResponse(response);
 		});
 	}
 
 	function removeBusiness(id: number) {
 		CategoriesServices.remove(id).then((response) => {
-			if (response.statusCode === 200) {
-				toast({ title: response.statusCode, description: response.message, variant: 'success', duration: 5000 });
-				getCategories();
-			}
-			if (response.statusCode > 399) toast({ title: response.statusCode, description: response.message, variant: 'destructive', duration: 5000 });
-			if (response instanceof Error) toast({ title: 'Error', description: '500 Internal Server Error | ' + response.message, variant: 'destructive', duration: 5000 });
+			if (response.statusCode === 200) getCategories();
+			handleServerResponse(response);
 		});
 	}
 	// #region Form actions
@@ -86,12 +71,10 @@ function ProductBusinessSettings() {
 		};
 		CategoriesServices.create(formattedData).then((response) => {
 			if (response.statusCode === 200) {
-				toast({ title: response.statusCode, description: response.message, variant: 'success', duration: 5000 });
 				getCategories();
 				categoriesForm.reset();
 			}
-			if (response.statusCode > 399) toast({ title: response.statusCode, description: response.message, variant: 'destructive', duration: 5000 });
-			if (response instanceof Error) toast({ title: 'Error', description: '500 Internal Server Error | ' + response.message, variant: 'destructive', duration: 5000 });
+            handleServerResponse(response);
 		});
 	}
 	// #endregion

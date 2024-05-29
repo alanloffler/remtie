@@ -5,44 +5,40 @@ import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from '@/components/ui/select';
 import { Separator } from '@/components/ui/separator';
-import { toast } from '@/components/ui/use-toast';
 // App
 import { ISetting } from '@/lib/interfaces/setting.interface';
 import { SettingsConfig } from '@/lib/config/settings.config';
 import { SettingsServices } from '@/services/settings.services';
+import { handleServerResponse } from '@/lib/handleServerResponse';
 import { useEffect, useState } from 'react';
 // React component
 function ProductViewSettings() {
 	const [defaultView, setDefaultView] = useState<ISetting>({} as ISetting);
 	const [defaultViewChanged, setDefaultViewChanged] = useState<string>('');
 	const [displayView, setDisplayView] = useState<string>('');
-
+    // #region Load data
 	useEffect(() => {
 		SettingsServices.findOne('defaultView').then((response) => {
-			if (response.id) {
+			if (!response.statusCode) {
 				setDefaultView(response);
 				setDisplayView(response.value);
 			}
-			if (response.statusCode > 399) toast({ title: response.statusCode, description: response.message, variant: 'destructive', duration: 5000 });
-			if (response instanceof Error) toast({ title: 'Error', description: '500 Internal Server Error | ' + response.message, variant: 'destructive', duration: 5000 });
+            handleServerResponse(response);
 		});
 	}, []);
-
+    // #endregion
+    // #region Form actions
 	function handleChange(event: string) {
 		setDefaultViewChanged(event);
 	}
 
 	function handleDefaultView() {
 		SettingsServices.update(defaultView.id, defaultViewChanged).then((response) => {
-			if (response.statusCode === 200) {
-				setDisplayView(defaultViewChanged);
-				toast({ title: response.statusCode, description: response.message, variant: 'success', duration: 5000 });
-			}
-			if (response.statusCode > 399) toast({ title: response.statusCode, description: response.message, variant: 'destructive', duration: 5000 });
-			if (response instanceof Error) toast({ title: 'Error', description: '500 Internal Server Error | ' + response.message, variant: 'destructive', duration: 5000 });
+			if (response.statusCode === 200) setDisplayView(defaultViewChanged);
+            handleServerResponse(response);
 		});
 	}
-
+    // #endregion
 	return (
 		<div className='space-y-2 pb-2'>
             <Separator className='mb-2' />

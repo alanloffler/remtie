@@ -1,5 +1,5 @@
 // App
-import MapCreateProduct from "@/components/settings/map/MapCreateProduct";
+import MapFormsProduct from "@/components/settings/map/MapFormsProduct";
 import MapId from "@/components/settings/map/MapId";
 // React component
 function SettingsMap() {
@@ -7,13 +7,14 @@ function SettingsMap() {
 		<>
 			<div className='mb-8 flex animate-fadeIn flex-col md:flex-row md:gap-6'>
 				<div className='w-full p-2 md:w-1/2'>
-					<div className='space-y-6'>
-                        <MapCreateProduct />
+					<div className='space-y-4'>
+                        <MapFormsProduct />
                         <MapId />
                     </div>
 				</div>
 				<div className='w-full p-2 md:w-1/2'>
 					<div className='space-y-4'>
+                        <MapFormsProduct />
                     </div>
 				</div>
 			</div>

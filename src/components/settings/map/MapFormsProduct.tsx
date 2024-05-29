@@ -4,23 +4,24 @@ import { FormControl, FormField, FormItem, FormMessage } from '@/components/ui/f
 import { Input } from '@/components/ui/input';
 import { Separator } from '@/components/ui/separator';
 // App
-import { SettingsConfig } from '@/lib/config/settings.config';
-import { mapSettingsSchema } from '@/lib/schemas/settings.schema';
-import { SettingsServices } from '@/services/settings.services';
-import { zodResolver } from '@hookform/resolvers/zod';
-import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from '@/components/ui/select';
-import { FormEvent, useEffect, useState } from 'react';
-import { FormProvider, useForm } from 'react-hook-form';
-import { z } from 'zod';
 import { Button } from '@/components/ui/button';
 import { ButtonsConfig } from '@/lib/config/buttons.config';
 import { Check } from 'lucide-react';
+import { FormEvent, useEffect, useState } from 'react';
+import { FormProvider, useForm } from 'react-hook-form';
 import { IMapOptions } from '@/lib/interfaces/google-map.interface';
 import { ISetting } from '@/lib/interfaces/setting.interface';
+import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from '@/components/ui/select';
+import { SettingsConfig } from '@/lib/config/settings.config';
+import { SettingsServices } from '@/services/settings.services';
+import { handleServerResponse } from '@/lib/handleServerResponse';
+import { mapSettingsSchema } from '@/lib/schemas/settings.schema';
+import { z } from 'zod';
+import { zodResolver } from '@hookform/resolvers/zod';
 // React component
-function MapCreateProduct() {
-    const [mapOptions, setMapOptions] = useState<IMapOptions>({} as IMapOptions);
-    const [setting, setSetting] = useState<ISetting>({} as ISetting);
+function MapFormsProduct() {
+	const [mapOptions, setMapOptions] = useState<IMapOptions>({} as IMapOptions);
+	const [setting, setSetting] = useState<ISetting>({} as ISetting);
 
 	const createMapForm = useForm<z.infer<typeof mapSettingsSchema>>({
 		resolver: zodResolver(mapSettingsSchema),
@@ -35,36 +36,36 @@ function MapCreateProduct() {
 	useEffect(() => {
 		function getMapOptions() {
 			SettingsServices.findOne('mapCPOptions').then((response) => {
-				const options = JSON.parse(response.value);
-                setSetting(response);
-                setMapOptions(options);
-				createMapForm.setValue('lat', options.lat);
-				createMapForm.setValue('lng', options.lng);
-				createMapForm.setValue('zoom', options.zoom);
-				createMapForm.setValue('mapType', options.mapType);
+				if (!response.statusCode) {
+					const options = JSON.parse(response.value);
+					setSetting(response);
+					setMapOptions(options);
+					createMapForm.setValue('lat', options.lat);
+					createMapForm.setValue('lng', options.lng);
+					createMapForm.setValue('zoom', options.zoom);
+					createMapForm.setValue('mapType', options.mapType);
+				}
+                handleServerResponse(response);
 			});
 		}
 		getMapOptions();
 	}, [createMapForm]);
 	// #endregion
-
+	// #region Form actions
 	function handleMapSubmit(data: z.infer<typeof mapSettingsSchema>) {
-        console.log(JSON.stringify(data));
-        const mapOptions: string = JSON.stringify(data);
-        SettingsServices.update(setting.id, mapOptions).then((response) => {
-            console.log(response);
-        });
+		const mapOptions: string = JSON.stringify(data);
+		SettingsServices.update(setting.id, mapOptions).then((response) => handleServerResponse(response));
 	}
 
-    function handleCancel(event: FormEvent<HTMLButtonElement>) {
-        event.preventDefault();
-        createMapForm.reset();
-        createMapForm.setValue('lat', mapOptions.lat);
-        createMapForm.setValue('lng', mapOptions.lng);
-        createMapForm.setValue('zoom', mapOptions.zoom);
-        createMapForm.setValue('mapType', mapOptions.mapType);
-    }
-
+	function handleCancel(event: FormEvent<HTMLButtonElement>) {
+		event.preventDefault();
+		createMapForm.reset();
+		createMapForm.setValue('lat', mapOptions.lat);
+		createMapForm.setValue('lng', mapOptions.lng);
+		createMapForm.setValue('zoom', mapOptions.zoom);
+		createMapForm.setValue('mapType', mapOptions.mapType);
+	}
+	// #endregion
 	return (
 		<>
 			<div className='space-y-4'>
@@ -75,13 +76,13 @@ function MapCreateProduct() {
 					<FormProvider {...createMapForm}>
 						<form onSubmit={createMapForm.handleSubmit(handleMapSubmit)} className='flex flex-col items-center space-y-4'>
 							<div className='flex w-full flex-row items-center space-x-4'>
-								<div className='w-1/3 space-y-7 text-end'>
+								{/* <div className='w-1/3 space-y-7 text-end'>
 									<div className='text-sm font-medium text-slate-600'>{SettingsConfig.sections.formMaps.form.label.lat}</div>
 									<div className='text-sm font-medium text-slate-600'>{SettingsConfig.sections.formMaps.form.label.lng}</div>
 									<div className='text-sm font-medium text-slate-600'>{SettingsConfig.sections.formMaps.form.label.zoom}</div>
 									<div className='text-sm font-medium text-slate-600'>{SettingsConfig.sections.formMaps.form.label.mapType}</div>
-								</div>
-								<div className='w-2/3 space-y-4'>
+								</div> */}
+								<div className='w-full space-y-4'>
 									<FormField
 										control={createMapForm.control}
 										name='lat'
@@ -89,6 +90,7 @@ function MapCreateProduct() {
 											<FormItem className='flex w-full flex-row items-center'>
 												<FormControl className='flex w-full'>
 													<div className='flex items-center space-x-4'>
+														<div className='w-1/2 text-sm font-medium text-slate-600'>{SettingsConfig.sections.formMaps.form.label.lat}</div>
 														<Input {...field} type='text' placeholder={SettingsConfig.sections.formMaps.form.placeholder.lat} className='h-8' />
 													</div>
 												</FormControl>
@@ -151,7 +153,7 @@ function MapCreateProduct() {
 									/>
 								</div>
 							</div>
-							<div className='flex flex-row justify-end gap-6 pt-4 w-full'>
+							<div className='flex w-full flex-row justify-end gap-6 pt-4'>
 								<Button onClick={(event) => handleCancel(event)} variant='ghost' size='sm' className='h-8 text-xs'>
 									{ButtonsConfig.actions.cancel}
 								</Button>
@@ -168,4 +170,4 @@ function MapCreateProduct() {
 	);
 }
 // Export React component
-export default MapCreateProduct;
+export default MapFormsProduct;

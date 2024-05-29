@@ -10,7 +10,6 @@ import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Separator } from '@/components/ui/separator';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
-import { toast } from '@/components/ui/use-toast';
 // App
 import { ButtonsConfig } from '@/lib/config/buttons.config';
 import { ChangeEvent, FormEvent, useEffect, useState } from 'react';
@@ -22,6 +21,7 @@ import { IState } from '@/lib/interfaces/state.interface';
 import { SettingsConfig } from '@/lib/config/settings.config';
 import { StatesServices } from '@/services/states.services';
 import { citiesSchema } from '@/lib/schemas/cities.schema';
+import { handleServerResponse } from '@/lib/handleServerResponse';
 import { statesSchema } from '@/lib/schemas/states.schema';
 import { useCapitalize } from '@/hooks/useCapitalize';
 import { useForm } from 'react-hook-form';
@@ -54,8 +54,7 @@ function ProductCities() {
 					setCities(response);
 					setCitiesSearch(response);
 				}
-				if (response.statusCode > 399) toast({ title: response.statusCode, description: response.message, variant: 'destructive', duration: 5000 });
-				if (response instanceof Error) toast({ title: 'Error', description: '500 Internal Server Error | ' + response.message, variant: 'destructive', duration: 5000 });
+				handleServerResponse(response);
 			});
 		}
 
@@ -69,8 +68,7 @@ function ProductCities() {
 					setStates(response);
 					setStatesSearch(response);
 				}
-				if (response.statusCode > 399) toast({ title: response.statusCode, description: response.message, variant: 'destructive', duration: 5000 });
-				if (response instanceof Error) toast({ title: 'Error', description: '500 Internal Server Error | ' + response.message, variant: 'destructive', duration: 5000 });
+				handleServerResponse(response);
 			});
 		}
 
@@ -80,8 +78,7 @@ function ProductCities() {
 					setStatesForSelect(response);
 					setStatesSelectKey(Math.random());
 				}
-				if (response.statusCode > 399) toast({ title: response.statusCode, description: response.message, variant: 'destructive', duration: 5000 });
-				if (response instanceof Error) toast({ title: 'Error', description: '500 Internal Server Error | ' + response.message, variant: 'destructive', duration: 5000 });
+				handleServerResponse(response);
 			});
 		}
 
@@ -495,10 +492,8 @@ function ProductCities() {
 				setUpdateCities(Math.random());
 				cityForm.reset();
 				setStatesSelectKey(Math.random());
-				toast({ title: response.statusCode, description: response.message, variant: 'success', duration: 5000 });
 			}
-			if (response.statusCode > 399) toast({ title: response.statusCode, description: response.message, variant: 'destructive', duration: 5000 });
-			if (response instanceof Error) toast({ title: 'Error', description: '500 Internal Server Error | ' + response.message, variant: 'destructive', duration: 5000 });
+            handleServerResponse(response);
 		});
 	}
 
@@ -508,10 +503,8 @@ function ProductCities() {
 				setUpdateCities(Math.random());
 				cityEditForm.reset();
 				setShowCityEditForm(false);
-				toast({ title: response.statusCode, description: response.message, variant: 'success', duration: 5000 });
 			}
-			if (response.statusCode > 399) toast({ title: response.statusCode, description: response.message, variant: 'destructive', duration: 5000 });
-			if (response instanceof Error) toast({ title: 'Error', description: '500 Internal Server Error | ' + response.message, variant: 'destructive', duration: 5000 });
+            handleServerResponse(response);
 		});
 	}
 
@@ -541,10 +534,8 @@ function ProductCities() {
 			if (response.statusCode === 200) {
 				setUpdateStates(Math.random());
 				stateForm.reset();
-				toast({ title: response.statusCode, description: response.message, variant: 'success', duration: 5000 });
 			}
-			if (response.statusCode > 399) toast({ title: response.statusCode, description: response.message, variant: 'destructive', duration: 5000 });
-			if (response instanceof Error) toast({ title: 'Error', description: '500 Internal Server Error | ' + response.message, variant: 'destructive', duration: 5000 });
+            handleServerResponse(response);
 		});
 	}
 
@@ -554,10 +545,8 @@ function ProductCities() {
 				setUpdateStates(Math.random());
 				stateEditForm.reset();
 				setShowStateEditForm(false);
-				toast({ title: response.statusCode, description: response.message, variant: 'success', duration: 5000 });
 			}
-			if (response.statusCode > 399) toast({ title: response.statusCode, description: response.message, variant: 'destructive', duration: 5000 });
-			if (response instanceof Error) toast({ title: 'Error', description: '500 Internal Server Error | ' + response.message, variant: 'destructive', duration: 5000 });
+            handleServerResponse(response);
 		});
 	}
 
@@ -609,72 +598,60 @@ function ProductCities() {
 	function removeCity(id: number) {
 		CitiesServices.remove(id).then((response) => {
 			if (response.statusCode === 200) {
-				toast({ title: response.statusCode, description: response.message, variant: 'success', duration: 5000 });
 				setUpdateCities(Math.random());
 				setOpenDialog(false);
 			}
-			if (response.statusCode > 399) toast({ title: response.statusCode, description: response.message, variant: 'destructive', duration: 5000 });
-			if (response instanceof Error) toast({ title: 'Error', description: '500 Internal Server Error | ' + response.message, variant: 'destructive', duration: 5000 });
+            handleServerResponse(response);
 		});
 	}
 
 	function removeSoftCity(id: number) {
 		CitiesServices.removeSoft(id).then((response) => {
 			if (response.statusCode === 200) {
-				toast({ title: response.statusCode, description: response.message, variant: 'success', duration: 5000 });
 				setUpdateCities(Math.random());
 				setOpenDialog(false);
 			}
-			if (response.statusCode > 399) toast({ title: response.statusCode, description: response.message, variant: 'destructive', duration: 5000 });
-			if (response instanceof Error) toast({ title: 'Error', description: '500 Internal Server Error | ' + response.message, variant: 'destructive', duration: 5000 });
+            handleServerResponse(response);
 		});
 	}
 
 	function restoreCity(id: number) {
 		CitiesServices.restore(id).then((response) => {
 			if (response.statusCode === 200) {
-				toast({ title: response.statusCode, description: response.message, variant: 'success', duration: 5000 });
 				setUpdateCities(Math.random());
 				setOpenDialog(false);
 			}
-			if (response.statusCode > 399) toast({ title: response.statusCode, description: response.message, variant: 'destructive', duration: 5000 });
-			if (response instanceof Error) toast({ title: 'Error', description: '500 Internal Server Error | ' + response.message, variant: 'destructive', duration: 5000 });
+            handleServerResponse(response);
 		});
 	}
 	// State
 	function removeState(id: number) {
 		StatesServices.remove(id).then((response) => {
 			if (response.statusCode === 200) {
-				toast({ title: response.statusCode, description: response.message, variant: 'success', duration: 5000 });
 				setUpdateStates(Math.random());
 				setOpenDialog(false);
 			}
-			if (response.statusCode > 399) toast({ title: response.statusCode, description: response.message, variant: 'destructive', duration: 5000 });
-			if (response instanceof Error) toast({ title: 'Error', description: '500 Internal Server Error | ' + response.message, variant: 'destructive', duration: 5000 });
+            handleServerResponse(response);
 		});
 	}
 
 	function removeSoftState(id: number) {
 		StatesServices.removeSoft(id).then((response) => {
 			if (response.statusCode === 200) {
-				toast({ title: response.statusCode, description: response.message, variant: 'success', duration: 5000 });
 				setUpdateStates(Math.random());
 				setOpenDialog(false);
 			}
-			if (response.statusCode > 399) toast({ title: response.statusCode, description: response.message, variant: 'destructive', duration: 5000 });
-			if (response instanceof Error) toast({ title: 'Error', description: '500 Internal Server Error | ' + response.message, variant: 'destructive', duration: 5000 });
+            handleServerResponse(response);
 		});
 	}
 
 	function restoreState(id: number) {
 		StatesServices.restore(id).then((response) => {
 			if (response.statusCode === 200) {
-				toast({ title: response.statusCode, description: response.message, variant: 'success', duration: 5000 });
 				setUpdateStates(Math.random());
 				setOpenDialog(false);
 			}
-			if (response.statusCode > 399) toast({ title: response.statusCode, description: response.message, variant: 'destructive', duration: 5000 });
-			if (response instanceof Error) toast({ title: 'Error', description: '500 Internal Server Error | ' + response.message, variant: 'destructive', duration: 5000 });
+            handleServerResponse(response);
 		});
 	}
 	// #endregion

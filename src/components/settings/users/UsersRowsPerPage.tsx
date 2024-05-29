@@ -8,25 +8,25 @@ import { FormField, FormItem, FormControl, FormMessage, Form } from '@/component
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Separator } from '@/components/ui/separator';
-import { toast } from '@/components/ui/use-toast';
 // App
 import { ISetting } from '@/lib/interfaces/setting.interface';
 import { SettingsConfig } from '@/lib/config/settings.config';
 import { SettingsServices } from '@/services/settings.services';
+import { handleServerResponse } from '@/lib/handleServerResponse';
 import { rowsOptionsSchema } from '@/lib/schemas/rowsOptions.schema';
 import { rowsPerPageSchema } from '@/lib/schemas/rowsPerPage.schema';
+import { store } from '@/services/store.services';
 import { useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { store } from '@/services/store.services';
 // React component
 function UsersRowsPerPage() {
 	const [rowsPerPage, setRowsPerPage] = useState<ISetting>({} as ISetting);
 	const [actualRowsPerPage, setActualRowsPerPage] = useState<string>('');
 	const [rowsPerPageOptions, setRowsPerPageOptions] = useState<ISetting>({} as ISetting);
 	const [options, setOptions] = useState<number[]>([]);
-    const setRowsPerPageUsersStore = store((state) => state.setRowsPerPageUsers);
+	const setRowsPerPageUsersStore = store((state) => state.setRowsPerPageUsers);
 
 	const rowsPerPageForm = useForm<z.infer<typeof rowsPerPageSchema>>({
 		resolver: zodResolver(rowsPerPageSchema),
@@ -34,42 +34,43 @@ function UsersRowsPerPage() {
 			value: 0
 		}
 	});
-
+	// #region Load Data
 	useEffect(() => {
 		SettingsServices.findOne('rowsPerPageUsers').then((response) => {
-			if (response.id) {
+			if (!response.statusCode) {
 				rowsPerPageForm.setValue('value', response.value);
 				setRowsPerPage(response);
 				setActualRowsPerPage(response.value);
 			}
-			if (response.statusCode > 399) toast({ title: response.statusCode, description: response.message, variant: 'destructive', duration: 5000 });
-			if (response instanceof Error) toast({ title: 'Error', description: '500 Internal Server Error | ' + response.message, variant: 'destructive', duration: 5000 });
+			handleServerResponse(response);
 		});
 		getRowsPerPageOptions();
 	}, [rowsPerPageForm]);
 
 	function getRowsPerPageOptions() {
 		SettingsServices.findOne('rowsPerPageOptionsUsers').then((response) => {
-			if (response.value) {
-				response.value = response.value.split(',');
-				response.value = response.value.map((item: string) => Number(item));
-			} else {
-				response.value = [];
+			if (!response.statusCode) {
+				if (response.value) {
+					response.value = response.value.split(',');
+					response.value = response.value.map((item: string) => Number(item));
+				} else {
+					response.value = [];
+				}
+				setRowsPerPageOptions(response);
+				setOptions(response.value);
 			}
-			setRowsPerPageOptions(response);
-			setOptions(response.value);
+			handleServerResponse(response);
 		});
 	}
-
+	// #endregion
+	// #region Form actions
 	function handleRowsPerPage(value: string) {
 		SettingsServices.update(rowsPerPage.id, value).then((response) => {
 			if (response.statusCode === 200) {
 				setRowsPerPage({ ...rowsPerPage, value: value });
-                setRowsPerPageUsersStore(Number(value));
-                toast({ title: response.statusCode, description: response.message, variant: 'success', duration: 5000 });
+				setRowsPerPageUsersStore(Number(value));
 			}
-			if (response.statusCode > 399) toast({ title: response.statusCode, description: response.message, variant: 'destructive', duration: 5000 });
-			if (response instanceof Error) toast({ title: 'Error', description: '500 Internal Server Error | ' + response.message, variant: 'destructive', duration: 5000 });
+            handleServerResponse(response);
 		});
 	}
 
@@ -80,11 +81,10 @@ function UsersRowsPerPage() {
 
 		SettingsServices.update(rowsPerPageOptions.id, tmpOptions.join(',')).then((response) => {
 			if (response.statusCode === 200) setOptions(tmpOptions);
-			if (response.statusCode > 399) toast({ title: response.statusCode, description: response.message, variant: 'destructive', duration: 5000 });
-			if (response instanceof Error) toast({ title: 'Error', description: '500 Internal Server Error | ' + response.message, variant: 'destructive', duration: 5000 });
+            handleServerResponse(response);
 		});
 	}
-	// #region Form
+
 	const rowsOptionsForm = useForm<z.infer<typeof rowsOptionsSchema>>({
 		resolver: zodResolver(rowsOptionsSchema),
 		defaultValues: {
@@ -103,19 +103,20 @@ function UsersRowsPerPage() {
 				setOptions(tmpOptions);
 				rowsOptionsForm.reset();
 			}
-			if (response.statusCode > 399) toast({ title: response.statusCode, description: response.message, variant: 'destructive', duration: 5000 });
-			if (response instanceof Error) toast({ title: 'Error', description: '500 Internal Server Error | ' + response.message, variant: 'destructive', duration: 5000 });
+            handleServerResponse(response);
 		});
 	}
 	// #endregion
-
 	return (
 		<div className='space-y-2'>
 			<Separator className='mb-2' />
 			<span className='text-base font-medium text-slate-500'>{SettingsConfig.sections.rowsPerPage.title}</span>
 			<Card className='p-4'>
 				<div className='grid space-y-2'>
-					<span className='flex flex-row text-sm text-slate-500 items-center'>{SettingsConfig.sections.rowsPerPage.subtitle1}<span className='font-semibold text-base pl-2'>{rowsPerPage.value}</span></span>
+					<span className='flex flex-row items-center text-sm text-slate-500'>
+						{SettingsConfig.sections.rowsPerPage.subtitle1}
+						<span className='pl-2 text-base font-semibold'>{rowsPerPage.value}</span>
+					</span>
 					<div className='flex flex-row gap-4'>
 						<Select value={actualRowsPerPage} onValueChange={(e) => setActualRowsPerPage(e)}>
 							<SelectTrigger className='h-8 w-[100px]'>

@@ -6,13 +6,13 @@ import { Card } from '@/components/ui/card';
 import { FormField, FormItem, FormControl, FormMessage } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { Separator } from '@/components/ui/separator';
-import { toast } from '@/components/ui/use-toast';
 // App
 import { FormProvider, useForm } from 'react-hook-form';
 import { ISetting } from '@/lib/interfaces/setting.interface';
 import { MouseEvent, useEffect, useState } from 'react';
 import { SettingsConfig } from '@/lib/config/settings.config';
 import { SettingsServices } from '@/services/settings.services';
+import { handleServerResponse } from '@/lib/handleServerResponse';
 import { settingsSchema } from '@/lib/schemas/settings.schema';
 import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -30,8 +30,11 @@ function MapId() {
     // #region Load Data
 	useEffect(() => {
 		SettingsServices.findOne('mapId').then((response) => {
-			setMapIdSetting(response);
-			mapIdForm.setValue('value', response.value);
+            if (!response.statusCode) {
+                setMapIdSetting(response);
+                mapIdForm.setValue('value', response.value);
+            }
+            handleServerResponse(response);
 		});
 	}, [mapIdForm]);
     // #endregion
@@ -43,11 +46,8 @@ function MapId() {
 
 	function handleMapIdSubmit(data: z.infer<typeof settingsSchema>) {
 		SettingsServices.update(mapIdSetting.id, data.value).then((response) => {
-            if (response.statusCode === 200) {
-                setDisabledInput(!disabledInput);
-            }
-            if (response.statusCode > 399) toast({ title: response.statusCode, description: response.message, variant: 'destructive', duration: 5000 });
-            if (response instanceof Error) toast({ title: 'Error', description: '500 Internal Server Error | ' + response.message, variant: 'destructive', duration: 5000 });
+            if (response.statusCode === 200) setDisabledInput(!disabledInput);
+            handleServerResponse(response);
 		});
 	}
     // #endregion

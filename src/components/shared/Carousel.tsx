@@ -1,11 +1,11 @@
 // Icons: Lucide (https://lucide.dev/)
 import { ChevronLeft, ChevronRight, Expand } from 'lucide-react';
 // App
-import { useState, useEffect } from 'react';
 import Loading from '@/components/shared/Loading';
-import { getImageURL } from '@/lib/image-util';
-import { IImage } from '@/lib/interfaces/image.interface';
 import { Dialog, DialogContent } from '@/components/ui/dialog';
+import { IImage } from '@/lib/interfaces/image.interface';
+import { getImageURL } from '@/lib/image-util';
+import { useState, useEffect } from 'react';
 // Interface
 interface ICarousel {
 	autoSlide?: boolean;
@@ -14,11 +14,11 @@ interface ICarousel {
 }
 // React component
 function Carousel(props: ICarousel) {
-	const images: IImage[] = props.images;
+	const [isFullscreen, setIsFullscreen] = useState(false);
+	const [loading, setLoading] = useState<boolean>(true);
 	const autoSlide: boolean = props.autoSlide || false;
 	const autoSlideInterval: number = props.autoSlideInterval || 3000;
-	const [loading, setLoading] = useState<boolean>(true);
-	const [isFullscreen, setIsFullscreen] = useState(false);
+	const images: IImage[] = props.images;
 
 	const [current, setCurrent] = useState<number>(0);
 	const prev = () => setCurrent((current) => (current === 0 ? images.length - 1 : current - 1));
@@ -30,7 +30,6 @@ function Carousel(props: ICarousel) {
 		return () => clearInterval(slideInterval);
 		// eslint-disable-next-line react-hooks/exhaustive-deps
 	}, []);
-	// TODO aspect ratio, set dynamic on each img?
 	return (
 		<>
 			<div className='flex aspect-[83/50]'>

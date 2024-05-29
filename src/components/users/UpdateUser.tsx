@@ -6,7 +6,6 @@ import { Card, CardContent } from '@/components/ui/card';
 import { FormField, FormItem, FormLabel, FormControl, FormMessage } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from '@/components/ui/select';
-import { toast } from '@/components/ui/use-toast';
 // App
 import { ButtonsConfig } from '@/lib/config/buttons.config';
 import { FormEvent, useEffect, useState } from 'react';
@@ -16,6 +15,7 @@ import { Link, useNavigate, useParams } from 'react-router-dom';
 import { RolesServices } from '@/services/roles.services';
 import { UsersConfig } from '@/lib/config/users.config';
 import { UsersServices } from '@/services/users.services';
+import { handleServerResponse } from '@/lib/handleServerResponse';
 import { updateUserSchema } from '@/lib/schemas/user.schema';
 import { useCapitalize } from '@/hooks/useCapitalize';
 import { useForm, FormProvider } from 'react-hook-form';
@@ -48,8 +48,7 @@ function UpdateUser() {
 		function getRoles() {
 			RolesServices.findAll().then((response) => {
 				if (!response.statusCode) setRoles(response);
-				if (response.statusCode > 399) toast({ title: response.statusCode, description: response.message, variant: 'destructive', duration: 5000 });
-				if (response instanceof Error) toast({ title: 'Error', description: '500 Internal Server Error | ' + response.message, variant: 'destructive', duration: 5000 });
+                handleServerResponse(response);
 			});
 		}
 
@@ -63,8 +62,7 @@ function UpdateUser() {
 					form.setValue('phone', response.phone || '');
 					form.setValue('role', response.role);
 				}
-				if (response.statusCode > 399) toast({ title: response.statusCode, description: response.message, variant: 'destructive', duration: 5000 });
-				if (response instanceof Error) toast({ title: 'Error', description: '500 Internal Server Error | ' + response.message, variant: 'destructive', duration: 5000 });
+                handleServerResponse(response);
 			});
 		}
         
@@ -76,12 +74,8 @@ function UpdateUser() {
 	function onSubmit(values: z.infer<typeof updateUserSchema>) {
 		if (values.password === '') values.password = user.password;
 		UsersServices.update(userId, values).then((response) => {
-			if (response.statusCode === 200) {
-				toast({ title: response.statusCode, description: response.message, variant: 'success', duration: 5000 });
-                navigate(`${APP_URL}/usuarios`);
-			}
-			if (response.statusCode > 399) toast({ title: response.statusCode, description: response.message, variant: 'destructive', duration: 5000 });
-			if (response instanceof Error) toast({ title: 'Error', description: '500 Internal Server Error | ' + response.message, variant: 'destructive', duration: 5000 });
+			if (response.statusCode === 200) navigate(`${APP_URL}/usuarios`);
+			handleServerResponse(response);
 		});
 	}
 

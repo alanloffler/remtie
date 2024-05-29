@@ -4,7 +4,6 @@ import { ArrowUpDown, BadgeX, CheckCircle, CircleOff, Info, Pencil, Plus, Trash2
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { toast } from '@/components/ui/use-toast';
 // App
 import Dot from '@/components/shared/Dot';
 import { ButtonsConfig } from '@/lib/config/buttons.config';
@@ -19,6 +18,7 @@ import { Roles } from '@/lib/constants';
 import { RolesServices } from '@/services/roles.services';
 import { UsersConfig } from '@/lib/config/users.config';
 import { UsersServices } from '@/services/users.services';
+import { handleServerResponse } from '@/lib/handleServerResponse';
 import { store } from '@/services/store.services';
 import { useCapitalize } from '@/hooks/useCapitalize';
 import { useEffect, useState } from 'react';
@@ -189,19 +189,15 @@ function ListUsers() {
 	// #region Load data
 	async function getAllUsers() {
 		UsersServices.getAll().then((response) => {
-			if (response.length > 0) {
-				setUsers(response);
-			}
-			if (response.statusCode > 399) toast({ title: response.statusCode, description: response.message, variant: 'destructive', duration: 5000 });
-			if (response instanceof Error) toast({ title: 'Error', description: '500 Internal Server Error | ' + response.message, variant: 'destructive', duration: 5000 });
+			if (!response.statusCode) setUsers(response);
+			handleServerResponse(response);
 		});
 	}
 
 	async function getRoles() {
 		RolesServices.findAll().then((response) => {
 			if (!response.statusCode) setRoles(response);
-			if (response.statusCode > 399) toast({ title: response.statusCode, description: response.message, variant: 'destructive', duration: 5000 });
-			if (response instanceof Error) toast({ title: 'Error', description: '500 Internal Server Error | ' + response.message, variant: 'destructive', duration: 5000 });
+            handleServerResponse(response);
 		});
 	}
 
@@ -215,39 +211,31 @@ function ListUsers() {
 	function removeSoft(id: number) {
 		UsersServices.removeSoft(id).then((response) => {
 			if (response.statusCode === 200) {
-				toast({ title: response.statusCode, description: response.message, variant: 'success', duration: 5000 });
 				getAllUsers();
 				setUpdateUI(Math.random());
                 (store.getState().role === Roles.USER) ? navigate(`${APP_URL}`) : navigate(`${APP_URL}/usuarios`);
 			}
-			if (response.statusCode > 399) toast({ title: response.statusCode, description: response.message, variant: 'destructive', duration: 5000 });
-			if (response instanceof Error) toast({ title: 'Error', description: '500 Internal Server Error | ' + response.message, variant: 'destructive', duration: 5000 });
 			setOpenDialog(false);
+            handleServerResponse(response);
 		});
 	}
 
 	function restore(id: number) {
 		UsersServices.restore(id).then((response) => {
 			if (response.statusCode === 200) {
-				toast({ title: response.statusCode, description: response.message, variant: 'success', duration: 5000 });
 				getAllUsers();
 				setUpdateUI(Math.random());
 			}
-			if (response.statusCode > 399) toast({ title: response.statusCode, description: response.message, variant: 'destructive', duration: 5000 });
-			if (response instanceof Error) toast({ title: 'Error', description: '500 Internal Server Error | ' + response.message, variant: 'destructive', duration: 5000 });
 			setOpenDialog(false);
+            handleServerResponse(response);
 		});
 	}
 
 	function remove(id: number) {
 		UsersServices.remove(id).then((response) => {
-			if (response.statusCode === 200) {
-				toast({ title: response.statusCode, description: response.message, variant: 'success', duration: 5000 });
-				getAllUsers();
-			}
-			if (response.statusCode > 399) toast({ title: response.statusCode, description: response.message, variant: 'destructive', duration: 5000 });
-			if (response instanceof Error) toast({ title: 'Error', description: '500 Internal Server Error | ' + response.message, variant: 'destructive', duration: 5000 });
+			if (response.statusCode === 200) getAllUsers();
 			setOpenDialog(false);
+            handleServerResponse(response);
 		});
 	}
 	// #endregion

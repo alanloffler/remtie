@@ -6,13 +6,13 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { toast } from '@/components/ui/use-toast';
 // App
 import { ButtonsConfig } from '@/lib/config/buttons.config';
 import { FormEvent } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { UsersConfig } from '@/lib/config/users.config';
 import { UsersServices } from '@/services/users.services';
+import { handleServerResponse } from '@/lib/handleServerResponse';
 import { useForm } from 'react-hook-form';
 import { userSchema } from '@/lib/schemas/user.schema';
 import { z } from 'zod';
@@ -35,12 +35,8 @@ function CreateUser() {
 
 	function onSubmit(values: z.infer<typeof userSchema>) {
 		UsersServices.create(values).then((response) => {
-			if (response.statusCode === 200) {
-				toast({ title: response.statusCode, description: response.message, variant: 'success', duration: 5000 });
-				navigate(`${APP_URL}/usuarios`);
-			}
-			if (response.statusCode > 399) toast({ title: response.statusCode, description: response.message, variant: 'destructive', duration: 5000 });
-			if (response instanceof Error) toast({ title: 'Error', description: '500 Internal Server Error | ' + response.message, variant: 'destructive', duration: 5000 });
+			if (response.statusCode === 200) navigate(`${APP_URL}/usuarios`);
+			handleServerResponse(response);
 		});
 	}
 

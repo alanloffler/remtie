@@ -4,7 +4,6 @@ import { ArrowLeft, BadgeX, CheckCircle, Mail, Pencil, Phone, Trash2 } from 'luc
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardFooter } from '@/components/ui/card';
 import { Dialog, DialogHeader, DialogFooter, DialogContent, DialogTitle, DialogDescription } from '@/components/ui/dialog';
-import { toast } from '@/components/ui/use-toast';
 // App
 import Dot from '@/components/shared/Dot';
 import { ButtonsConfig } from '@/lib/config/buttons.config';
@@ -15,6 +14,7 @@ import { Roles } from '@/lib/constants';
 import { UsersConfig } from '@/lib/config/users.config';
 import { UsersServices } from '@/services/users.services';
 import { emptyUser } from '@/lib/utils';
+import { handleServerResponse } from '@/lib/handleServerResponse';
 import { store } from '@/services/store.services';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useUserSince } from '@/hooks/useUserSince';
@@ -32,46 +32,33 @@ function ViewUser() {
 	// #region Load data
 	useEffect(() => {
 		UsersServices.findOne(id).then((response) => {
-			if (response.id) setUser(response);
-			if (response.statusCode > 399) toast({ title: response.statusCode, description: response.message, variant: 'destructive', duration: 5000 });
-			if (response instanceof Error) toast({ title: 'Error', description: '500 Internal Server Error | ' + response.message, variant: 'destructive', duration: 5000 });
+			if (!response.statusCode) setUser(response);
+            handleServerResponse(response);
 		});
 	}, [id, navigate, updateUI]);
 	// #endregion
 	// #region Button actions
 	async function removeSoft(id: number) {
 		UsersServices.removeSoft(id).then((response) => {
-			if (response.statusCode === 200) {
-				setUpdateUI(Math.random());
-				toast({ title: response.statusCode, description: response.message, variant: 'success', duration: 5000 });
-			}
-			if (response.statusCode > 399) toast({ title: response.statusCode, description: response.message, variant: 'destructive', duration: 5000 });
-			if (response instanceof Error) toast({ title: 'Error', description: '500 Internal Server Error | ' + response.message, variant: 'destructive', duration: 5000 });
+			if (response.statusCode === 200) setUpdateUI(Math.random());
 			setOpenDialog(false);
+            handleServerResponse(response);
 		});
 	}
 
 	function remove(id: number): void {
 		UsersServices.remove(id).then((response) => {
-			if (response.statusCode === 200) {
-				navigate(-1);
-				toast({ title: response.statusCode, description: response.message, variant: 'success', duration: 5000 });
-			}
-			if (response.statusCode > 399) toast({ title: response.statusCode, description: response.message, variant: 'destructive', duration: 5000 });
-			if (response instanceof Error) toast({ title: 'Error', description: '500 Internal Server Error | ' + response.message, variant: 'destructive', duration: 5000 });
+			if (response.statusCode === 200) navigate(-1);
 			setOpenDialog(false);
+            handleServerResponse(response);
 		});
 	}
 
 	async function restore(id: number) {
 		UsersServices.restore(id).then((response) => {
-			if (response.statusCode === 200) {
-				setUpdateUI(Math.random());
-				toast({ title: response.statusCode, description: response.message, variant: 'success', duration: 5000 });
-			}
-			if (response.statusCode > 399) toast({ title: response.statusCode, description: response.message, variant: 'destructive', duration: 5000 });
-			if (response instanceof Error) toast({ title: 'Error', description: '500 Internal Server Error | ' + response.message, variant: 'destructive', duration: 5000 });
+			if (response.statusCode === 200) setUpdateUI(Math.random());
 			setOpenDialog(false);
+            handleServerResponse(response);
 		});
 	}
 	// #endregion

@@ -4,7 +4,6 @@ import { ArrowLeftIcon, ArrowRightIcon, ChevronLeftIcon, ChevronRightIcon } from
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { toast } from '@/components/ui/use-toast';
 // Tanstack table
 import { ColumnDef, ColumnFiltersState, flexRender, getCoreRowModel, getFilteredRowModel, getPaginationRowModel, getSortedRowModel, SortingState, useReactTable } from '@tanstack/react-table';
 // App
@@ -12,15 +11,16 @@ import { DataTableConfig } from '@/lib/config/data-table.config';
 import { SettingsServices } from '@/services/settings.services';
 import { UsersConfig } from '@/lib/config/users.config';
 import { useEffect, useState } from 'react';
+import { handleServerResponse } from '@/lib/handleServerResponse';
 // Interfaces
 interface DataTableProps<TData, TValue> {
 	columns: ColumnDef<TData, TValue>[];
 	data: TData[];
 	rowsPerPage: number;
-    tableFor: string;
+	tableFor: string;
 }
 // React component
-export function DataTable<TData, TValue>({ columns, data, rowsPerPage, tableFor }: DataTableProps<TData, TValue>) {
+function DataTable<TData, TValue>({ columns, data, rowsPerPage, tableFor }: DataTableProps<TData, TValue>) {
 	const [itemsPerPage, setItemsPerPage] = useState<number[]>([]);
 	const [sorting, setSorting] = useState<SortingState>([]);
 	const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
@@ -45,13 +45,12 @@ export function DataTable<TData, TValue>({ columns, data, rowsPerPage, tableFor 
 	});
 
 	useEffect(() => {
-        let tableType: string = '';
-        if (tableFor === 'users') tableType = 'rowsPerPageOptionsUsers';
-        if (tableFor === 'products') tableType = 'rowsPerPageOptionsProducts';
+		let tableType: string = '';
+		if (tableFor === 'users') tableType = 'rowsPerPageOptionsUsers';
+		if (tableFor === 'products') tableType = 'rowsPerPageOptionsProducts';
 		SettingsServices.findOne(tableType).then((response) => {
-			if (response.id) setItemsPerPage(response.value.split(','));
-			if (response.statusCode > 399) toast({ title: response.statusCode, description: response.message, variant: 'destructive', duration: 5000 });
-			if (response instanceof Error) toast({ title: 'Error', description: '500 Internal Server Error | ' + response.message, variant: 'destructive', duration: 5000 });
+			if (!response.statusCode) setItemsPerPage(response.value.split(','));
+			handleServerResponse(response);
 		});
 	}, [tableFor]);
 
@@ -134,3 +133,5 @@ export function DataTable<TData, TValue>({ columns, data, rowsPerPage, tableFor 
 		</div>
 	);
 }
+// Export React component
+export { DataTable };

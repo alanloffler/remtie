@@ -9,7 +9,6 @@ function SettingsMap() {
 				<div className='w-full p-2 md:w-1/2'>
 					<div className='space-y-4'>
                         <MapFormsProduct />
-                        <MapId />
                     </div>
 				</div>
 				<div className='w-full p-2 md:w-1/2'>
@@ -18,7 +17,7 @@ function SettingsMap() {
                     </div>
 				</div>
 			</div>
-			{/* <div className='flex w-full flex-col pb-8'><MapId /></div> */}
+			<div className='flex w-full flex-col pb-8'><MapId /></div>
 		</>
 	);
 }

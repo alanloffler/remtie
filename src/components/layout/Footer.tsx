@@ -1,5 +1,5 @@
+// App
 import { LayoutConfig } from "@/lib/config/layout.config";
-
 // React component
 function Footer() {
 	return (

@@ -59,7 +59,7 @@ function Login() {
 				navigate(import.meta.env.VITE_APP_URL);
 			}
 			if (response.statusCode > 399) setStatusMessage(response.message);
-			if (response instanceof Error) setStatusMessage('500 Internal Server Error | ' + response.message);
+            if (response instanceof Error) setStatusMessage('500 Internal Server Error | ' + response.message);
 		});
 	}
 

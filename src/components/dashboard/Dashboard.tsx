@@ -1,6 +1,5 @@
 // UI: Shadcn-ui (https://ui.shadcn.com/)
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { toast } from '@/components/ui/use-toast';
 // App
 import DashboardHeader from '@/components/dashboard/DashboardHeader';
 import DashboardLatest from './DashboardLatest';
@@ -10,6 +9,7 @@ import { DashboardConfig } from '@/lib/config/dashboard.config';
 import { DashboardServices } from '@/services/dashboard.services';
 import { IDashboardData } from '@/lib/interfaces/dashboard.interface';
 import { ReactElement, useEffect, useState } from 'react';
+import { handleServerResponse } from '@/lib/handleServerResponse';
 import { useCapitalize } from '@/hooks/useCapitalize';
 // React component
 function Dashboard() {
@@ -24,8 +24,7 @@ function Dashboard() {
 				setData(response as IDashboardData[]);
 				setShowDashboardHeader(true);
 			}
-			if (response.statusCode > 399) toast({ title: String(response.statusCode), description: response.message, variant: 'destructive', duration: 5000 });
-			if (response instanceof Error) toast({ title: 'Error', description: '500 Internal Server Error | ' + response.message, variant: 'destructive', duration: 5000 });
+            handleServerResponse(response);
 		});
 	}, []);
 
@@ -47,12 +46,12 @@ function Dashboard() {
 											<path d='M21.21 15.89A10 10 0 1 1 8 2.83' />
 											<path d='M22 12A10 10 0 0 0 12 2v10z' />
 										</svg>
-										Propiedades
+										{DashboardConfig.components.pieChart.title}
 									</CardTitle>
-									<CardDescription className='text-xs'>Por categorías</CardDescription>
+									<CardDescription className='text-xs'>{DashboardConfig.components.pieChart.subtitle}</CardDescription>
 								</CardHeader>
 								<CardContent className='flex w-full flex-row p-4'>
-									{data?.length < 1 ? <p className='text-sm text-slate-500'>No hay propiedades.</p> : <PieChart data={data} outerRadius={70} innerRadius={30} margins={10} />}
+									{data?.length < 1 ? <p className='text-sm text-slate-500'>{DashboardConfig.components.pieChart.errorMessage}</p> : <PieChart data={data} outerRadius={70} innerRadius={30} margins={10} />}
 									<div className='ml-4 flex flex-row items-center gap-2 text-xs'>
 										<ul className=''>
 											{data?.map((d) => {

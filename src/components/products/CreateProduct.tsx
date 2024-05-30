@@ -504,7 +504,7 @@ function CreateProduct() {
 									<AccordionItem value='item-1' className='border-none'>
 										<AccordionTrigger className='justify-start gap-2 pb-0 pt-4'>{ProductsConfig.form.addImages}</AccordionTrigger>
 										<AccordionContent className='py-0'>
-											<div className='grid gap-4 pt-6'>
+											{images.length > 0 && <div className='grid gap-4 pt-6'>
 												{images.map((img, i) => {
 													return (
 														<Card key={img.id} className='bg-slate-100/50 px-2 py-2'>
@@ -530,31 +530,7 @@ function CreateProduct() {
 														</Card>
 													);
 												})}
-												<Dialog open={openDialog} onOpenChange={setOpenDialog}>
-													<DialogContent>
-														<DialogHeader>
-															<DialogTitle>{ProductsConfig.pages.create.dialog.title}</DialogTitle>
-															<DialogDescription>{ProductsConfig.pages.create.dialog.subtitle}</DialogDescription>
-														</DialogHeader>
-														<div>
-															<section className='text-sm font-normal'>
-																<span className='flex flex-row'>{ProductsConfig.pages.create.dialog.message}</span>
-																<span className='text-md px-1 font-bold text-slate-900'>{imageDialog.name}</span>
-															</section>
-															<DialogFooter>
-																<div className='mt-6 flex flex-row gap-4'>
-																	<Button variant='ghost' onClick={() => setOpenDialog(false)}>
-																		{ButtonsConfig.actions.cancel}
-																	</Button>
-																	<Button variant='delete' onClick={() => handleDeleteImage(imageDialog.id)}>
-																		{ButtonsConfig.actions.delete}
-																	</Button>
-																</div>
-															</DialogFooter>
-														</div>
-													</DialogContent>
-												</Dialog>
-											</div>
+											</div>}
 											<FormProvider {...imageForm}>
 												<form onSubmit={imageForm.handleSubmit(handleSubmitImage)}>
 													<div className='mt-6 grid w-full grid-cols-1 items-center gap-1.5'>
@@ -593,6 +569,30 @@ function CreateProduct() {
 													</div>
 												</form>
 											</FormProvider>
+                                            <Dialog open={openDialog} onOpenChange={setOpenDialog}>
+													<DialogContent>
+														<DialogHeader>
+															<DialogTitle>{ProductsConfig.pages.create.dialog.title}</DialogTitle>
+															<DialogDescription>{ProductsConfig.pages.create.dialog.subtitle}</DialogDescription>
+														</DialogHeader>
+														<div>
+															<section className='text-sm font-normal'>
+																<span className='flex flex-row'>{ProductsConfig.pages.create.dialog.message}</span>
+																<span className='text-md px-1 font-bold text-slate-900'>{imageDialog.name}</span>
+															</section>
+															<DialogFooter>
+																<div className='mt-6 flex flex-row gap-4'>
+																	<Button variant='ghost' onClick={() => setOpenDialog(false)}>
+																		{ButtonsConfig.actions.cancel}
+																	</Button>
+																	<Button variant='delete' onClick={() => handleDeleteImage(imageDialog.id)}>
+																		{ButtonsConfig.actions.delete}
+																	</Button>
+																</div>
+															</DialogFooter>
+														</div>
+													</DialogContent>
+											</Dialog>
 										</AccordionContent>
 									</AccordionItem>
 								</Accordion>

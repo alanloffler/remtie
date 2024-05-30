@@ -5,10 +5,10 @@ import { Button } from '@/components/ui/button';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 // App
 import UserLogged from '@/components/layout/UserLogged';
+import { LayoutConfig } from '@/lib/config/layout.config';
 import { Link, useNavigate } from 'react-router-dom';
 import { Roles } from '@/lib/constants';
 import { Separator } from '@/components/ui/separator';
-import { LayoutConfig } from '@/lib/config/layout.config';
 import { store } from '@/services/store.services';
 import { useEffect, useRef } from 'react';
 // .env constants
@@ -19,10 +19,10 @@ function Sidebar() {
 	const isClicked = store((state) => state.isClicked);
 	const isOpen = store((state) => state.isOpen);
 	const navigate = useNavigate();
-	const sidebarRef = useRef<HTMLDivElement>(null);
-	const userId: number = store.getState().userId;
 	const reset = store((state) => state.reset);
 	const role = store((state) => state.role);
+	const sidebarRef = useRef<HTMLDivElement>(null);
+	const userId: number = store.getState().userId;
 
 	function handleClick(item: number) {
 		isClicked(item);

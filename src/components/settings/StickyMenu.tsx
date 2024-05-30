@@ -15,7 +15,7 @@ function StickyMenu({ className }: { className?: string }) {
 
 	return (
 		<div className={`relative mx-auto flex items-center rounded-md bg-slate-200/50 ${className}` }>
-			<Link to={`${APP_URL}/config/productos`} className='flex-1 py-2 px-2 text-center text-slate-500'>
+			<Link to={`${APP_URL}/config/productos`} className='flex-1 py-2 text-center text-slate-500'>
 				<button onClick={() => handleClick(1)} className={`flex-1 py-2 text-center ${selectedItem === 1 ? 'text-slate-900' : 'text-slate-500'}`}>
 					{LayoutConfig.sidebar.menu.products}
 				</button>

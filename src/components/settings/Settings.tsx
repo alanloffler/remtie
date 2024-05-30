@@ -30,7 +30,7 @@ function Settings() {
 			</div>
 			<section className='mt-8 w-full px-2'>
 				<div className='flex flex-col mx-auto px-4 md:px-6 '>
-					<StickyMenu className='w-9/12' />
+					<StickyMenu className='w-full' />
 					<div className='mt-6'>
 						<Outlet />
 					</div>

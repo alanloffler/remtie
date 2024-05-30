@@ -27,18 +27,18 @@ function MapId() {
 			value: ''
 		}
 	});
-    // #region Load Data
+	// #region Load Data
 	useEffect(() => {
 		SettingsServices.findOne('mapId').then((response) => {
-            if (!response.statusCode) {
-                setMapIdSetting(response);
-                mapIdForm.setValue('value', response.value);
-            }
-            handleServerResponse(response);
+			if (!response.statusCode) {
+				setMapIdSetting(response);
+				mapIdForm.setValue('value', response.value);
+			}
+			handleServerResponse(response);
 		});
 	}, [mapIdForm]);
-    // #endregion
-    // #region Buttons actions
+	// #endregion
+	// #region Buttons actions
 	function handleDisabledInput(event: MouseEvent) {
 		event.preventDefault();
 		setDisabledInput(!disabledInput);
@@ -46,17 +46,17 @@ function MapId() {
 
 	function handleMapIdSubmit(data: z.infer<typeof settingsSchema>) {
 		SettingsServices.update(mapIdSetting.id, data.value).then((response) => {
-            if (response.statusCode === 200) setDisabledInput(!disabledInput);
-            handleServerResponse(response);
+			if (response.statusCode === 200) setDisabledInput(!disabledInput);
+			handleServerResponse(response);
 		});
 	}
-    // #endregion
+	// #endregion
 	return (
 		<div className='space-y-4'>
 			<Separator className='mb-4' />
 			<span className='flex text-base font-medium text-slate-500'>{SettingsConfig.sections.mapId.title}</span>
 			<span className='flex text-sm font-normal text-slate-500'>{SettingsConfig.sections.mapId.subtitle}</span>
-			<Card className='p-6'>
+			<Card className='w-full p-6 md:w-full lg:w-9/12'>
 				<FormProvider {...mapIdForm}>
 					<form onSubmit={mapIdForm.handleSubmit(handleMapIdSubmit)} className='flex flex-col items-center space-y-4'>
 						<div className='flex w-full flex-row items-center space-x-4'>

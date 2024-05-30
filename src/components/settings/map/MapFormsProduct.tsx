@@ -45,7 +45,7 @@ function MapFormsProduct() {
 					createMapForm.setValue('zoom', options.zoom);
 					createMapForm.setValue('mapType', options.mapType);
 				}
-                handleServerResponse(response);
+				handleServerResponse(response);
 			});
 		}
 		getMapOptions();
@@ -71,17 +71,11 @@ function MapFormsProduct() {
 			<div className='space-y-4'>
 				<Separator className='mb-4' />
 				<span className='text-base font-medium text-slate-500'>{SettingsConfig.sections.formMaps.title}</span>
-				<Card className='p-6'>
+				<Card className='w-full md:w-full lg:w-2/3 p-6'>
 					{/* SECTION: Create Product Map */}
 					<FormProvider {...createMapForm}>
 						<form onSubmit={createMapForm.handleSubmit(handleMapSubmit)} className='flex flex-col items-center space-y-4'>
 							<div className='flex w-full flex-row items-center space-x-4'>
-								{/* <div className='w-1/3 space-y-7 text-end'>
-									<div className='text-sm font-medium text-slate-600'>{SettingsConfig.sections.formMaps.form.label.lat}</div>
-									<div className='text-sm font-medium text-slate-600'>{SettingsConfig.sections.formMaps.form.label.lng}</div>
-									<div className='text-sm font-medium text-slate-600'>{SettingsConfig.sections.formMaps.form.label.zoom}</div>
-									<div className='text-sm font-medium text-slate-600'>{SettingsConfig.sections.formMaps.form.label.mapType}</div>
-								</div> */}
 								<div className='w-full space-y-4'>
 									<FormField
 										control={createMapForm.control}
@@ -90,8 +84,8 @@ function MapFormsProduct() {
 											<FormItem className='flex w-full flex-row items-center'>
 												<FormControl className='flex w-full'>
 													<div className='flex items-center space-x-4'>
-														<div className='w-1/2 text-sm font-medium text-slate-600'>{SettingsConfig.sections.formMaps.form.label.lat}</div>
-														<Input {...field} type='text' placeholder={SettingsConfig.sections.formMaps.form.placeholder.lat} className='h-8' />
+														<div className='w-1/2 text-end text-sm font-medium text-slate-600'>{SettingsConfig.sections.formMaps.form.label.lat}</div>
+														<Input {...field} type='text' placeholder={SettingsConfig.sections.formMaps.form.placeholder.lat} className='h-8 w-1/2' />
 													</div>
 												</FormControl>
 												<FormMessage className='text-xs font-light' />
@@ -105,7 +99,8 @@ function MapFormsProduct() {
 											<FormItem className='flex w-full flex-row items-center'>
 												<FormControl className='flex w-full'>
 													<div className='flex items-center space-x-4'>
-														<Input {...field} type='text' placeholder={SettingsConfig.sections.formMaps.form.placeholder.lng} className='h-8' />
+														<div className='w-1/2 text-end text-sm font-medium text-slate-600'>{SettingsConfig.sections.formMaps.form.label.lng}</div>
+														<Input {...field} type='text' placeholder={SettingsConfig.sections.formMaps.form.placeholder.lng} className='h-8 w-1/2' />
 													</div>
 												</FormControl>
 												<FormMessage className='text-xs font-light' />
@@ -119,7 +114,8 @@ function MapFormsProduct() {
 											<FormItem className='flex w-full flex-row items-center'>
 												<FormControl className='flex w-full'>
 													<div className='flex items-center space-x-4'>
-														<Input {...field} type='number' placeholder={SettingsConfig.sections.formMaps.form.placeholder.zoom} className='h-8 w-1/3' />
+														<div className='w-1/2 text-end text-sm font-medium text-slate-600'>{SettingsConfig.sections.formMaps.form.label.zoom}</div>
+														<Input {...field} type='number' placeholder={SettingsConfig.sections.formMaps.form.placeholder.zoom} className='h-8 w-1/2' />
 													</div>
 												</FormControl>
 												<FormMessage className='text-xs font-light' />
@@ -131,22 +127,25 @@ function MapFormsProduct() {
 										name='mapType'
 										render={({ field }) => (
 											<FormItem className='w-full space-y-1'>
-												<Select onValueChange={(event) => field.onChange(event)} value={field.value}>
-													<FormControl>
-														<SelectTrigger className='h-8'>
-															<SelectValue placeholder='' />
-														</SelectTrigger>
-													</FormControl>
-													<SelectContent>
-														{SettingsConfig.sections.formMaps.form.mapTypeOptions.map((option) => {
-															return (
-																<SelectItem key={option.name} className='text-sm' value={option.value}>
-																	{option.name}
-																</SelectItem>
-															);
-														})}
-													</SelectContent>
-												</Select>
+												<div className='flex items-center space-x-4'>
+													<div className='w-1/2 text-end text-sm font-medium text-slate-600'>{SettingsConfig.sections.formMaps.form.label.mapType}</div>
+													<Select onValueChange={(event) => field.onChange(event)} value={field.value}>
+														<FormControl>
+															<SelectTrigger className='h-8 w-1/2'>
+																<SelectValue placeholder='' />
+															</SelectTrigger>
+														</FormControl>
+														<SelectContent>
+															{SettingsConfig.sections.formMaps.form.mapTypeOptions.map((option) => {
+																return (
+																	<SelectItem key={option.name} className='text-sm' value={option.value}>
+																		{option.name}
+																	</SelectItem>
+																);
+															})}
+														</SelectContent>
+													</Select>
+												</div>
 												<FormMessage />
 											</FormItem>
 										)}

@@ -307,7 +307,7 @@ function ListAllProducts({ type }: { type: string }) {
 				</div>
 			</div>
 			<div className='container'>
-				<Tabs defaultValue={tabActive} className='w-full'>
+				<Tabs defaultValue={tabActive || 'card'} className='w-full'>
 					{/* SECTION: Filters (header) */}
 					<div className='flex flex-col rounded-md border border-slate-300 bg-slate-200 px-3 py-4 shadow-sm md:min-w-[600px] md:flex-row md:gap-4 md:p-2 md:pr-4'>
 						<div className='flex flex-row'>

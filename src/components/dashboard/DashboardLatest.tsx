@@ -58,7 +58,7 @@ function DashboardLatest() {
 	}
 
 	return (
-		<Card className='w-full'>
+		<Card className='w-1/2'>
 			<CardHeader className='gap-2 p-4 pb-0'>
 				<div className='flex items-center justify-between text-slate-700'>
 					<CardTitle>

@@ -87,7 +87,7 @@ function MapProperties() {
 			</div>
 			{/* SECTION: Google Map */}
 			<div className='flex flex-col items-center px-8 pb-8 pt-4'>
-				{showUI ? (
+				{showUI && (
 					<div className='w-full space-y-2'>
 						<div className=''>
 							<div className='text-sm font-semibold text-slate-600'>{`${MapPropertiesConfig.showing[0]} ${markers.length} ${MapPropertiesConfig.showing[1]} ${properties.length} ${MapPropertiesConfig.showing[2]}`}</div>
@@ -175,7 +175,8 @@ function MapProperties() {
 							</div>
 						</div>
 					</div>
-				) : (
+				)}
+                {!showUI && markers.length > 0 && (
 					// Info card
 					<div className='mt-12 flex justify-center'>
 						<InfoCard content={content} />

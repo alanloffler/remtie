@@ -7,7 +7,6 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
-import { toast } from '@/components/ui/use-toast';
 // App
 import Carousel from '@/components/shared/Carousel';
 import CurrencyFormat from '@/components/shared/CurrencyFormat';
@@ -21,6 +20,7 @@ import { ProductsConfig } from '@/lib/config/products.config';
 import { ProductsServices } from '@/services/products.services';
 import { ReactElement, useEffect, useState } from 'react';
 import { Roles } from '@/lib/constants';
+import { handleServerResponse } from '@/lib/handleServerResponse';
 import { store } from '@/services/store.services';
 import { useCapitalize } from '@/hooks/useCapitalize';
 import { useLocaleDate } from '@/hooks/useLocaleDate';
@@ -74,31 +74,23 @@ function ViewProduct() {
 						return;
 					}
 				}
-				if (response.statusCode > 399) toast({ title: response.statusCode, description: response.message, variant: 'destructive', duration: 5000 });
-				if (response instanceof Error) toast({ title: '1 Error', description: '500 Internal Server Error | ' + response.message, variant: 'destructive', duration: 5000 });
+                handleServerResponse(response);
 			});
 		}
 
 		async function getImages(id: number) {
 			ImageServices.findByProperty(id).then((response) => {
 				if (response.length > 0) setImages(response);
-				if (response.statusCode > 399) toast({ title: response.statusCode, description: response.message, variant: 'destructive', duration: 5000 });
-				if (response instanceof Error) toast({ title: 'Error', description: '500 Internal Server Error | ' + response.message, variant: 'destructive', duration: 5000 });
+                handleServerResponse(response);
 			});
 		}
         SettingsServices.findOne('mapId').then((response) => {
-			if (!response.statusCode) {
-				setMapId(response.value);
-			}
-			if (response.statusCode > 399) toast({ title: response.statusCode, description: response.message, variant: 'destructive', duration: 5000 });
-			if (response instanceof Error) toast({ title: 'Error', description: '500 Internal Server Error | ' + response.message, variant: 'destructive', duration: 5000 });
+			if (!response.statusCode) setMapId(response.value);
+			handleServerResponse(response);
 		});
 		SettingsServices.findOne('mapCPOptions').then((response) => {
-			if (!response.statusCode) {
-				setMapOptions(JSON.parse(response.value));
-			}
-			if (response.statusCode > 399) toast({ title: response.statusCode, description: response.message, variant: 'destructive', duration: 5000 });
-			if (response instanceof Error) toast({ title: 'Error', description: '500 Internal Server Error | ' + response.message, variant: 'destructive', duration: 5000 });
+			if (!response.statusCode) setMapOptions(JSON.parse(response.value));
+			handleServerResponse(response);
 		});
 
 		getProperty(propertyId);
@@ -152,9 +144,7 @@ function ViewProduct() {
 	// #region Button actions
 	async function restore(id: number) {
 		ProductsServices.restore(id).then((response) => {
-			if (response.statusCode === 200) toast({ title: response.statusCode, description: response.message, variant: 'success', duration: 5000 });
-			if (response.statusCode > 399) toast({ title: response.statusCode, description: response.message, variant: 'destructive', duration: 5000 });
-			if (response instanceof Error) toast({ title: 'Error', description: '500 Internal Server Error | ' + response.message, variant: 'destructive', duration: 5000 });
+            handleServerResponse(response);
 			setOpenDialog(false);
 			setUpdateUI(Math.random());
 		});
@@ -162,34 +152,22 @@ function ViewProduct() {
 
 	async function removeSoft(id: number) {
 		ProductsServices.removeSoft(id).then((response) => {
-			if (response.statusCode === 200) {
-				setUpdateUI(Math.random());
-				toast({ title: response.statusCode, description: response.message, variant: 'success', duration: 5000 });
-			}
-			if (response.statusCode > 399) toast({ title: response.statusCode, description: response.message, variant: 'destructive', duration: 5000 });
-			if (response instanceof Error) toast({ title: '2 Error', description: '500 Internal Server Error | ' + response.message, variant: 'destructive', duration: 5000 });
+			if (response.statusCode === 200) setUpdateUI(Math.random());
+            handleServerResponse(response);
 			setOpenDialog(false);
 		});
 	}
 
 	async function remove(id: number) {
 		ProductsServices.remove(id).then((response) => {
-			if (response.statusCode === 200) {
-				navigate(`${APP_URL}/productos`);
-				toast({ title: response.statusCode, description: response.message, variant: 'success', duration: 5000 });
-			}
-			if (response.statusCode > 399) toast({ title: response.statusCode, description: response.message, variant: 'destructive', duration: 5000 });
-			if (response instanceof Error) toast({ title: 'Error', description: '500 Internal Server Error | ' + response.message, variant: 'destructive', duration: 5000 });
+			if (response.statusCode === 200) navigate(`${APP_URL}/productos`);
+            handleServerResponse(response);
 			setOpenDialog(false);
 		});
 	}
 
 	function switchActive(check: boolean) {
-		ProductsServices.switchActive(propertyId, check).then((response) => {
-			if (response.statusCode === 200) toast({ title: response.statusCode, description: response.message, variant: 'success', duration: 5000 });
-			if (response.statusCode > 399) toast({ title: response.statusCode, description: response.message, variant: 'destructive', duration: 5000 });
-			if (response instanceof Error) toast({ title: 'Error', description: '500 Internal Server Error | ' + response.message, variant: 'destructive', duration: 5000 });
-		});
+		ProductsServices.switchActive(propertyId, check).then((response) => handleServerResponse(response));
 	}
 	// #endregion
 	return (
@@ -248,8 +226,8 @@ function ViewProduct() {
 										<Map 
                                             className='w-full h-80 md:h-96 lg:h-96'
                                             mapId={mapId}
-                                            defaultCenter={{ lat: Number(mapOptions.lat), lng: Number(mapOptions.lng) }} 
-                                            defaultZoom={mapOptions.zoom} 
+                                            defaultCenter={{ lat: Number(property.lat), lng: Number(property.lng) }} 
+                                            defaultZoom = { property.zoom || mapOptions.zoom }
                                             mapTypeId={mapOptions.mapType}
                                             gestureHandling={'greedy'} 
                                             disableDefaultUI={false}

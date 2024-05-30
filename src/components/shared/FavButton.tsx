@@ -14,7 +14,9 @@ function FavButton({ property, height }: { property: IProperty; height: number }
 	useEffect(() => {
 		FavoritesServices.findOne(property.id).then((response) => {
 			if (!response.statusCode) {
-				if (response.propertyId === property.id) setIsFavorite(true);
+				if (response.propertyId === property.id) {
+                    setIsFavorite(true);
+                }
 			}
 		});
 	}, [property]);
@@ -22,13 +24,19 @@ function FavButton({ property, height }: { property: IProperty; height: number }
 	function handleFavorite() {
 		if (isFavorite === false) {
 			FavoritesServices.createFavorite(property).then((response) => {
-				if (response.statusCode === 200) setIsFavorite(true);
+				if (response.statusCode === 200) {
+                    setIsFavorite(true);
+                    property.isFavorite = true;
+                }
 				handleServerResponse(response);
 			});
 		}
 		if (isFavorite === true) {
 			FavoritesServices.removeFavorite(property).then((response) => {
-				if (response.statusCode === 200) setIsFavorite(false);
+				if (response.statusCode === 200) {
+                    setIsFavorite(false);
+                    property.isFavorite = false;
+                }
 				handleServerResponse(response);
 			});
 		}

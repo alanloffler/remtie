@@ -112,8 +112,8 @@ function UpdateProduct() {
 				propertyForm.setValue('short_description', response.short_description);
 				propertyForm.setValue('long_description', response.long_description);
 				propertyForm.setValue('street', response.street);
-				propertyForm.setValue('city', response.city.id);
-				propertyForm.setValue('state', response.state.id);
+				propertyForm.setValue('city', response.city.city);
+				propertyForm.setValue('state', response.state.state);
 				propertyForm.setValue('zip', response.zip);
 				propertyForm.setValue('price', response.price);
 				propertyForm.setValue('is_active', Boolean(response.is_active));
@@ -448,7 +448,8 @@ function UpdateProduct() {
 															onValueChange={(event) => {
 																field.onChange(event);
 																filterCitiesByState(event);
-															}}>
+															}}
+                                                            value={String(field.value)}>
 															<FormControl>
 																<SelectTrigger>
 																	<SelectValue placeholder='' />
@@ -456,7 +457,7 @@ function UpdateProduct() {
 															</FormControl>
 															<SelectContent>
 																{statesSelect.map((el) => (
-																	<SelectItem key={el.id} value={String(el.id)} className='text-sm'>
+																	<SelectItem key={el.id} value={String(el.state)} className='text-sm'>
 																		{capitalize(el.state)}
 																	</SelectItem>
 																))}
@@ -612,7 +613,7 @@ function UpdateProduct() {
 									<AccordionTrigger className='justify-start gap-2 pb-0 pt-4'>{ProductsConfig.form.editImages}</AccordionTrigger>
 									<AccordionContent className='py-0'>
 										{/* SECTION: Images list */}
-										<div className='grid gap-4 pt-6'>
+										{images.length > 0 && <div className='grid gap-4 pt-6'>
 											{images.map((img, i) => {
 												return (
 													<Card key={img.id} className='bg-slate-100/50 px-2 py-2'>
@@ -660,9 +661,9 @@ function UpdateProduct() {
 													</Card>
 												);
 											})}
-										</div>
+										</div>}
 										{/* SECTION: File input */}
-										{store.getState().userId === property.created_by && (
+										{(store.getState().userId === property.created_by || store.getState().role === Roles.ADMIN) && (
 											<FormProvider {...imageForm}>
 												<form onSubmit={imageForm.handleSubmit(handleSubmitImage)}>
 													<div className='mt-6 grid w-full grid-cols-1 items-center gap-1.5'>

@@ -18,6 +18,7 @@ import { ReactElement, useEffect, useState } from 'react';
 import { getImageURL } from '@/lib/image-util';
 import { useCapitalize } from '@/hooks/useCapitalize';
 import { useLocaleDate } from '@/hooks/useLocaleDate';
+import { handleServerResponse } from '@/lib/handleServerResponse';
 // .env constants
 const API_KEY: string = import.meta.env.VITE_GOOGLE_MAPS_API_KEY;
 const APP_URL: string = import.meta.env.VITE_APP_URL;
@@ -53,6 +54,7 @@ function MapProperties() {
 				setMarkers(markers);
 				setShowUI(true);
 			} else {
+				handleServerResponse(response);
 				setShowUI(false);
 			}
 		});
@@ -91,14 +93,14 @@ function MapProperties() {
 							<div className='text-sm font-semibold text-slate-600'>{`${MapPropertiesConfig.showing[0]} ${markers.length} ${MapPropertiesConfig.showing[1]} ${properties.length} ${MapPropertiesConfig.showing[2]}`}</div>
 							<div className='text-sm text-slate-600'>{`${properties.length - markers.length} ${MapPropertiesConfig.noLocation}`}</div>
 						</div>
-						<div className='flex flex-col gap-8 md:flex-row lg:flex-row'>
-							<div className='lg:2/3 flex w-full md:w-2/3'>
+						<div className='flex flex-col gap-8 md:flex-col lg:flex-row'>
+							<div className='lg:w-2/3 flex w-full md:w-full'>
 								<APIProvider apiKey={API_KEY}>
 									{/* prettier-ignore */}
 									<Map 
                                         className='h-80 w-full md:h-[470px] lg:h-[470px]' 
                                         mapId='1c6903a9111fa3c3' 
-                                        defaultCenter={{ lat: -26.000694, lng: -54.57684 }} 
+                                        defaultCenter={{ lat: -25.972965, lng: -54.559972 }} 
                                         defaultZoom={11} 
                                         mapTypeId={'roadmap'} 
                                         gestureHandling={'greedy'} 
@@ -120,7 +122,7 @@ function MapProperties() {
                                     </Map>
 								</APIProvider>
 							</div>
-							<div className='flex w-full md:w-1/3 lg:w-1/3'>
+							<div className='flex w-full md:w-2/3 lg:w-1/3 md:mx-auto'>
 								<Card className='h-fit w-full overflow-hidden'>
 									<CardHeader className='pb-4'>
 										<div className='flex justify-between text-xs font-bold uppercase text-slate-500'>
@@ -174,7 +176,7 @@ function MapProperties() {
 						</div>
 					</div>
 				) : (
-                    // Info card
+					// Info card
 					<div className='mt-12 flex justify-center'>
 						<InfoCard content={content} />
 					</div>

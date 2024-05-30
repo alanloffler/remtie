@@ -10,11 +10,11 @@ import { DashboardConfig } from '@/lib/config/dashboard.config';
 import { DashboardServices } from '@/services/dashboard.services';
 import { IProperty } from '@/lib/interfaces/property.interface';
 import { Link, useNavigate } from 'react-router-dom';
+import { SettingsServices } from '@/services/settings.services';
 import { useCapitalize } from '@/hooks/useCapitalize';
 import { useEffect, useState } from 'react';
 import { useLocaleDate } from '@/hooks/useLocaleDate';
 import { useTruncateText } from '@/hooks/useTruncateText';
-import { SettingsServices } from '@/services/settings.services';
 // .env constants
 const APP_URL: string = import.meta.env.VITE_APP_URL;
 // React component
@@ -25,8 +25,8 @@ function DashboardLatest() {
 	const [propertiesUrl, setPropertiesUrl] = useState<string>('0');
 	const capitalize = useCapitalize();
 	const localeDate = useLocaleDate();
-	const truncateText = useTruncateText();
 	const navigate = useNavigate();
+	const truncateText = useTruncateText();
 
 	useEffect(() => {
 		function getLatestLimit() {

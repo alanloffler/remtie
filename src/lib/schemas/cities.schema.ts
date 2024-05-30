@@ -1,8 +1,8 @@
 import { z } from "zod";
 
 export const citiesSchema = z.object({
-	city: z.coerce.number().min(1, {
-		message: 'Debes elegir una ciudad/estado'
+	city: z.string().min(3, {
+		message: 'La ciudad debe poseer al menos 3 caracteres'
 	}),
 	state: z.coerce.number().min(1, {
 		message: 'Debes elegir una provincia'

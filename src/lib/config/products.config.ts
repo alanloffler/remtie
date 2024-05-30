@@ -26,7 +26,7 @@ export const ProductsConfig = {
 		category: 'Categoría',
 		chooseImage: 'Seleccionar imágen',
 		city: 'Ciudad',
-        editImages: 'Editar imágenes',
+        editImages: 'Administrar imágenes',
 		goToProperty: 'Ver la propiedad que creaste',
 		longDescription: 'Descripción extendida',
 		price: 'Precio',

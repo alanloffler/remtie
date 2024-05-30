@@ -51,12 +51,13 @@ function MapId() {
 		});
 	}
 	// #endregion
+    // TODO CHANGE BUTTONS STYLES
 	return (
 		<div className='space-y-4'>
 			<Separator className='mb-4' />
 			<span className='flex text-base font-medium text-slate-500'>{SettingsConfig.sections.mapId.title}</span>
 			<span className='flex text-sm font-normal text-slate-500'>{SettingsConfig.sections.mapId.subtitle}</span>
-			<Card className='w-full p-6 sm:1/2 md:1/2 lg:w-1/2'>
+			<Card className='sm:1/2 md:1/2 w-full p-6 lg:w-1/2'>
 				<FormProvider {...mapIdForm}>
 					<form onSubmit={mapIdForm.handleSubmit(handleMapIdSubmit)} className='flex flex-col items-center space-y-4'>
 						<div className='flex w-full flex-row items-center space-x-4'>

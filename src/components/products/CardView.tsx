@@ -5,7 +5,6 @@ import { Button } from '@/components/ui/button';
 import { Card, CardHeader, CardContent, CardFooter, CardTitle, CardDescription } from '@/components/ui/card';
 import { Dialog, DialogHeader, DialogFooter, DialogContent, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
-import { toast } from '@/components/ui/use-toast';
 // App
 import CurrencyFormat from '@/components/shared/CurrencyFormat';
 import FavButton from '../shared/FavButton';
@@ -16,6 +15,7 @@ import { IProperty } from '@/lib/interfaces/property.interface';
 import { ProductsServices } from '@/services/products.services';
 import { ReactElement, useState } from 'react';
 import { Roles } from '@/lib/constants';
+import { handleServerResponse } from '@/lib/handleServerResponse';
 import { store } from '@/services/store.services';
 import { useCapitalize } from '@/hooks/useCapitalize';
 import { useLocaleDate } from '@/hooks/useLocaleDate';
@@ -33,36 +33,24 @@ function CardView({ type, properties, getProducts }: { type?: string; properties
 	// #region Dialog buttons actions
 	async function removeSoft(id: number) {
 		ProductsServices.removeSoft(id).then((response) => {
-			if (response.statusCode === 200) {
-				toast({ title: response.statusCode, description: response.message, variant: 'success', duration: 5000 });
-				getProducts();
-			}
-			if (response.statusCode > 399) toast({ title: response.statusCode, description: response.message, variant: 'destructive', duration: 5000 });
-			if (response instanceof Error) toast({ title: 'Error', description: '500 Internal Server Error | ' + response.message, variant: 'destructive', duration: 5000 });
+			if (response.statusCode === 200) getProducts();
+			handleServerResponse(response);
 			setOpenDialog(false);
 		});
 	}
 
 	async function restore(id: number) {
 		ProductsServices.restore(id).then((response) => {
-			if (response.statusCode === 200) {
-				toast({ title: response.statusCode, description: response.message, variant: 'success', duration: 5000 });
-				getProducts();
-			}
-			if (response.statusCode > 399) toast({ title: response.statusCode, description: response.message, variant: 'destructive', duration: 5000 });
-			if (response instanceof Error) toast({ title: 'Error', description: '500 Internal Server Error | ' + response.message, variant: 'destructive', duration: 5000 });
+			if (response.statusCode === 200) getProducts();
+            handleServerResponse(response);
 			setOpenDialog(false);
 		});
 	}
 
 	async function remove(id: number) {
 		ProductsServices.remove(id).then((response) => {
-			if (response.statusCode === 200) {
-				toast({ title: response.statusCode, description: response.message, variant: 'success', duration: 5000 });
-				getProducts();
-			}
-			if (response.statusCode > 399) toast({ title: response.statusCode, description: response.message, variant: 'destructive', duration: 5000 });
-			if (response instanceof Error) toast({ title: 'Error', description: '500 Internal Server Error | ' + response.message, variant: 'destructive', duration: 5000 });
+			if (response.statusCode === 200) getProducts();
+			handleServerResponse(response);
 			setOpenDialog(false);
 		});
 	}

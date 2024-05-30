@@ -21,7 +21,7 @@ function DashboardLimit() {
 
 	const form = useForm<z.infer<typeof settingsSchema>>({
 		resolver: zodResolver(settingsSchema),
-		defaultValues: {
+		values: {
 			value: ''
 		}
 	});
@@ -29,7 +29,7 @@ function DashboardLimit() {
 	useEffect(() => {
 		function findOneSettings(setting: string) {
 			SettingsServices.findOne(setting).then((response) => {
-				if (response.statusCode === 200) {
+				if (!response.statusCode) {
 					setSetting(response);
 					form.setValue('value', response.value);
 				}
@@ -65,7 +65,7 @@ function DashboardLimit() {
 						render={({ field }) => (
 							<FormItem className='w-1/3'>
 								<FormControl>
-									<Input {...field} type='text' className='h-8' />
+									<Input {...field} type='number' className='h-8' />
 								</FormControl>
 								<FormMessage className='text-xs font-light' />
 							</FormItem>

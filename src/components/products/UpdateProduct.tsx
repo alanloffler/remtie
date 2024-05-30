@@ -12,7 +12,6 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Separator } from '@/components/ui/separator';
 import { Switch } from '@/components/ui/switch';
 import { Textarea } from '@/components/ui/textarea';
-import { toast } from '@/components/ui/use-toast';
 // App
 import z from 'zod';
 import { BusinessServices } from '@/services/business.services';
@@ -33,6 +32,7 @@ import { ProductsServices } from '@/services/products.services';
 import { Roles } from '@/lib/constants';
 import { StatesServices } from '@/services/states.services';
 import { getImageURL } from '@/lib/image-util';
+import { handleServerResponse } from '@/lib/handleServerResponse';
 import { imageFormSchema } from '@/lib/schemas/image.schema';
 import { propertySchema } from '@/lib/schemas/property.schema';
 import { store } from '@/services/store.services';
@@ -45,8 +45,8 @@ const APP_URL: string = import.meta.env.VITE_APP_URL;
 // Google Map
 import { APIProvider, Map, AdvancedMarker, MapMouseEvent } from '@vis.gl/react-google-maps';
 import { IMapOptions, IMarkerProp } from '@/lib/interfaces/google-map.interface';
-import { confirmMapExistence } from '@/lib/utils';
 import { SettingsServices } from '@/services/settings.services';
+import { confirmMapExistence } from '@/lib/utils';
 // React component
 function UpdateProduct() {
 	const { id } = useParams();
@@ -58,8 +58,10 @@ function UpdateProduct() {
 	const [categories, setCategories] = useState<ICategory[]>([]);
 	const [categoriesKey, setCategoriesKey] = useState<number>(0);
 	const [chosenImage, setChosenImage] = useState<string>('');
+	const [cities, setCities] = useState<ICity[]>([]);
 	const [citiesSelect, setCitiesSelect] = useState<ICity[]>([]);
 	const [citiesSelectKey, setCitiesSelectKey] = useState<number>(0);
+	const [citySelectDisabled, setCitySelectDisabled] = useState<boolean>(true);
 	const [dialogAction, setDialogAction] = useState<string>('');
 	const [imageDialog, setImageDialog] = useState<IDialog>({ id: 0, name: '', title: '', subtitle: '', message: <span></span> });
 	const [images, setImages] = useState<IImage[]>([]);
@@ -68,15 +70,13 @@ function UpdateProduct() {
 	const [statesSelect, setStatesSelect] = useState<IState[]>([]);
 	const [statesSelectKey, setStatesSelectKey] = useState<number>(0);
 	const [updateUI, setUpdateUI] = useState<number>(0);
-    const [cities, setCities] = useState<ICity[]>([]);
-    const [citySelectDisabled, setCitySelectDisabled] = useState<boolean>(true);
-    // Google Map
+	// Google Map
 	const [addMarker, setAddMarker] = useState<boolean>(false);
+	const [mapId, setMapId] = useState<string>('');
 	const [mapOptions, setMapOptions] = useState<IMapOptions>({} as IMapOptions);
 	const [marker, setMarker] = useState<IMarkerProp>({} as IMarkerProp);
 	const [showMap, setShowMap] = useState<boolean>(false);
-    const [mapId, setMapId] = useState<string>('');
-    // #region Forms declaration
+	// #region Forms declaration
 	const propertyForm = useForm<z.infer<typeof propertySchema>>({
 		resolver: zodResolver(propertySchema),
 		values: {
@@ -86,7 +86,7 @@ function UpdateProduct() {
 			short_description: '',
 			long_description: '',
 			street: '',
-			city: '',
+			city: 0,
 			state: 0,
 			zip: '',
 			is_active: true,
@@ -100,7 +100,7 @@ function UpdateProduct() {
 			file: undefined
 		}
 	});
-    // #endregion
+	// #endregion
 	// #region Load data
 	useEffect(() => {
 		ProductsServices.findOne(propertyId).then((response) => {
@@ -112,26 +112,25 @@ function UpdateProduct() {
 				propertyForm.setValue('short_description', response.short_description);
 				propertyForm.setValue('long_description', response.long_description);
 				propertyForm.setValue('street', response.street);
-				propertyForm.setValue('city', response.city);
+				propertyForm.setValue('city', response.city.id);
 				propertyForm.setValue('state', response.state.id);
 				propertyForm.setValue('zip', response.zip);
 				propertyForm.setValue('price', response.price);
 				propertyForm.setValue('is_active', Boolean(response.is_active));
-                // Google Map
-                const newMarker: IMarkerProp = { propertyId: response.id, lat: Number(response.lat), lng: Number(response.lng), key: response.key, zoom: Number(response.zoom) };
-                const confirmedMapExistence = confirmMapExistence(newMarker);
-                if (confirmedMapExistence) {
-                    setMarker(newMarker);
-                    setAddMarker(true);
-                    setShowMap(true);
-                } else {
-                    setAddMarker(false);
-                    setShowMap(true);
-                    return;
-                }
+				// Google Map
+				const newMarker: IMarkerProp = { propertyId: response.id, lat: Number(response.lat), lng: Number(response.lng), key: response.key, zoom: Number(response.zoom) };
+				const confirmedMapExistence = confirmMapExistence(newMarker);
+				if (confirmedMapExistence) {
+					setMarker(newMarker);
+					setAddMarker(true);
+					setShowMap(true);
+				} else {
+					setAddMarker(false);
+					setShowMap(true);
+					return;
+				}
 			}
-			if (response.statusCode > 399) toast({ title: response.statusCode, description: response.message, variant: 'destructive', duration: 5000 });
-			if (response instanceof Error) toast({ title: 'Error', description: '500 Internal Server Error | ' + response.message, variant: 'destructive', duration: 5000 });
+			handleServerResponse(response);
 		});
 
 		BusinessServices.findAllUI().then((response) => {
@@ -139,8 +138,7 @@ function UpdateProduct() {
 				setBusiness(response);
 				setBusinessKey(Math.random());
 			}
-			if (response.statusCode > 399) toast({ title: response.statusCode, description: response.message, variant: 'destructive', duration: 5000 });
-			if (response instanceof Error) toast({ title: 'Error', description: '500 Internal Server Error | ' + response.message, variant: 'destructive', duration: 5000 });
+			handleServerResponse(response);
 		});
 
 		CategoriesServices.findAllUI().then((response) => {
@@ -148,18 +146,16 @@ function UpdateProduct() {
 				setCategories(response);
 				setCategoriesKey(Math.random());
 			}
-			if (response.statusCode > 399) toast({ title: response.statusCode, description: response.message, variant: 'destructive', duration: 5000 });
-			if (response instanceof Error) toast({ title: 'Error', description: '500 Internal Server Error | ' + response.message, variant: 'destructive', duration: 5000 });
+			handleServerResponse(response);
 		});
 
 		CitiesServices.findAll().then((response) => {
 			if (!response.statusCode) {
 				setCitiesSelect(response);
-                setCities(response);
+				setCities(response);
 				setCitiesSelectKey(Math.random());
 			}
-			if (response.statusCode > 399) toast({ title: response.statusCode, description: response.message, variant: 'destructive', duration: 5000 });
-			if (response instanceof Error) toast({ title: 'Error', description: '500 Internal Server Error | ' + response.message, variant: 'destructive', duration: 5000 });
+			handleServerResponse(response);
 		});
 
 		StatesServices.findAll().then((response) => {
@@ -167,31 +163,27 @@ function UpdateProduct() {
 				setStatesSelect(response);
 				setStatesSelectKey(Math.random());
 			}
-			if (response.statusCode > 399) toast({ title: response.statusCode, description: response.message, variant: 'destructive', duration: 5000 });
-			if (response instanceof Error) toast({ title: 'Error', description: '500 Internal Server Error | ' + response.message, variant: 'destructive', duration: 5000 });
+			handleServerResponse(response);
 		});
-        SettingsServices.findOne('mapId').then((response) => {
-			if (!response.statusCode) {
-				setMapId(response.value);
-			}
-			if (response.statusCode > 399) toast({ title: response.statusCode, description: response.message, variant: 'destructive', duration: 5000 });
-			if (response instanceof Error) toast({ title: 'Error', description: '500 Internal Server Error | ' + response.message, variant: 'destructive', duration: 5000 });
+
+		SettingsServices.findOne('mapId').then((response) => {
+			if (!response.statusCode) setMapId(response.value);
+			handleServerResponse(response);
 		});
+
 		SettingsServices.findOne('mapCPOptions').then((response) => {
 			if (!response.statusCode) {
 				setMapOptions(JSON.parse(response.value));
 				setShowMap(true);
 			}
-			if (response.statusCode > 399) toast({ title: response.statusCode, description: response.message, variant: 'destructive', duration: 5000 });
-			if (response instanceof Error) toast({ title: 'Error', description: '500 Internal Server Error | ' + response.message, variant: 'destructive', duration: 5000 });
+			handleServerResponse(response);
 		});
 	}, [propertyId, propertyForm]);
 
 	useEffect(() => {
 		ImageServices.findByProperty(propertyId).then((response) => {
 			if (!response.statusCode) setImages(response);
-			if (response.statusCode > 399) toast({ title: response.statusCode, description: response.message, variant: 'destructive', duration: 5000 });
-			if (response instanceof Error) toast({ title: 'Error', description: '500 Internal Server Error | ' + response.message, variant: 'destructive', duration: 5000 });
+			handleServerResponse(response);
 		});
 	}, [propertyId, updateUI]);
 	// #endregion
@@ -200,26 +192,19 @@ function UpdateProduct() {
 		const color: string | undefined = categories.find((cat) => cat.name === values.type)?.color;
 		const isActive: number = values.is_active === true ? 1 : 0;
 		const propertyData = { ...values, color: color ? color : '', is_active: isActive, lat: marker.lat, lng: marker.lng, key: marker.key, zoom: marker.zoom };
-		ProductsServices.update(propertyId, propertyData).then((response) => {
-			if (response.statusCode === 200) toast({ title: response.statusCode, description: response.message, variant: 'success', duration: 5000 });
-			if (response.statusCode > 399) toast({ title: response.statusCode, description: response.message, variant: 'destructive', duration: 5000 });
-			if (response instanceof Error) toast({ title: 'Error', description: '500 Internal Server Error | ' + response.message, variant: 'destructive', duration: 5000 });
-		});
+		ProductsServices.update(propertyId, propertyData).then((response) => handleServerResponse(response));
 	}
 
 	function handleSubmitImage(data: FieldValues) {
 		ImageServices.create(propertyId, data.file[0]).then((response) => {
 			if (!response.statusCode) {
-				ImageServices.findByProperty(propertyId).then((response) => {
-					if (!response.statusCode) setImages(response);
-					if (response.statusCode > 399) toast({ title: response.statusCode, description: response.message, variant: 'destructive', duration: 5000 });
-					if (response instanceof Error) toast({ title: 'Error', description: '500 Internal Server Error | ' + response.message, variant: 'destructive', duration: 5000 });
+				ImageServices.findByProperty(propertyId).then((resp) => {
+					if (!resp.statusCode) setImages(resp);
+					handleServerResponse(resp);
 				});
-				toast({ title: response.statusCode, description: response.message, variant: 'success', duration: 5000 });
 				imageForm.reset();
 			}
-			if (response.statusCode > 399) toast({ title: response.statusCode, description: response.message, variant: 'destructive', duration: 5000 });
-			if (response instanceof Error) toast({ title: 'Error', description: '500 Internal Server Error | ' + response.message, variant: 'destructive', duration: 5000 });
+			handleServerResponse(response);
 		});
 	}
 
@@ -275,59 +260,48 @@ function UpdateProduct() {
 	async function removeSoft(id: number) {
 		ImageServices.removeSoft(id).then((response) => {
 			if (response.statusCode === 200) setUpdateUI(Math.random());
-			if (response.statusCode > 399) toast({ title: response.statusCode, description: response.message, variant: 'destructive', duration: 5000 });
-			if (response instanceof Error) toast({ title: 'Error', description: '500 Internal Server Error | ' + response.message, variant: 'destructive', duration: 5000 });
+			handleServerResponse(response);
 		});
 		setOpenDialog(false);
 	}
 
 	async function remove(id: number) {
 		ImageServices.remove(id).then((response) => {
-			if (response.statusCode === 200) {
-				setUpdateUI(Math.random());
-			}
-			if (response.statusCode > 399) toast({ title: response.statusCode, description: response.message, variant: 'destructive', duration: 5000 });
-			if (response instanceof Error) toast({ title: 'Error', description: '500 Internal Server Error | ' + response.message, variant: 'destructive', duration: 5000 });
+			if (response.statusCode === 200) setUpdateUI(Math.random());
+			handleServerResponse(response);
 		});
 		setOpenDialog(false);
 	}
 
 	async function restore(id: number) {
 		ImageServices.restore(id).then((response) => {
-			if (response.statusCode === 200) {
-				setUpdateUI(Math.random());
-			}
-			if (response.statusCode > 399) toast({ title: response.statusCode, description: response.message, variant: 'destructive', duration: 5000 });
-			if (response instanceof Error) toast({ title: 'Error', description: '500 Internal Server Error | ' + response.message, variant: 'destructive', duration: 5000 });
+			if (response.statusCode === 200) setUpdateUI(Math.random());
+			handleServerResponse(response);
 		});
 		setOpenDialog(false);
 	}
 
 	function switchActive(check: boolean) {
-		ProductsServices.switchActive(propertyId, check).then((response) => {
-			if (response.statusCode === 200) toast({ title: response.statusCode, description: response.message, variant: 'success', duration: 5000 });
-			if (response.statusCode > 399) toast({ title: response.statusCode, description: response.message, variant: 'destructive', duration: 5000 });
-			if (response instanceof Error) toast({ title: 'Error', description: '500 Internal Server Error | ' + response.message, variant: 'destructive', duration: 5000 });
-		});
+		ProductsServices.switchActive(propertyId, check).then((response) => handleServerResponse(response));
 	}
 
 	function fillZipCode(event: string) {
 		propertyForm.setValue('zip', citiesSelect.find((city) => city.city === event)?.zip || '');
 	}
 
-    function filterCitiesByState(state: string) {
-        setCitySelectDisabled(false);
-        setCitiesSelectKey(Math.random());
-        setCitiesSelect(cities.filter((city) => city.state.state === state));
-        propertyForm.setValue('city', '');
-        propertyForm.setValue('zip', '');
-    }
+	function filterCitiesByState(state: string) {
+		setCitySelectDisabled(false);
+		setCitiesSelectKey(Math.random());
+		setCitiesSelect(cities.filter((city) => city.state?.id === Number(state)));
+		propertyForm.setValue('city', 0);
+		propertyForm.setValue('zip', '');
+	}
 	// #endregion
 	// #region Google Maps
-    function createMarker(event: MapMouseEvent) {
+	function createMarker(event: MapMouseEvent) {
 		const uuid: string = self.crypto.randomUUID();
 		const newMarker: IMarkerProp = {
-            propertyId: propertyId,
+			propertyId: propertyId,
 			lat: event.detail.latLng?.lat || 0,
 			lng: event.detail.latLng?.lng || 0,
 			key: `marker-${uuid}`,
@@ -336,8 +310,8 @@ function UpdateProduct() {
 		setMarker(newMarker);
 		setAddMarker(true);
 	}
-    // #endregion
-    return (
+	// #endregion
+	return (
 		<main className='flex-1 animate-fadeIn overflow-y-auto'>
 			<div className='flex flex-row items-center justify-between px-8 pt-8'>
 				<h1 className='text-2xl font-normal text-slate-600'>{ProductsConfig.pages.update.title}</h1>
@@ -381,7 +355,7 @@ function UpdateProduct() {
 															))}
 														</SelectContent>
 													</Select>
-													<FormMessage />
+													<FormMessage className='text-xs font-light' />
 												</FormItem>
 											)}
 										/>
@@ -405,7 +379,7 @@ function UpdateProduct() {
 															))}
 														</SelectContent>
 													</Select>
-													<FormMessage />
+													<FormMessage className='text-xs font-light' />
 												</FormItem>
 											)}
 										/>
@@ -421,7 +395,7 @@ function UpdateProduct() {
 														<FormControl>
 															<Input {...field} />
 														</FormControl>
-														<FormMessage />
+														<FormMessage className='text-xs font-light' />
 													</FormItem>
 												)}
 											/>
@@ -436,7 +410,7 @@ function UpdateProduct() {
 														<FormControl>
 															<Input {...field} />
 														</FormControl>
-														<FormMessage />
+														<FormMessage className='text-xs font-light' />
 													</FormItem>
 												)}
 											/>
@@ -452,7 +426,7 @@ function UpdateProduct() {
 													<FormControl>
 														<Textarea {...field} className='h-28'></Textarea>
 													</FormControl>
-													<FormMessage />
+													<FormMessage className='text-xs font-light' />
 												</FormItem>
 											)}
 										/>
@@ -474,8 +448,7 @@ function UpdateProduct() {
 															onValueChange={(event) => {
 																field.onChange(event);
 																filterCitiesByState(event);
-															}}
-															value={String(field.value)}>
+															}}>
 															<FormControl>
 																<SelectTrigger>
 																	<SelectValue placeholder='' />
@@ -489,7 +462,7 @@ function UpdateProduct() {
 																))}
 															</SelectContent>
 														</Select>
-														<FormMessage />
+														<FormMessage className='text-xs font-light' />
 													</FormItem>
 												)}
 											/>
@@ -502,13 +475,13 @@ function UpdateProduct() {
 													<FormItem className='w-full space-y-1'>
 														<FormLabel className='font-semibold text-slate-500'>{ProductsConfig.form.city}</FormLabel>
 														<Select
-                                                            disabled={citySelectDisabled}
+															disabled={citySelectDisabled}
 															key={citiesSelectKey}
 															onValueChange={(event) => {
 																field.onChange(event);
 																fillZipCode(event);
 															}}
-															value={field.value}>
+															value={String(field.value)}>
 															<FormControl>
 																<SelectTrigger>
 																	<SelectValue placeholder='' />
@@ -516,13 +489,13 @@ function UpdateProduct() {
 															</FormControl>
 															<SelectContent>
 																{citiesSelect.map((el) => (
-																	<SelectItem key={el.id} value={el.city} className='text-sm'>
+																	<SelectItem key={el.id} value={String(el.city)} className='text-sm'>
 																		{capitalize(el.city)}
 																	</SelectItem>
 																))}
 															</SelectContent>
 														</Select>
-														<FormMessage />
+														<FormMessage className='text-xs font-light' />
 													</FormItem>
 												)}
 											/>
@@ -539,7 +512,7 @@ function UpdateProduct() {
 														<FormControl>
 															<Input {...field} />
 														</FormControl>
-														<FormMessage />
+														<FormMessage className='text-xs font-light' />
 													</FormItem>
 												)}
 											/>
@@ -554,7 +527,7 @@ function UpdateProduct() {
 														<FormControl>
 															<Input disabled type='text' {...field} />
 														</FormControl>
-														<FormMessage />
+														<FormMessage className='text-xs font-light' />
 													</FormItem>
 												)}
 											/>
@@ -571,7 +544,7 @@ function UpdateProduct() {
 														<FormControl>
 															<Input type='text' inputMode='numeric' {...field} />
 														</FormControl>
-														<FormMessage />
+														<FormMessage className='text-xs font-light' />
 													</FormItem>
 												)}
 											/>
@@ -588,33 +561,35 @@ function UpdateProduct() {
 																<Label htmlFor='is_active'>{ProductsConfig.form.active}</Label>
 															</div>
 														</FormControl>
-														<FormMessage />
+														<FormMessage className='text-xs font-light' />
 													</FormItem>
 												)}
 											/>
 										</div>
 									</div>
-                                    {/* Google Maps */}
-                                    {showMap && <div className='flex flex-row pt-2'>
-                                        <APIProvider apiKey={API_KEY}>
-                                            {/* prettier-ignore */}
-                                            <Map 
-                                                className='w-full h-80 md:h-96 lg:h-96'
-                                                mapId={mapId}
-                                                defaultCenter={{ lat: Number(mapOptions.lat), lng: Number(mapOptions.lng) }} 
-                                                defaultZoom={mapOptions.zoom} 
-                                                mapTypeId={mapOptions.mapType}
-                                                gestureHandling={'greedy'} 
-                                                disableDefaultUI={false}
-                                                disableDoubleClickZoom={true}
-                                                controlSize={25} 
-                                                onDblclick={(event) => createMarker(event)} 
-                                                onZoomChanged={(event) => setMarker({ ...marker, zoom: event.map.getZoom() || 10})}              
-                                            >
-                                                {addMarker && <AdvancedMarker position={marker} />}
-                                            </Map>
-                                        </APIProvider>
-                                    </div>}
+									{/* Google Maps */}
+									{showMap && (
+										<div className='flex flex-row pt-2'>
+											<APIProvider apiKey={API_KEY}>
+												{/* prettier-ignore */}
+												<Map 
+                                                    className='w-full h-80 md:h-96 lg:h-96'
+                                                    mapId={mapId}
+                                                    defaultCenter={{ lat: Number(property.lat), lng: Number(property.lng) }} 
+                                                    defaultZoom={property.zoom || mapOptions.zoom}
+                                                    mapTypeId={mapOptions.mapType}
+                                                    gestureHandling={'greedy'} 
+                                                    disableDefaultUI={false}
+                                                    disableDoubleClickZoom={true}
+                                                    controlSize={25} 
+                                                    onDblclick={(event) => createMarker(event)} 
+                                                    onZoomChanged={(event) => setMarker({ ...marker, zoom: event.map.getZoom() || 10 })}              
+                                                >
+                                                    {addMarker && <AdvancedMarker position={marker} />}
+                                                </Map>
+											</APIProvider>
+										</div>
+									)}
 									<div className='flex flex-row justify-end space-x-4 pt-4'>
 										<Button
 											variant='ghost'
@@ -719,7 +694,7 @@ function UpdateProduct() {
 																			{ButtonsConfig.actions.save}
 																		</Button>
 																	</div>
-																	<FormMessage />
+																	<FormMessage className='text-xs font-light' />
 																</FormItem>
 															)}
 														/>

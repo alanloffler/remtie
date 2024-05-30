@@ -9,7 +9,6 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Separator } from '@/components/ui/separator';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Toggle } from '@/components/ui/toggle';
-import { toast } from '@/components/ui/use-toast';
 // App
 import CardView from '@/components/products/CardView';
 import CurrencyFormat from '@/components/shared/CurrencyFormat';
@@ -33,6 +32,7 @@ import { ReactElement, useEffect, useState } from 'react';
 import { Roles } from '@/lib/constants';
 import { SettingsConfig } from '@/lib/config/settings.config';
 import { SettingsServices } from '@/services/settings.services';
+import { handleServerResponse } from '@/lib/handleServerResponse';
 import { store } from '@/services/store.services';
 import { useCapitalize } from '@/hooks/useCapitalize';
 // .env constants
@@ -60,38 +60,33 @@ function ListAllProducts({ type }: { type: string }) {
 	const tabActive: string = store.getState().tabActive;
 	const capitalize = useCapitalize();
 	const navigate = useNavigate();
-	const isClicked = store((state) => state.isClicked);
 	const content: ReactElement | false = <div>{ProductsConfig.contentStatus.admin}</div>;
 	// #region Load data (UI, Favs, Settings and Properties)
 	async function getBusiness() {
 		BusinessServices.findAllUI().then((response) => {
-			if (response.length > 0) setBusiness(response);
-			if (response.statusCode > 399) toast({ title: response.statusCode, description: response.message, variant: 'destructive', duration: 5000 });
-			if (response instanceof Error) toast({ title: 'Error', description: '500 Internal Server Error | ' + response.message, variant: 'destructive', duration: 5000 });
+			if (!response.statusCode) setBusiness(response);
+			handleServerResponse(response);
 		});
 	}
 
 	async function getCategories() {
 		CategoriesServices.findAllUI().then((response) => {
-			if (response.length > 0) setCategories(response);
-			if (response.statusCode > 399) toast({ title: response.statusCode, description: response.message, variant: 'destructive', duration: 5000 });
-			if (response instanceof Error) toast({ title: 'Error', description: '500 Internal Server Error | ' + response.message, variant: 'destructive', duration: 5000 });
+			if (!response.statusCode) setCategories(response);
+			handleServerResponse(response);
 		});
 	}
 
 	async function getProducts() {
 		ProductsServices.findAllClient().then((response) => {
-			if (Array.isArray(response)) {
+			if (!response.statusCode) {
 				if (response.length > 0) {
 					setShowSelects(true);
 					setFavorites(response);
-					// setShowCard(true);
 				} else {
 					setShowInfoCard(true);
 				}
 			}
-			if (response.statusCode > 399) toast({ title: response.statusCode, description: response.message, variant: 'destructive', duration: 5000 });
-			if (response instanceof Error) toast({ title: 'Error', description: '500 Internal Server Error | ' + response.message, variant: 'destructive', duration: 5000 });
+			handleServerResponse(response);
 		});
 	}
 
@@ -109,14 +104,14 @@ function ListAllProducts({ type }: { type: string }) {
 				setProperties(props);
 			}
 			setShowCard(true);
-			if (response.statusCode > 399) toast({ title: response.statusCode, description: response.message, variant: 'destructive', duration: 5000 });
-			if (response instanceof Error) toast({ title: 'Error', description: '500 Internal Server Error | ' + response.message, variant: 'destructive', duration: 5000 });
+			handleServerResponse(response);
 		});
 	}
 
 	async function getRowsPerPage() {
 		SettingsServices.findOne('rowsPerPageProducts').then((response) => {
-			setRowsPerPageProducts(Number(response.value));
+			if (!response.statusCode) setRowsPerPageProducts(Number(response.value));
+			handleServerResponse(response);
 		});
 	}
 
@@ -125,7 +120,6 @@ function ListAllProducts({ type }: { type: string }) {
 		getBusiness();
 		getCategories();
 		getProducts();
-		isClicked(0);
 	}, []);
 	// #endregion
 	// #region Table columns
@@ -173,12 +167,12 @@ function ListAllProducts({ type }: { type: string }) {
 		},
 		// City
 		{
-            accessorKey: 'city',
-            header: ProductsConfig.headers[4],
-            cell: ({ row }) => {
-                return <div className='text-left'>{capitalize(row.original.city.city)}</div>;
-            }
-        },
+			accessorKey: 'city',
+			header: ProductsConfig.headers[4],
+			cell: ({ row }) => {
+				return <div className='text-left'>{capitalize(row.original.city.city)}</div>;
+			}
+		},
 		{
 			accessorKey: 'price',
 			header: ({ column }) => {
@@ -291,11 +285,10 @@ function ListAllProducts({ type }: { type: string }) {
 		setPropertiesFiltered(favorites);
 		setProperties(favorites);
 	}
-
-	function handleFavorites() {
-		setIsFavsToggled(!isFavsToggled);
+	async function handleFavorites() {
 		setCreatedSelected('');
 		resetFilters();
+		setIsFavsToggled(!isFavsToggled);
 		if (!isFavsToggled) getFavorites();
 		if (isFavsToggled) getProducts();
 	}
@@ -316,7 +309,7 @@ function ListAllProducts({ type }: { type: string }) {
 			<div className='container'>
 				<Tabs defaultValue={tabActive} className='w-full'>
 					{/* SECTION: Filters (header) */}
-					<div className='flex flex-col rounded-md border border-slate-300 bg-slate-200 px-3 py-4 shadow-sm md:flex-row md:gap-4 md:p-2 md:pr-4'>
+					<div className='flex flex-col rounded-md border border-slate-300 bg-slate-200 px-3 py-4 shadow-sm md:min-w-[600px] md:flex-row md:gap-4 md:p-2 md:pr-4'>
 						<div className='flex flex-row'>
 							<TabsList className='flex bg-inherit p-0 pl-1'>
 								<TabsTrigger value='card' className='font-normal' onClick={() => setTabActive('card')}>

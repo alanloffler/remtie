@@ -10,7 +10,6 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Separator } from '@/components/ui/separator';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Toggle } from '@/components/ui/toggle';
-import { toast } from '@/components/ui/use-toast';
 // App
 import CardView from '@/components/products/CardView';
 import CurrencyFormat from '@/components/shared/CurrencyFormat';
@@ -35,6 +34,7 @@ import { ReactElement, useEffect, useState } from 'react';
 import { Roles } from '@/lib/constants';
 import { SettingsConfig } from '@/lib/config/settings.config';
 import { SettingsServices } from '@/services/settings.services';
+import { handleServerResponse } from '@/lib/handleServerResponse';
 import { store } from '@/services/store.services';
 import { useCapitalize } from '@/hooks/useCapitalize';
 // .env constants
@@ -80,23 +80,21 @@ function ListProducts() {
 	// #region Load data (UI, Favs, Settings and Properties)
 	async function getBusiness() {
 		BusinessServices.findAllUI().then((response) => {
-			if (response.length > 0) setBusiness(response);
-			if (response.statusCode > 399) toast({ title: response.statusCode, description: response.message, variant: 'destructive', duration: 5000 });
-			if (response instanceof Error) toast({ title: 'Error', description: '500 Internal Server Error | ' + response.message, variant: 'destructive', duration: 5000 });
+			if (!response.statusCode) setBusiness(response);
+            handleServerResponse(response);
 		});
 	}
 
 	async function getCategories() {
 		CategoriesServices.findAllUI().then((response) => {
-			if (response.length > 0) setCategories(response);
-			if (response.statusCode > 399) toast({ title: response.statusCode, description: response.message, variant: 'destructive', duration: 5000 });
-			if (response instanceof Error) toast({ title: 'Error', description: '500 Internal Server Error | ' + response.message, variant: 'destructive', duration: 5000 });
+			if (!response.statusCode) setCategories(response);
+            handleServerResponse(response);
 		});
 	}
 
 	async function getProducts() {
 		ProductsServices.findAll().then((response) => {
-			if (Array.isArray(response)) {
+			if (!response.statusCode) {
 				if (response.length > 0) {
 					setShowSelects(true);
 					setFavorites(response);
@@ -105,14 +103,13 @@ function ListProducts() {
 					setShowInfoCard(true);
 				}
 			}
-			if (response.statusCode > 399) toast({ title: response.statusCode, description: response.message, variant: 'destructive', duration: 5000 });
-			if (response instanceof Error) toast({ title: 'Error', description: '500 Internal Server Error | ' + response.message, variant: 'destructive', duration: 5000 });
+            handleServerResponse(response);
 		});
 	}
 
 	async function setFavorites(props: IProperty[]) {
 		FavoritesServices.findAll().then((response) => {
-			if (response.length > 0) {
+			if (!response.statusCode) {
 				const properties = props.map((property) => ({
 					...property,
 					isFavorite: response.map((favorite: IFavorite) => favorite.propertyId).includes(property.id)
@@ -123,14 +120,14 @@ function ListProducts() {
 				setPropertiesFiltered(props);
 				setProperties(props);
 			}
-			if (response.statusCode > 399) toast({ title: response.statusCode, description: response.message, variant: 'destructive', duration: 5000 });
-			if (response instanceof Error) toast({ title: 'Error', description: '500 Internal Server Error | ' + response.message, variant: 'destructive', duration: 5000 });
+            handleServerResponse(response);
 		});
 	}
 
 	async function getRowsPerPage() {
 		SettingsServices.findOne('rowsPerPageProducts').then((response) => {
-			setRowsPerPageProducts(Number(response.value));
+            if (!response.statusCode) setRowsPerPageProducts(Number(response.value));
+            handleServerResponse(response);
 		});
 	}
 
@@ -360,36 +357,24 @@ function ListProducts() {
 	// #region Button actions
 	async function restore(id: number) {
 		ProductsServices.restore(id).then((response) => {
-			if (response.statusCode === 200) {
-				toast({ title: response.statusCode, description: response.message, variant: 'success', duration: 5000 });
-				getProducts();
-			}
-			if (response.statusCode > 399) toast({ title: response.statusCode, description: response.message, variant: 'destructive', duration: 5000 });
-			if (response instanceof Error) toast({ title: 'Error', description: '500 Internal Server Error | ' + response.message, variant: 'destructive', duration: 5000 });
+			if (response.statusCode === 200) getProducts();
+            handleServerResponse(response);
 		});
         setOpenDialog(false);
 	}
 
 	async function removeSoft(id: number) {
 		ProductsServices.removeSoft(id).then((response) => {
-			if (response.statusCode === 200) {
-				toast({ title: response.statusCode, description: response.message, variant: 'success', duration: 5000 });
-				getProducts();
-			}
-			if (response.statusCode > 399) toast({ title: response.statusCode, description: response.message, variant: 'destructive', duration: 5000 });
-			if (response instanceof Error) toast({ title: 'Error', description: '500 Internal Server Error | ' + response.message, variant: 'destructive', duration: 5000 });
+			if (response.statusCode === 200) getProducts();
+            handleServerResponse(response);
 		});
 		setOpenDialog(false);
 	}
 
 	async function remove(id: number) {
 		ProductsServices.remove(id).then((response) => {
-			if (response.statusCode === 200) {
-				toast({ title: response.statusCode, description: response.message, variant: 'success', duration: 5000 });
-				getProducts();
-			}
-			if (response.statusCode > 399) toast({ title: response.statusCode, description: response.message, variant: 'destructive', duration: 5000 });
-			if (response instanceof Error) toast({ title: 'Error', description: '500 Internal Server Error | ' + response.message, variant: 'destructive', duration: 5000 });
+			if (response.statusCode === 200) getProducts();
+            handleServerResponse(response);
 		});
 		setOpenDialog(false);
 	}

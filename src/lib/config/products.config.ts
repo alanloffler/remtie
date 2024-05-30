@@ -47,7 +47,11 @@ export const ProductsConfig = {
 				message: 'La imágen de la propiedad se eliminará permanentemente de la base de datos.'
 			},
 			subtitle: 'Descripción',
-			title: 'Crear Propiedad'
+			title: 'Crear Propiedad',
+            createResponse: {
+                statusCode: '200',
+                message: 'Propiedad creada',
+            }
 		},
 		update: {
 			title: 'Editar Propiedad'

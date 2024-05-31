@@ -76,6 +76,8 @@ function UpdateProduct() {
 	const [mapOptions, setMapOptions] = useState<IMapOptions>({} as IMapOptions);
 	const [marker, setMarker] = useState<IMarkerProp>({} as IMarkerProp);
 	const [showMap, setShowMap] = useState<boolean>(false);
+	const [showMapOptions, setShowMapOptions] = useState<boolean>(false);
+	const [showMapId, setShowMapId] = useState<boolean>(false);
 	// #region Forms declaration
 	const propertyForm = useForm<z.infer<typeof propertySchema>>({
 		resolver: zodResolver(propertySchema),
@@ -171,14 +173,17 @@ function UpdateProduct() {
 		});
 
 		SettingsServices.findOne('mapId').then((response) => {
-			if (!response.statusCode) setMapId(response.value);
+			if (!response.statusCode) {
+                setMapId(response.value);
+                setShowMapId(true);
+            }
 			handleServerResponse(response);
 		});
 
 		SettingsServices.findOne('mapCPOptions').then((response) => {
 			if (!response.statusCode) {
 				setMapOptions(JSON.parse(response.value));
-				setShowMap(true);
+				setShowMapOptions(true);
 			}
 			handleServerResponse(response);
 		});
@@ -574,16 +579,16 @@ function UpdateProduct() {
 										</div>
 									</div>
 									{/* Google Maps */}
-									{showMap && (
+									{(showMap && showMapId && showMapOptions) && (
 										<div className='flex flex-row pt-2'>
 											<APIProvider apiKey={API_KEY}>
 												{/* prettier-ignore */}
 												<Map 
                                                     className='w-full h-80 md:h-96 lg:h-96'
                                                     mapId={mapId}
-                                                    defaultCenter={{ lat: Number(property.lat), lng: Number(property.lng) }} 
+                                                    defaultCenter={{ lat: Number(property.lat) || 0, lng: Number(property.lng) || 0 }} 
                                                     defaultZoom={property.zoom || mapOptions.zoom}
-                                                    mapTypeId={mapOptions.mapType}
+                                                    mapTypeId={mapOptions.mapType || 'roadmap'}
                                                     gestureHandling={'greedy'} 
                                                     disableDefaultUI={false}
                                                     disableDoubleClickZoom={true}

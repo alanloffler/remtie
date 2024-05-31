@@ -29,7 +29,7 @@ import { ImageServices } from '@/services/image.services';
 import { ProductsConfig} from '@/lib/config/products.config';
 import { ProductsServices } from '@/services/products.services';
 import { StatesServices } from '@/services/states.services';
-import { getImageURL } from '@/lib/image-util';
+// import { getImageURL } from '@/lib/image-util';
 import { handleServerResponse } from '@/lib/handleServerResponse';
 import { imageFormSchema } from '@/lib/schemas/image.schema';
 import { propertySchema } from '@/lib/schemas/property.schema';
@@ -39,6 +39,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 // .env constants
 const API_KEY: string = import.meta.env.VITE_GOOGLE_MAPS_API_KEY;
 const APP_URL: string = import.meta.env.VITE_APP_URL;
+const IMAGES_URL: string = import.meta.env.VITE_IMAGES_URL;
 // Google Maps
 import { APIProvider, Map, AdvancedMarker, MapMouseEvent } from '@vis.gl/react-google-maps';
 import { IMapOptions, IMarker } from '@/lib/interfaces/google-map.interface';
@@ -510,7 +511,7 @@ function CreateProduct() {
 														<Card key={img.id} className='bg-slate-100/50 px-2 py-2'>
 															<div className='flex flex-row place-items-center justify-between'>
 																<div className='flex h-6 flex-row space-x-2'>
-																	<img src={getImageURL(img.name)} />
+																	<img src={`${IMAGES_URL}/${(img.name)}`} />
 																	<h2 className='flex flex-row place-items-center text-xs font-medium text-slate-900'># {i + 1}</h2>
 																</div>
 																<div className='hidden flex-row text-xs font-light text-slate-400 xs:block md:block lg:block'>{img.name}</div>

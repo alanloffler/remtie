@@ -31,7 +31,6 @@ import { ProductsConfig } from '@/lib/config/products.config';
 import { ProductsServices } from '@/services/products.services';
 import { Roles } from '@/lib/constants';
 import { StatesServices } from '@/services/states.services';
-import { getImageURL } from '@/lib/image-util';
 import { handleServerResponse } from '@/lib/handleServerResponse';
 import { imageFormSchema } from '@/lib/schemas/image.schema';
 import { propertySchema } from '@/lib/schemas/property.schema';
@@ -42,6 +41,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 // .env constants
 const API_KEY: string = import.meta.env.VITE_GOOGLE_MAPS_API_KEY;
 const APP_URL: string = import.meta.env.VITE_APP_URL;
+const IMAGES_URL: string = import.meta.env.VITE_IMAGES_URL;
 // Google Map
 import { APIProvider, Map, AdvancedMarker, MapMouseEvent } from '@vis.gl/react-google-maps';
 import { IMapOptions, IMarkerProp } from '@/lib/interfaces/google-map.interface';
@@ -112,8 +112,8 @@ function UpdateProduct() {
 				propertyForm.setValue('short_description', response.short_description);
 				propertyForm.setValue('long_description', response.long_description);
 				propertyForm.setValue('street', response.street);
-				propertyForm.setValue('city', response.city.city);
-				propertyForm.setValue('state', response.state.state);
+				propertyForm.setValue('city', response.city.id);
+				propertyForm.setValue('state', response.state.id);
 				propertyForm.setValue('zip', response.zip);
 				propertyForm.setValue('price', response.price);
 				propertyForm.setValue('is_active', Boolean(response.is_active));
@@ -131,6 +131,10 @@ function UpdateProduct() {
 				}
 			}
 			handleServerResponse(response);
+            setBusinessKey(Math.random());
+            setCategoriesKey(Math.random());
+            setCitiesSelectKey(Math.random());
+            setStatesSelectKey(Math.random());
 		});
 
 		BusinessServices.findAllUI().then((response) => {
@@ -197,12 +201,13 @@ function UpdateProduct() {
 
 	function handleSubmitImage(data: FieldValues) {
 		ImageServices.create(propertyId, data.file[0]).then((response) => {
-			if (!response.statusCode) {
+			if (response.statusCode === 200) {
 				ImageServices.findByProperty(propertyId).then((resp) => {
 					if (!resp.statusCode) setImages(resp);
 					handleServerResponse(resp);
 				});
 				imageForm.reset();
+                setChosenImage('');
 			}
 			handleServerResponse(response);
 		});
@@ -286,7 +291,7 @@ function UpdateProduct() {
 	}
 
 	function fillZipCode(event: string) {
-		propertyForm.setValue('zip', citiesSelect.find((city) => city.city === event)?.zip || '');
+		propertyForm.setValue('zip', citiesSelect.find((city) => city.id === Number(event))?.zip || '');
 	}
 
 	function filterCitiesByState(state: string) {
@@ -457,7 +462,7 @@ function UpdateProduct() {
 															</FormControl>
 															<SelectContent>
 																{statesSelect.map((el) => (
-																	<SelectItem key={el.id} value={String(el.state)} className='text-sm'>
+																	<SelectItem key={el.id} value={String(el.id)} className='text-sm'>
 																		{capitalize(el.state)}
 																	</SelectItem>
 																))}
@@ -490,7 +495,7 @@ function UpdateProduct() {
 															</FormControl>
 															<SelectContent>
 																{citiesSelect.map((el) => (
-																	<SelectItem key={el.id} value={String(el.city)} className='text-sm'>
+																	<SelectItem key={el.id} value={String(el.id)} className='text-sm'>
 																		{capitalize(el.city)}
 																	</SelectItem>
 																))}
@@ -619,7 +624,7 @@ function UpdateProduct() {
 													<Card key={img.id} className='bg-slate-100/50 px-2 py-2'>
 														<div className='flex flex-row place-items-center justify-between'>
 															<div className='flex h-6 flex-row space-x-2'>
-																<img src={getImageURL(img.name)} />
+																<img src={`${IMAGES_URL}/${img.name}`} />
 																<h2 className='flex flex-row place-items-center text-xs font-medium text-slate-900'># {i + 1}</h2>
 															</div>
 															<div className='hidden flex-row text-xs font-light text-slate-400 xs:block md:block lg:block'>{img.name}</div>

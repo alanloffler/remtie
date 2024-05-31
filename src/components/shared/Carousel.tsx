@@ -4,8 +4,9 @@ import { ChevronLeft, ChevronRight, Expand } from 'lucide-react';
 import Loading from '@/components/shared/Loading';
 import { Dialog, DialogContent } from '@/components/ui/dialog';
 import { IImage } from '@/lib/interfaces/image.interface';
-import { getImageURL } from '@/lib/image-util';
 import { useState, useEffect } from 'react';
+// .env constants
+const IMAGES_URL: string = import.meta.env.VITE_IMAGES_URL;
 // Interface
 interface ICarousel {
 	autoSlide?: boolean;
@@ -24,7 +25,7 @@ function Carousel(props: ICarousel) {
 	const prev = () => setCurrent((current) => (current === 0 ? images.length - 1 : current - 1));
 	const next = () => setCurrent((current) => (current === images.length - 1 ? 0 : current + 1));
 
-	useEffect(() => {
+    useEffect(() => {
 		if (!autoSlide) return;
 		const slideInterval = setInterval(next, autoSlideInterval);
 		return () => clearInterval(slideInterval);
@@ -32,7 +33,7 @@ function Carousel(props: ICarousel) {
 	}, []);
 	return (
 		<>
-			<div className='flex aspect-[83/50]'>
+			<div className='flex aspect-[83/50] min-w-full'>
 				{loading && (
 					<div className='mx-auto flex h-auto w-auto flex-row items-center'>
 						<Loading width={36} height={36} dur={0.75} color='#0ea5e9' />
@@ -41,7 +42,7 @@ function Carousel(props: ICarousel) {
 				<div className='relative overflow-hidden rounded-xl shadow-md'>
 					<div className='flex transition-transform duration-500 ease-out' style={{ transform: `translateX(-${current * 100}%)` }}>
 						{images.map((img, i) => (
-							<img key={i} src={getImageURL(img.name)} onLoad={() => setLoading(false)} />
+							<img key={i} src={`${IMAGES_URL}/${img.name}`} onLoad={() => setLoading(false)} />
 						))}
 					</div>
 					{images.length > 1 && (
@@ -70,7 +71,7 @@ function Carousel(props: ICarousel) {
 			</div>
 			<Dialog open={isFullscreen} onOpenChange={setIsFullscreen}>
 				<DialogContent className='max-w-4xl border-none p-0'>
-					<img className={`rounded-lg`} src={getImageURL(images[current].name)} />
+					<img className={`rounded-lg`} src={`${IMAGES_URL}/${images[current].name}`} />
 				</DialogContent>
 			</Dialog>
 		</>

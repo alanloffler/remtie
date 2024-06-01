@@ -1,3 +1,4 @@
+/* DEPLOY IN VERCEL: 31/05/2024 */
 // Styles
 import '@/index.css';
 // App

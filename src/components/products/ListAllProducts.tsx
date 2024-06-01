@@ -1,6 +1,6 @@
 /* eslint-disable react-hooks/exhaustive-deps */
 // Icons: Lucide (https://lucide.dev/)
-import { ArrowUpDown, CircleOff, Heart, Info, Pencil, Plus } from 'lucide-react';
+import { ArrowUpDown, CircleOff, FileText, Heart, Pencil, Plus } from 'lucide-react';
 // UI: Shadcn-ui (https://ui.shadcn.com/)
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
@@ -9,6 +9,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Separator } from '@/components/ui/separator';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Toggle } from '@/components/ui/toggle';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 // App
 import CardView from '@/components/products/CardView';
 import CurrencyFormat from '@/components/shared/CurrencyFormat';
@@ -197,13 +198,31 @@ function ListAllProducts({ type }: { type: string }) {
 					<div className='flex flex-row gap-2'>
 						{row.original.deletedAt === null && (
 							<>
-								<Button onClick={() => navigate(APP_URL + '/productos/' + row.original.id)} variant='outline' size='miniIcon' className='hover:bg-white hover:text-sky-400'>
-									<Info className='h-5 w-5' strokeWidth='1.5' />
-								</Button>
+								<TooltipProvider>
+									<Tooltip>
+										<TooltipTrigger asChild>
+											<Button onClick={() => navigate(`${APP_URL}/productos/${row.original.id}`)} variant='outline' size='miniIcon' className='hover:bg-white hover:text-sky-400'>
+												<FileText className='h-5 w-5' strokeWidth='1.5' />
+											</Button>
+										</TooltipTrigger>
+										<TooltipContent>
+											<p>{ButtonsConfig.actions.details}</p>
+										</TooltipContent>
+									</Tooltip>
+								</TooltipProvider>
 								{type !== 'client' && (
-									<Button onClick={() => navigate(`${APP_URL}/productos/modificar/${row.original.id}`)} variant='outline' size='miniIcon' className='hover:bg-white hover:text-emerald-400'>
-										<Pencil className='h-5 w-5' strokeWidth='1.5' />
-									</Button>
+									<TooltipProvider>
+										<Tooltip>
+											<TooltipTrigger asChild>
+												<Button onClick={() => navigate(`${APP_URL}/productos/modificar/${row.original.id}`)} variant='outline' size='miniIcon' className='hover:bg-white hover:text-emerald-400'>
+													<Pencil className='h-5 w-5' strokeWidth='1.5' />
+												</Button>
+											</TooltipTrigger>
+											<TooltipContent>
+												<p>{ButtonsConfig.actions.edit}</p>
+											</TooltipContent>
+										</Tooltip>
+									</TooltipProvider>
 								)}
 							</>
 						)}

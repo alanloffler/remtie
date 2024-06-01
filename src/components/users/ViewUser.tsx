@@ -4,6 +4,7 @@ import { ArrowLeft, BadgeX, CheckCircle, Mail, Pencil, Phone, Trash2 } from 'luc
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardFooter } from '@/components/ui/card';
 import { Dialog, DialogHeader, DialogFooter, DialogContent, DialogTitle, DialogDescription } from '@/components/ui/dialog';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 // App
 import Dot from '@/components/shared/Dot';
 import { ButtonsConfig } from '@/lib/config/buttons.config';
@@ -33,7 +34,7 @@ function ViewUser() {
 	useEffect(() => {
 		UsersServices.findOne(id).then((response) => {
 			if (!response.statusCode) setUser(response);
-            handleServerResponse(response);
+			handleServerResponse(response);
 		});
 	}, [id, navigate, updateUI]);
 	// #endregion
@@ -42,7 +43,7 @@ function ViewUser() {
 		UsersServices.removeSoft(id).then((response) => {
 			if (response.statusCode === 200) setUpdateUI(Math.random());
 			setOpenDialog(false);
-            handleServerResponse(response);
+			handleServerResponse(response);
 		});
 	}
 
@@ -50,7 +51,7 @@ function ViewUser() {
 		UsersServices.remove(id).then((response) => {
 			if (response.statusCode === 200) navigate(-1);
 			setOpenDialog(false);
-            handleServerResponse(response);
+			handleServerResponse(response);
 		});
 	}
 
@@ -58,7 +59,7 @@ function ViewUser() {
 		UsersServices.restore(id).then((response) => {
 			if (response.statusCode === 200) setUpdateUI(Math.random());
 			setOpenDialog(false);
-            handleServerResponse(response);
+			handleServerResponse(response);
 		});
 	}
 	// #endregion
@@ -140,23 +141,59 @@ function ViewUser() {
 					{(store.getState().role === Roles.ADMIN || store.getState().userId === user.id) && (
 						<CardFooter className='justify-end gap-2 bg-slate-200/50 p-2'>
 							{user.deletedAt === null && (
-								<Button onClick={() => navigate(`${APP_URL}/usuario/modificar/${user.id}`)} variant='ghost' size='miniIcon' className='rounded-full border bg-white text-slate-400/70 shadow-sm hover:bg-white hover:text-emerald-500'>
-									<Pencil className='h-4 w-4' />
-								</Button>
+								<TooltipProvider>
+									<Tooltip>
+										<TooltipTrigger asChild>
+											<Button onClick={() => navigate(`${APP_URL}/usuario/modificar/${user.id}`)} variant='ghost' size='miniIcon' className='rounded-full border bg-white text-slate-400/70 shadow-sm hover:bg-white hover:text-emerald-500'>
+												<Pencil className='h-4 w-4' />
+											</Button>
+										</TooltipTrigger>
+										<TooltipContent>
+											<p>{ButtonsConfig.actions.edit}</p>
+										</TooltipContent>
+									</Tooltip>
+								</TooltipProvider>
 							)}
 							{user.deletedAt === null ? (
-								<Button onClick={() => handleDialog(user, 'removeSoft')} variant='outline' size='miniIcon' className='rounded-full border bg-white text-slate-400/70 shadow-sm hover:bg-white hover:text-rose-400'>
-									<Trash2 className='h-4 w-4' />
-								</Button>
+								<TooltipProvider>
+									<Tooltip>
+										<TooltipTrigger asChild>
+											<Button onClick={() => handleDialog(user, 'removeSoft')} variant='outline' size='miniIcon' className='rounded-full border bg-white text-slate-400/70 shadow-sm hover:bg-white hover:text-rose-400'>
+												<Trash2 className='h-4 w-4' />
+											</Button>
+										</TooltipTrigger>
+										<TooltipContent>
+											<p>{ButtonsConfig.actions.delete}</p>
+										</TooltipContent>
+									</Tooltip>
+								</TooltipProvider>
 							) : (
-								<Button onClick={() => handleDialog(user, 'restore')} variant='outline' size='miniIcon' className='rounded-full border bg-white text-slate-400/70 shadow-sm hover:bg-white hover:text-emerald-400'>
-									<CheckCircle className='h-4 w-4' />
-								</Button>
+								<TooltipProvider>
+									<Tooltip>
+										<TooltipTrigger asChild>
+											<Button onClick={() => handleDialog(user, 'restore')} variant='outline' size='miniIcon' className='rounded-full border bg-white text-slate-400/70 shadow-sm hover:bg-white hover:text-emerald-400'>
+												<CheckCircle className='h-4 w-4' />
+											</Button>
+										</TooltipTrigger>
+										<TooltipContent>
+											<p>{ButtonsConfig.actions.restore}</p>
+										</TooltipContent>
+									</Tooltip>
+								</TooltipProvider>
 							)}
 							{store.getState().role === Roles.ADMIN && store.getState().userId !== user.id && (
-								<Button onClick={() => handleDialog(user, 'remove')} variant='outline' size='miniIcon' className='rounded-full border bg-white text-slate-400/70 shadow-sm hover:bg-white hover:text-rose-400'>
-									<BadgeX className='h-5 w-5' strokeWidth='1.5' />
-								</Button>
+								<TooltipProvider>
+									<Tooltip>
+										<TooltipTrigger asChild>
+											<Button onClick={() => handleDialog(user, 'remove')} variant='outline' size='miniIcon' className='rounded-full border bg-white text-slate-400/70 shadow-sm hover:bg-white hover:text-rose-400'>
+												<BadgeX className='h-4 w-4' />
+											</Button>
+										</TooltipTrigger>
+										<TooltipContent>
+											<p>{ButtonsConfig.actions.deletePermanent}</p>
+										</TooltipContent>
+									</Tooltip>
+								</TooltipProvider>
 							)}
 						</CardFooter>
 					)}

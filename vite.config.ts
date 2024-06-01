@@ -9,12 +9,5 @@ export default defineConfig({
 		alias: {
 			'@': path.resolve(__dirname, './src')
 		}
-	},
-	build: {
-		outDir: 'dist',
-		rollupOptions: {
-			input:  {main: path.resolve(__dirname, './src/main.tsx')},
-			output: { dir: path.resolve(__dirname, './dist') }
-		}
 	}
 });

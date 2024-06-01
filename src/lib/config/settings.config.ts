@@ -61,6 +61,7 @@ export const SettingsConfig = {
 		},
 		formMaps: {
 			title: 'Configuración de mapas (Formularios)',
+            titleSection: 'Configuración de mapa (Sección)',
 			form: {
 				label: {
 					lat: 'Latitud centro',

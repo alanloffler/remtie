@@ -93,6 +93,14 @@ function App() {
 						}
 					/>
 				</Route>
+				<Route
+					path='*'
+					element={
+						<React.Suspense fallback={<Loading2 width='60' height='60' color='#0ea5e9' dur={0.75} />}>
+							<NotFound />
+						</React.Suspense>
+					}
+				/>
 			</Routes>
 			<Toaster />
 		</>

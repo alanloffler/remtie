@@ -45,8 +45,8 @@ function ViewProduct() {
 	const [showCard, setShowCard] = useState<boolean>(false);
 	const [updateUI, setUpdateUI] = useState<number>(0);
 	const propertyId = Number(useParams().id);
-    const [mapId, setMapId] = useState<string>('');
-    const [showMap, setShowMap] = useState<boolean>(false);
+	const [mapId, setMapId] = useState<string>('');
+	const [showMap, setShowMap] = useState<boolean>(false);
 	const capitalize = useCapitalize();
 	const localeDate = useLocaleDate();
 	const navigate = useNavigate();
@@ -66,25 +66,25 @@ function ViewProduct() {
 					const confirmedMapExistence = confirmMapExistence(newMarker);
 					if (confirmedMapExistence) {
 						setMarker(newMarker);
-                        setShowMap(true);
+						setShowMap(true);
 						setAddMarker(true);
 					} else {
-                        setShowMap(false);
+						setShowMap(false);
 						setAddMarker(false);
 						return;
 					}
 				}
-                handleServerResponse(response);
+				handleServerResponse(response);
 			});
 		}
 
 		async function getImages(id: number) {
 			ImageServices.findByProperty(id).then((response) => {
 				if (response.length > 0) setImages(response);
-                handleServerResponse(response);
+				if (response.statusCode !== 401) handleServerResponse(response);
 			});
 		}
-        SettingsServices.findOne('mapId').then((response) => {
+		SettingsServices.findOne('mapId').then((response) => {
 			if (!response.statusCode) setMapId(response.value);
 			handleServerResponse(response);
 		});
@@ -144,7 +144,7 @@ function ViewProduct() {
 	// #region Button actions
 	async function restore(id: number) {
 		ProductsServices.restore(id).then((response) => {
-            handleServerResponse(response);
+			handleServerResponse(response);
 			setOpenDialog(false);
 			setUpdateUI(Math.random());
 		});
@@ -153,7 +153,7 @@ function ViewProduct() {
 	async function removeSoft(id: number) {
 		ProductsServices.removeSoft(id).then((response) => {
 			if (response.statusCode === 200) setUpdateUI(Math.random());
-            handleServerResponse(response);
+			handleServerResponse(response);
 			setOpenDialog(false);
 		});
 	}
@@ -161,7 +161,7 @@ function ViewProduct() {
 	async function remove(id: number) {
 		ProductsServices.remove(id).then((response) => {
 			if (response.statusCode === 200) navigate(`${APP_URL}/productos`);
-            handleServerResponse(response);
+			handleServerResponse(response);
 			setOpenDialog(false);
 		});
 	}
@@ -252,61 +252,63 @@ function ViewProduct() {
 								<Label className='text-slate-400/70'>Activo</Label>
 							</div>
 
-							{(store.getState().role === Roles.ADMIN || store.getState().userId === property.user?.id) && <div className='flex gap-2'>
-								<TooltipProvider>
-									<Tooltip>
-										<TooltipTrigger asChild>
-											<Button onClick={() => navigate(`${APP_URL}/productos/modificar/${property.id}`)} variant='ghost' size='miniIcon' className='rounded-full border bg-white text-slate-400/70 shadow-sm hover:bg-white hover:text-emerald-500'>
-												<Pencil className='h-4 w-4' />
-											</Button>
-										</TooltipTrigger>
-										<TooltipContent>
-											<p>{ButtonsConfig.actions.edit}</p>
-										</TooltipContent>
-									</Tooltip>
-								</TooltipProvider>
-								{property.deletedAt === null ? (
+							{(store.getState().role === Roles.ADMIN || store.getState().userId === property.user?.id) && (
+								<div className='flex gap-2'>
 									<TooltipProvider>
 										<Tooltip>
 											<TooltipTrigger asChild>
-												<Button onClick={() => handleDialog(property, 'removeSoft')} variant='outline' size='miniIcon' className='rounded-full border bg-white text-slate-400/70 shadow-sm hover:bg-white hover:text-rose-400'>
-													<Trash2 className='h-4 w-4' />
+												<Button onClick={() => navigate(`${APP_URL}/productos/modificar/${property.id}`)} variant='ghost' size='miniIcon' className='rounded-full border bg-white text-slate-400/70 shadow-sm hover:bg-white hover:text-emerald-500'>
+													<Pencil className='h-4 w-4' />
 												</Button>
 											</TooltipTrigger>
 											<TooltipContent>
-												<p>{ButtonsConfig.actions.delete}</p>
+												<p>{ButtonsConfig.actions.edit}</p>
 											</TooltipContent>
 										</Tooltip>
 									</TooltipProvider>
-								) : (
-									<TooltipProvider>
-										<Tooltip>
-											<TooltipTrigger asChild>
-												<Button onClick={() => handleDialog(property, 'restore')} variant='outline' size='miniIcon' className='rounded-full border bg-white text-slate-400/70 shadow-sm hover:bg-white hover:text-emerald-400'>
-													<CheckCircle className='h-4 w-4' />
-												</Button>
-											</TooltipTrigger>
-											<TooltipContent>
-												<p>{ButtonsConfig.actions.restore}</p>
-											</TooltipContent>
-										</Tooltip>
-									</TooltipProvider>
-								)}
-								{store.getState().role === Roles.ADMIN && (
-									<TooltipProvider>
-										<Tooltip>
-											<TooltipTrigger asChild>
-												<Button onClick={() => handleDialog(property, 'remove')} variant='outline' size='miniIcon' className='rounded-full border bg-white text-slate-400/70 shadow-sm hover:bg-white hover:text-rose-400'>
-													<BadgeX className='h-5 w-5' strokeWidth='1.5' />
-												</Button>
-											</TooltipTrigger>
-											<TooltipContent>
-												<p>{ButtonsConfig.actions.deletePermanent}</p>
-											</TooltipContent>
-										</Tooltip>
-									</TooltipProvider>
-								)}
-							</div>}
+									{property.deletedAt === null ? (
+										<TooltipProvider>
+											<Tooltip>
+												<TooltipTrigger asChild>
+													<Button onClick={() => handleDialog(property, 'removeSoft')} variant='outline' size='miniIcon' className='rounded-full border bg-white text-slate-400/70 shadow-sm hover:bg-white hover:text-rose-400'>
+														<Trash2 className='h-4 w-4' />
+													</Button>
+												</TooltipTrigger>
+												<TooltipContent>
+													<p>{ButtonsConfig.actions.delete}</p>
+												</TooltipContent>
+											</Tooltip>
+										</TooltipProvider>
+									) : (
+										<TooltipProvider>
+											<Tooltip>
+												<TooltipTrigger asChild>
+													<Button onClick={() => handleDialog(property, 'restore')} variant='outline' size='miniIcon' className='rounded-full border bg-white text-slate-400/70 shadow-sm hover:bg-white hover:text-emerald-400'>
+														<CheckCircle className='h-4 w-4' />
+													</Button>
+												</TooltipTrigger>
+												<TooltipContent>
+													<p>{ButtonsConfig.actions.restore}</p>
+												</TooltipContent>
+											</Tooltip>
+										</TooltipProvider>
+									)}
+									{store.getState().role === Roles.ADMIN && (
+										<TooltipProvider>
+											<Tooltip>
+												<TooltipTrigger asChild>
+													<Button onClick={() => handleDialog(property, 'remove')} variant='outline' size='miniIcon' className='rounded-full border bg-white text-slate-400/70 shadow-sm hover:bg-white hover:text-rose-400'>
+														<BadgeX className='h-5 w-5' strokeWidth='1.5' />
+													</Button>
+												</TooltipTrigger>
+												<TooltipContent>
+													<p>{ButtonsConfig.actions.deletePermanent}</p>
+												</TooltipContent>
+											</Tooltip>
+										</TooltipProvider>
+									)}
+								</div>
+							)}
 						</CardFooter>
 					</Card>
 				)}

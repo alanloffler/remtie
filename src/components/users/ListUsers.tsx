@@ -1,9 +1,10 @@
 // Icons: Lucide (https://lucide.dev/)
-import { ArrowUpDown, BadgeX, CheckCircle, CircleOff, Info, Pencil, Plus, Trash2 } from 'lucide-react';
+import { ArrowUpDown, BadgeX, CheckCircle, CircleOff, FileText, Pencil, Plus, Trash2 } from 'lucide-react';
 // UI: Shadcn-ui (https://ui.shadcn.com/)
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 // App
 import Dot from '@/components/shared/Dot';
 import { ButtonsConfig } from '@/lib/config/buttons.config';
@@ -95,88 +96,133 @@ function ListUsers() {
 			cell: ({ row }) => {
 				return (
 					<div className='flex flex-row gap-2'>
-						<Button onClick={() => navigate(`${APP_URL}/usuario/${Number(row.original.id)}`)} variant='outline' size='miniIcon' className='hover:bg-white hover:text-sky-400'>
-							<Info className='h-5 w-5' strokeWidth='1.5' />
-						</Button>
+						<TooltipProvider>
+							<Tooltip>
+								<TooltipTrigger asChild>
+									<Button onClick={() => navigate(`${APP_URL}/usuario/${Number(row.original.id)}`)} variant='outline' size='miniIcon' className='hover:bg-white hover:text-sky-400'>
+										<FileText className='h-5 w-5' strokeWidth='1.5' />
+									</Button>
+								</TooltipTrigger>
+								<TooltipContent>
+									<p>{ButtonsConfig.actions.details}</p>
+								</TooltipContent>
+							</Tooltip>
+						</TooltipProvider>
 						{(isAdmin || (store.getState().userId === Number(row.original.id) && !isAdmin)) && (
 							<>
 								{/* Edit */}
 								{row.original.deletedAt === null && (
-									<Button onClick={() => navigate(`${APP_URL}/usuario/modificar/${Number(row.original.id)}`)} variant='outline' size='miniIcon' className='hover:bg-white hover:text-emerald-400'>
-										<Pencil className='h-5 w-5' strokeWidth='1.5' />
-									</Button>
+									<TooltipProvider>
+										<Tooltip>
+											<TooltipTrigger asChild>
+												<Button onClick={() => navigate(`${APP_URL}/usuario/modificar/${Number(row.original.id)}`)} variant='outline' size='miniIcon' className='hover:bg-white hover:text-emerald-400'>
+													<Pencil className='h-5 w-5' strokeWidth='1.5' />
+												</Button>
+											</TooltipTrigger>
+											<TooltipContent>
+												<p>{ButtonsConfig.actions.edit}</p>
+											</TooltipContent>
+										</Tooltip>
+									</TooltipProvider>
 								)}
 								{/* Soft Delete or Restore */}
 								{row.original.deletedAt === null ? (
-									<Button
-										onClick={() => {
-											setOpenDialog(true);
-											setUserDialog({
-												id: Number(row.original.id),
-												name: row.original.name,
-												title: UsersConfig.dialog.title,
-												subtitle: UsersConfig.dialog.impossibleRevertion,
-												message: (
-													<div className='flex flex-col'>
-														<span className='text-md font-bold text-slate-900'>{row.original.name}</span>
-														{UsersConfig.dialog.userSoftDelete}
-													</div>
-												)
-											});
-											setDialogAction('removeSoft');
-										}}
-										variant='outline'
-										size='miniIcon'
-										className='hover:bg-white hover:text-rose-400'>
-										<Trash2 className='h-5 w-5' strokeWidth='1.5' />
-									</Button>
+									<TooltipProvider>
+										<Tooltip>
+											<TooltipTrigger asChild>
+												<Button
+													onClick={() => {
+														setOpenDialog(true);
+														setUserDialog({
+															id: Number(row.original.id),
+															name: row.original.name,
+															title: UsersConfig.dialog.title,
+															subtitle: UsersConfig.dialog.impossibleRevertion,
+															message: (
+																<div className='flex flex-col'>
+																	<span className='text-md font-bold text-slate-900'>{row.original.name}</span>
+																	{UsersConfig.dialog.userSoftDelete}
+																</div>
+															)
+														});
+														setDialogAction('removeSoft');
+													}}
+													variant='outline'
+													size='miniIcon'
+													className='hover:bg-white hover:text-rose-400'>
+													<Trash2 className='h-5 w-5' strokeWidth='1.5' />
+												</Button>
+											</TooltipTrigger>
+											<TooltipContent>
+												<p>{ButtonsConfig.actions.delete}</p>
+											</TooltipContent>
+										</Tooltip>
+									</TooltipProvider>
 								) : (
-									<Button
-										onClick={() => {
-											setOpenDialog(true);
-											setUserDialog({
-												id: Number(row.original.id),
-												name: row.original.name,
-												title: UsersConfig.dialog.title,
-												subtitle: UsersConfig.dialog.possibleRevertion,
-												message: (
-													<div className='flex flex-col'>
-														<span className='text-md font-bold text-slate-900'>{row.original.name}</span>
-														{UsersConfig.dialog.userRestore}
-													</div>
-												)
-											});
-											setDialogAction('restore');
-										}}
-										variant='outline'
-										size='miniIcon'
-										className='hover:bg-white hover:text-emerald-400'>
-										<CheckCircle className='h-5 w-5' strokeWidth='1.5' />
-									</Button>
+									<TooltipProvider>
+										<Tooltip>
+											<TooltipTrigger asChild>
+												<Button
+													onClick={() => {
+														setOpenDialog(true);
+														setUserDialog({
+															id: Number(row.original.id),
+															name: row.original.name,
+															title: UsersConfig.dialog.title,
+															subtitle: UsersConfig.dialog.possibleRevertion,
+															message: (
+																<div className='flex flex-col'>
+																	<span className='text-md font-bold text-slate-900'>{row.original.name}</span>
+																	{UsersConfig.dialog.userRestore}
+																</div>
+															)
+														});
+														setDialogAction('restore');
+													}}
+													variant='outline'
+													size='miniIcon'
+													className='hover:bg-white hover:text-emerald-400'>
+													<CheckCircle className='h-5 w-5' strokeWidth='1.5' />
+												</Button>
+											</TooltipTrigger>
+											<TooltipContent>
+												<p>{ButtonsConfig.actions.restore}</p>
+											</TooltipContent>
+										</Tooltip>
+									</TooltipProvider>
 								)}
 								{store.getState().userId !== Number(row.original.id) && (
-									<Button
-										onClick={() => {
-											setOpenDialog(true);
-											setUserDialog({
-												id: Number(row.original.id),
-												name: row.original.name,
-												title: UsersConfig.dialog.title,
-												subtitle: UsersConfig.dialog.impossibleRevertion,
-												message: (
-													<div className='flex flex-col'>
-														<span className='text-md font-bold text-slate-900'>{row.original.name}</span>
-														{UsersConfig.dialog.userDelete}
-													</div>
-												)
-											});
-											setDialogAction('remove');
-										}}
-										variant='outline'
-										size='miniIcon'
-										className='hover:bg-white hover:text-rose-400'>
-										<BadgeX className='h-5 w-5' strokeWidth='1.5' />
-									</Button>
+									<TooltipProvider>
+										<Tooltip>
+											<TooltipTrigger asChild>
+												<Button
+													onClick={() => {
+														setOpenDialog(true);
+														setUserDialog({
+															id: Number(row.original.id),
+															name: row.original.name,
+															title: UsersConfig.dialog.title,
+															subtitle: UsersConfig.dialog.impossibleRevertion,
+															message: (
+																<div className='flex flex-col'>
+																	<span className='text-md font-bold text-slate-900'>{row.original.name}</span>
+																	{UsersConfig.dialog.userDelete}
+																</div>
+															)
+														});
+														setDialogAction('remove');
+													}}
+													variant='outline'
+													size='miniIcon'
+													className='hover:bg-white hover:text-rose-400'>
+													<BadgeX className='h-5 w-5' strokeWidth='1.5' />
+												</Button>
+											</TooltipTrigger>
+											<TooltipContent>
+												<p>{ButtonsConfig.actions.deletePermanent}</p>
+											</TooltipContent>
+										</Tooltip>
+									</TooltipProvider>
 								)}
 							</>
 						)}
@@ -197,7 +243,7 @@ function ListUsers() {
 	async function getRoles() {
 		RolesServices.findAll().then((response) => {
 			if (!response.statusCode) setRoles(response);
-            handleServerResponse(response);
+			handleServerResponse(response);
 		});
 	}
 
@@ -213,10 +259,10 @@ function ListUsers() {
 			if (response.statusCode === 200) {
 				getAllUsers();
 				setUpdateUI(Math.random());
-                (store.getState().role === Roles.USER) ? navigate(`${APP_URL}`) : navigate(`${APP_URL}/usuarios`);
+				store.getState().role === Roles.USER ? navigate(`${APP_URL}`) : navigate(`${APP_URL}/usuarios`);
 			}
 			setOpenDialog(false);
-            handleServerResponse(response);
+			handleServerResponse(response);
 		});
 	}
 
@@ -227,7 +273,7 @@ function ListUsers() {
 				setUpdateUI(Math.random());
 			}
 			setOpenDialog(false);
-            handleServerResponse(response);
+			handleServerResponse(response);
 		});
 	}
 
@@ -235,12 +281,12 @@ function ListUsers() {
 		UsersServices.remove(id).then((response) => {
 			if (response.statusCode === 200) getAllUsers();
 			setOpenDialog(false);
-            handleServerResponse(response);
+			handleServerResponse(response);
 		});
 	}
 	// #endregion
 	return (
-		<main className='flex-1 overflow-y-auto animate-fadeIn'>
+		<main className='flex-1 animate-fadeIn overflow-y-auto'>
 			<div className='flex flex-row items-center justify-between px-8 pt-8'>
 				<h1 className='text-2xl font-normal text-slate-600'>{LayoutConfig.sidebar.menu.users}</h1>
 				{isAdmin && (

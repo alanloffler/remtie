@@ -466,9 +466,9 @@ function CreateProduct() {
 												<Map 
                                                     className='w-full h-80 md:h-96 lg:h-96'
                                                     mapId={mapId}
-                                                    defaultCenter={{ lat: Number(mapOptions.lat), lng: Number(mapOptions.lng) }} 
+                                                    defaultCenter={{ lat: Number(mapOptions.lat) || 0, lng: Number(mapOptions.lng) || 0 }} 
                                                     defaultZoom={mapOptions.zoom || 10} 
-                                                    mapTypeId={mapOptions.mapType}
+                                                    mapTypeId={mapOptions.mapType || 'roadmap'}
                                                     gestureHandling={'greedy'} 
                                                     disableDefaultUI={false} 
                                                     disableDoubleClickZoom={true}

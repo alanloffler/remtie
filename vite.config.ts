@@ -13,7 +13,8 @@ export default defineConfig({
 	build: {
 		outDir: 'dist',
 		rollupOptions: {
-			input: 'src/main.tsx'
+			input:  {main: path.resolve(__dirname, './src/main.tsx')},
+			output: { dir: path.resolve(__dirname, './dist') }
 		}
 	}
 });

@@ -12,10 +12,12 @@ import { FormEvent, useEffect, useState } from 'react';
 import { IRole } from '@/lib/interfaces/role.interface';
 import { IUser } from '@/lib/interfaces/user.interface';
 import { Link, useNavigate, useParams } from 'react-router-dom';
+import { Roles } from '@/lib/constants';
 import { RolesServices } from '@/services/roles.services';
 import { UsersConfig } from '@/lib/config/users.config';
 import { UsersServices } from '@/services/users.services';
 import { handleServerResponse } from '@/lib/handleServerResponse';
+import { store } from '@/services/store.services';
 import { updateUserSchema } from '@/lib/schemas/user.schema';
 import { useCapitalize } from '@/hooks/useCapitalize';
 import { useForm, FormProvider } from 'react-hook-form';
@@ -48,7 +50,7 @@ function UpdateUser() {
 		function getRoles() {
 			RolesServices.findAll().then((response) => {
 				if (!response.statusCode) setRoles(response);
-                handleServerResponse(response);
+				handleServerResponse(response);
 			});
 		}
 
@@ -56,16 +58,16 @@ function UpdateUser() {
 			UsersServices.findOne(userId).then((response) => {
 				if (!response.statusCode) {
 					setUser(response);
-                    setRoleKey(Math.random());
+					setRoleKey(Math.random());
 					form.setValue('name', response.name);
 					form.setValue('email', response.email);
 					form.setValue('phone', response.phone || '');
 					form.setValue('role', response.role);
 				}
-                handleServerResponse(response);
+				handleServerResponse(response);
 			});
 		}
-        
+
 		getRoles();
 		getUser(userId);
 	}, [form, userId]);
@@ -157,30 +159,32 @@ function UpdateUser() {
 													</FormItem>
 												)}
 											/>
-											<FormField
-												control={form.control}
-												name='role'
-												render={({ field }) => (
-													<FormItem>
-														<FormLabel>{UsersConfig.form.role.title}</FormLabel>
-														<Select key={roleKey} value={field.value} onValueChange={(event) => field.onChange(event)}>
-															<FormControl>
-																<SelectTrigger>
-																	<SelectValue />
-																</SelectTrigger>
-															</FormControl>
-															<SelectContent>
-																{roles.map((role) => (
-																	<SelectItem key={role.id} value={role.value}>
-																		{capitalize(role.title)}
-																	</SelectItem>
-																))}
-															</SelectContent>
-														</Select>
-														<FormMessage />
-													</FormItem>
-												)}
-											/>
+											{store.getState().role === Roles.ADMIN && (
+												<FormField
+													control={form.control}
+													name='role'
+													render={({ field }) => (
+														<FormItem>
+															<FormLabel>{UsersConfig.form.role.title}</FormLabel>
+															<Select key={roleKey} value={field.value} onValueChange={(event) => field.onChange(event)}>
+																<FormControl>
+																	<SelectTrigger>
+																		<SelectValue />
+																	</SelectTrigger>
+																</FormControl>
+																<SelectContent>
+																	{roles.map((role) => (
+																		<SelectItem key={role.id} value={role.value}>
+																			{capitalize(role.title)}
+																		</SelectItem>
+																	))}
+																</SelectContent>
+															</Select>
+															<FormMessage />
+														</FormItem>
+													)}
+												/>
+											)}
 										</div>
 									</div>
 								</div>

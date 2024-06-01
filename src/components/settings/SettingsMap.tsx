@@ -1,4 +1,5 @@
 // App
+import MapAllProducts from "@/components/settings/map/MapAllProducts";
 import MapFormsProduct from "@/components/settings/map/MapFormsProduct";
 import MapId from "@/components/settings/map/MapId";
 // React component
@@ -13,7 +14,7 @@ function SettingsMap() {
 				</div>
 				<div className='w-full p-2 md:w-1/2'>
 					<div className='space-y-4'>
-                        <MapFormsProduct />
+                        <MapAllProducts />
                     </div>
 				</div>
 			</div>

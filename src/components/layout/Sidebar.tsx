@@ -48,8 +48,8 @@ function Sidebar() {
 	}, [isOpen]);
 
 	function Logout() {
+		navigate('/');
 		reset();
-		navigate(0);
 	}
 
 	return (

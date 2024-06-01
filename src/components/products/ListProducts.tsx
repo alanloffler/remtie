@@ -1,6 +1,6 @@
 /* eslint-disable react-hooks/exhaustive-deps */
 // Icons: Lucide (https://lucide.dev/)
-import { ArrowUpDown, BadgeX, CheckCircle, CircleOff, Filter, Heart, Info, Pencil, Plus, Trash2 } from 'lucide-react';
+import { ArrowUpDown, BadgeX, CheckCircle, CircleOff, FileText, Filter, Heart, Pencil, Plus, Trash2 } from 'lucide-react';
 // UI: Shadcn-ui (https://ui.shadcn.com/)
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
@@ -10,6 +10,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Separator } from '@/components/ui/separator';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Toggle } from '@/components/ui/toggle';
+import { TooltipProvider, Tooltip, TooltipTrigger, TooltipContent } from '@/components/ui/tooltip';
 // App
 import CardView from '@/components/products/CardView';
 import CurrencyFormat from '@/components/shared/CurrencyFormat';
@@ -41,7 +42,7 @@ import { useCapitalize } from '@/hooks/useCapitalize';
 const APP_URL: string = import.meta.env.VITE_APP_URL;
 // React component
 function ListProducts() {
-    const [searchParams, setSearchParams] = useSearchParams();
+	const [searchParams, setSearchParams] = useSearchParams();
 	const [business, setBusiness] = useState<IBusiness[]>([]);
 	const [businessKey, setBusinessKey] = useState<number>(0);
 	const [businessSelected, setBusinessSelected] = useState<string>(searchParams.get('t') || '');
@@ -66,7 +67,7 @@ function ListProducts() {
 	const tabActive: string = store.getState().tabActive;
 	const capitalize = useCapitalize();
 	const navigate = useNavigate();
-    const isClicked = store((state) => state.isClicked);
+	const isClicked = store((state) => state.isClicked);
 
 	const content: ReactElement | false =
 		store.getState().role === Roles.ADMIN ? (
@@ -81,14 +82,14 @@ function ListProducts() {
 	async function getBusiness() {
 		BusinessServices.findAllUI().then((response) => {
 			if (!response.statusCode) setBusiness(response);
-            handleServerResponse(response);
+			handleServerResponse(response);
 		});
 	}
 
 	async function getCategories() {
 		CategoriesServices.findAllUI().then((response) => {
 			if (!response.statusCode) setCategories(response);
-            handleServerResponse(response);
+			handleServerResponse(response);
 		});
 	}
 
@@ -103,7 +104,7 @@ function ListProducts() {
 					setShowInfoCard(true);
 				}
 			}
-            handleServerResponse(response);
+			handleServerResponse(response);
 		});
 	}
 
@@ -120,14 +121,14 @@ function ListProducts() {
 				setPropertiesFiltered(props);
 				setProperties(props);
 			}
-            handleServerResponse(response);
+			handleServerResponse(response);
 		});
 	}
 
 	async function getRowsPerPage() {
 		SettingsServices.findOne('rowsPerPageProducts').then((response) => {
-            if (!response.statusCode) setRowsPerPageProducts(Number(response.value));
-            handleServerResponse(response);
+			if (!response.statusCode) setRowsPerPageProducts(Number(response.value));
+			handleServerResponse(response);
 		});
 	}
 
@@ -136,7 +137,7 @@ function ListProducts() {
 		getBusiness();
 		getCategories();
 		getProducts();
-        isClicked(2);
+		isClicked(2);
 	}, []);
 	// #endregion
 	// #region Table columns
@@ -183,13 +184,13 @@ function ListProducts() {
 			}
 		},
 		// City
-        {
-            accessorKey: 'city',
-            header: ProductsConfig.headers[4],
-            cell: ({ row }) => {
-                return <div className='text-left'>{capitalize(row.original.city.city)}</div>;
-            }
-        },
+		{
+			accessorKey: 'city',
+			header: ProductsConfig.headers[4],
+			cell: ({ row }) => {
+				return <div className='text-left'>{capitalize(row.original.city.city)}</div>;
+			}
+		},
 		{
 			accessorKey: 'price',
 			header: ({ column }) => {
@@ -215,27 +216,72 @@ function ListProducts() {
 					<div className='flex flex-row gap-2'>
 						{row.original.deletedAt === null && (
 							<>
-								<Button onClick={() => navigate(APP_URL + '/productos/' + row.original.id)} variant='outline' size='miniIcon' className='hover:bg-white hover:text-sky-400'>
-									<Info className='h-5 w-5' strokeWidth='1.5' />
-								</Button>
-								<Button onClick={() => navigate(`${APP_URL}/productos/modificar/${row.original.id}`)} variant='outline' size='miniIcon' className='hover:bg-white hover:text-emerald-400'>
-									<Pencil className='h-5 w-5' strokeWidth='1.5' />
-								</Button>
+								<TooltipProvider>
+									<Tooltip>
+										<TooltipTrigger asChild>
+											<Button onClick={() => navigate(`${APP_URL}/productos/${row.original.id}`)} variant='outline' size='miniIcon' className='hover:bg-white hover:text-sky-400'>
+												<FileText className='h-5 w-5' strokeWidth='1.5' />
+											</Button>
+										</TooltipTrigger>
+										<TooltipContent>
+											<p>{ButtonsConfig.actions.details}</p>
+										</TooltipContent>
+									</Tooltip>
+								</TooltipProvider>
+								<TooltipProvider>
+									<Tooltip>
+										<TooltipTrigger asChild>
+											<Button onClick={() => navigate(`${APP_URL}/productos/modificar/${row.original.id}`)} variant='outline' size='miniIcon' className='hover:bg-white hover:text-emerald-400'>
+												<Pencil className='h-5 w-5' strokeWidth='1.5' />
+											</Button>
+										</TooltipTrigger>
+										<TooltipContent>
+											<p>{ButtonsConfig.actions.edit}</p>
+										</TooltipContent>
+									</Tooltip>
+								</TooltipProvider>
 							</>
 						)}
 						{row.original.deletedAt === null ? (
-							<Button onClick={() => handleDialog(row.original, 'removeSoft')} variant='outline' size='miniIcon' className='hover:bg-white hover:text-rose-400'>
-								<Trash2 className='h-5 w-5' strokeWidth='1.5' />
-							</Button>
+							<TooltipProvider>
+								<Tooltip>
+									<TooltipTrigger asChild>
+										<Button onClick={() => handleDialog(row.original, 'removeSoft')} variant='outline' size='miniIcon' className='hover:bg-white hover:text-rose-400'>
+											<Trash2 className='h-5 w-5' strokeWidth='1.5' />
+										</Button>
+									</TooltipTrigger>
+									<TooltipContent>
+										<p>{ButtonsConfig.actions.delete}</p>
+									</TooltipContent>
+								</Tooltip>
+							</TooltipProvider>
 						) : (
-							<Button onClick={() => handleDialog(row.original, 'restore')} variant='outline' size='miniIcon' className='hover:bg-white hover:text-emerald-400'>
-								<CheckCircle className='h-5 w-5' strokeWidth='1.5' />
-							</Button>
+							<TooltipProvider>
+								<Tooltip>
+									<TooltipTrigger asChild>
+										<Button onClick={() => handleDialog(row.original, 'restore')} variant='outline' size='miniIcon' className='hover:bg-white hover:text-emerald-400'>
+											<CheckCircle className='h-5 w-5' strokeWidth='1.5' />
+										</Button>
+									</TooltipTrigger>
+									<TooltipContent>
+										<p>{ButtonsConfig.actions.restore}</p>
+									</TooltipContent>
+								</Tooltip>
+							</TooltipProvider>
 						)}
 						{store.getState().role === Roles.ADMIN && (
-							<Button onClick={() => handleDialog(row.original, 'remove')} variant='outline' size='miniIcon' className='hover:bg-white hover:text-rose-400'>
-								<BadgeX className='h-5 w-5' strokeWidth='1.5' />
-							</Button>
+							<TooltipProvider>
+								<Tooltip>
+									<TooltipTrigger asChild>
+										<Button onClick={() => handleDialog(row.original, 'remove')} variant='outline' size='miniIcon' className='hover:bg-white hover:text-rose-400'>
+											<BadgeX className='h-5 w-5' strokeWidth='1.5' />
+										</Button>
+									</TooltipTrigger>
+									<TooltipContent>
+										<p>{ButtonsConfig.actions.deletePermanent}</p>
+									</TooltipContent>
+								</Tooltip>
+							</TooltipProvider>
 						)}
 					</div>
 				);
@@ -249,7 +295,7 @@ function ListProducts() {
 		if (event === 'reset') {
 			setBusinessSelected('');
 			setBusinessKey(+new Date());
-            setSearchParams(updateDeletedParams(searchParams, 't'));
+			setSearchParams(updateDeletedParams(searchParams, 't'));
 		} else {
 			setBusinessSelected(event);
 			categorySelected !== '' ? setSearchParams({ c: categorySelected, t: event }) : setSearchParams({ t: event });
@@ -273,17 +319,17 @@ function ListProducts() {
 		setCategorySelected('');
 		setCategoryKey(+new Date());
 		setSearchFilter('');
-        setSearchParams([]);
+		setSearchParams([]);
 	}
 
-    function updateDeletedParams(paramsArray: URLSearchParams, param: string) {
-        const searchParamsArray = [...paramsArray.entries()];
-        const filteredParamsArray = searchParamsArray.filter(([key]) => key !== param);
-        const filteredSearchParams = filteredParamsArray.reduce((obj, [key, value]) => {
-            return { ...obj, [key]: value };
-        }, {});
-        return filteredSearchParams;
-    }
+	function updateDeletedParams(paramsArray: URLSearchParams, param: string) {
+		const searchParamsArray = [...paramsArray.entries()];
+		const filteredParamsArray = searchParamsArray.filter(([key]) => key !== param);
+		const filteredSearchParams = filteredParamsArray.reduce((obj, [key, value]) => {
+			return { ...obj, [key]: value };
+		}, {});
+		return filteredSearchParams;
+	}
 
 	useEffect(() => {
 		function applyFilters(prop: IProperty[], filterAttributes: string[], filterValues: (string | number)[], search: string) {
@@ -320,7 +366,7 @@ function ListProducts() {
 			message = (
 				<div className='flex flex-col'>
 					<span>{ProductsConfig.dialog.propertySoftDelete}</span>
-                    <span className='text-md font-bold text-slate-900'>{property.id < 10 ? `COD/0${property.id}` : `COD/${property.id}`}</span>
+					<span className='text-md font-bold text-slate-900'>{property.id < 10 ? `COD/0${property.id}` : `COD/${property.id}`}</span>
 				</div>
 			);
 		}
@@ -329,7 +375,7 @@ function ListProducts() {
 			message = (
 				<div className='flex flex-col'>
 					<span>{ProductsConfig.dialog.propertyDelete}</span>
-                    <span className='text-md font-bold text-slate-900'>{property.id < 10 ? `COD/0${property.id}` : `COD/${property.id}`}</span>
+					<span className='text-md font-bold text-slate-900'>{property.id < 10 ? `COD/0${property.id}` : `COD/${property.id}`}</span>
 				</div>
 			);
 		}
@@ -338,7 +384,7 @@ function ListProducts() {
 			message = (
 				<div className='flex flex-col'>
 					<span>{ProductsConfig.dialog.propertyRestore}</span>
-                    <span className='text-md font-bold text-slate-900'>{property.id < 10 ? `COD/0${property.id}` : `COD/${property.id}`}</span>
+					<span className='text-md font-bold text-slate-900'>{property.id < 10 ? `COD/0${property.id}` : `COD/${property.id}`}</span>
 				</div>
 			);
 		}
@@ -358,15 +404,15 @@ function ListProducts() {
 	async function restore(id: number) {
 		ProductsServices.restore(id).then((response) => {
 			if (response.statusCode === 200) getProducts();
-            handleServerResponse(response);
+			handleServerResponse(response);
 		});
-        setOpenDialog(false);
+		setOpenDialog(false);
 	}
 
 	async function removeSoft(id: number) {
 		ProductsServices.removeSoft(id).then((response) => {
 			if (response.statusCode === 200) getProducts();
-            handleServerResponse(response);
+			handleServerResponse(response);
 		});
 		setOpenDialog(false);
 	}
@@ -374,7 +420,7 @@ function ListProducts() {
 	async function remove(id: number) {
 		ProductsServices.remove(id).then((response) => {
 			if (response.statusCode === 200) getProducts();
-            handleServerResponse(response);
+			handleServerResponse(response);
 		});
 		setOpenDialog(false);
 	}
@@ -396,7 +442,7 @@ function ListProducts() {
 	}
 	// #endregion
 	return (
-		<main className='flex-1 overflow-y-auto animate-fadeIn'>
+		<main className='flex-1 animate-fadeIn overflow-y-auto'>
 			<div className='mx-8 mb-8 mt-8 flex flex-row items-center justify-between'>
 				<h1 className='text-2xl font-normal text-slate-600'>{LayoutConfig.sidebar.menu.products}</h1>
 				<div>
@@ -480,7 +526,7 @@ function ListProducts() {
 					{store.getState().role === Roles.ADMIN && (
 						<section className='flex flex-row space-x-4 pl-2 pt-4'>
 							<div className='flex flex-row items-center space-x-2 text-sm text-slate-600'>
-								<Filter className='h-4 w-4' strokeWidth='2' />
+								<Filter className='h-5 w-5' strokeWidth='2' />
 								<span>{ProductsConfig.filters.byCreator}</span>
 							</div>
 							{/* SECTION: Filter by creator */}

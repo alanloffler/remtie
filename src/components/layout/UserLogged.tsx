@@ -19,7 +19,7 @@ function UserLogged({ user }: { user: number }) {
                     setActualUser(data);
                     store.setState({ username: data.name });
                 }
-                if (data.statusCode > 399 || data instanceof Error) navigate(`${APP_URL}/`);
+                if (data.statusCode > 399 || data instanceof Error) navigate(`${APP_URL}`);
 			});
 		}
 		getUser();

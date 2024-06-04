@@ -5,6 +5,8 @@ import { UsersServices } from '@/services/users.services';
 import { store } from '@/services/store.services';
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+// .env constants
+const APP_URL: string = import.meta.env.VITE_APP_URL;
 // React component
 function UserLogged({ user }: { user: number }) {
 	const [actualUser, setActualUser] = useState<IUser>();
@@ -17,7 +19,7 @@ function UserLogged({ user }: { user: number }) {
                     setActualUser(data);
                     store.setState({ username: data.name });
                 }
-                if (data.statusCode > 399 || data instanceof Error) navigate('/');
+                if (data.statusCode > 399 || data instanceof Error) navigate(`${APP_URL}/`);
 			});
 		}
 		getUser();
